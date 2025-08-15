@@ -1,0 +1,61 @@
+{% extends 'tickets/base.html' %}
+
+{% block title %}Create Ticket - Ticket Management System{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h4>Create New Ticket</h4>
+            </div>
+            <div class="card-body">
+                <form method="post">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label for="title" class="form-label">Title <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="title" name="title" required 
+                               placeholder="Enter a descriptive title for your ticket">
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="description" class="form-label">Description <span class="text-danger">*</span></label>
+                        <textarea class="form-control" id="description" name="description" rows="5" required
+                                  placeholder="Provide detailed information about the issue or request"></textarea>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="priority" class="form-label">Priority</label>
+                        <select class="form-select" id="priority" name="priority">
+                            <option value="low">Low</option>
+                            <option value="medium" selected>Medium</option>
+                            <option value="high">High</option>
+                            <option value="urgent">Urgent</option>
+                        </select>
+                        <div class="form-text">Select the appropriate priority level for this ticket.</div>
+                    </div>
+                    
+                    <div class="d-flex justify-content-between">
+                        <a href="{% url 'tickets:ticket_list' %}" class="btn btn-secondary">Cancel</a>
+                        <button type="submit" class="btn btn-primary">Create Ticket</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row justify-content-center mt-4">
+    <div class="col-md-8">
+        <div class="alert alert-info">
+            <h6>💡 Tips for creating effective tickets:</h6>
+            <ul class="mb-0">
+                <li>Use clear, descriptive titles</li>
+                <li>Provide detailed descriptions with steps to reproduce issues</li>
+                <li>Set appropriate priority levels</li>
+                <li>Include any relevant error messages or screenshots</li>
+            </ul>
+        </div>
+    </div>
+</div>
+{% endblock %}

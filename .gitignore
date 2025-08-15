@@ -1,0 +1,17 @@
+__pycache__/
+*.sqlite3
+*.log
+*.csv
+*.xlsx
+*.xls
+*.json
+*.xml
+*.DS_Store
+*.sql
+Helper_ODBCConnection.py
+migrations/
+.idea/
+# other django files
+*.pyc
+.vscode/
+*.txt

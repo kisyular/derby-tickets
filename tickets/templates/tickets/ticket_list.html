@@ -1,0 +1,62 @@
+{% extends 'tickets/base.html' %}
+
+{% block title %}All Tickets - Ticket Management System{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2>All Tickets</h2>
+    <a href="{% url 'tickets:create_ticket' %}" class="btn btn-success">
+        <i class="fas fa-plus"></i> Create New Ticket
+    </a>
+</div>
+
+{% if tickets %}
+    <div class="row">
+        {% for ticket in tickets %}
+        <div class="col-md-6 col-lg-4 mb-4">
+            <div class="card ticket-card h-100">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h6 class="mb-0">Ticket #{{ ticket.id }}</h6>
+                    <span class="badge 
+                        {% if ticket.priority == 'urgent' %}bg-danger
+                        {% elif ticket.priority == 'high' %}bg-warning
+                        {% elif ticket.priority == 'medium' %}bg-info
+                        {% else %}bg-secondary
+                        {% endif %} priority-badge">
+                        {{ ticket.get_priority_display }}
+                    </span>
+                </div>
+                <div class="card-body">
+                    <h5 class="card-title">{{ ticket.title }}</h5>
+                    <p class="card-text">{{ ticket.description|truncatewords:15 }}</p>
+                    <p class="card-text">
+                        <small class="text-muted">
+                            Status: 
+                            <span class="badge 
+                                {% if ticket.status == 'open' %}bg-primary
+                                {% elif ticket.status == 'in_progress' %}bg-warning
+                                {% else %}bg-success
+                                {% endif %}">
+                                {{ ticket.get_status_display }}
+                            </span>
+                        </small>
+                    </p>
+                </div>
+                <div class="card-footer">
+                    <small class="text-muted">Created: {{ ticket.created_at|date:"M d, Y" }}</small>
+                    <a href="{% url 'tickets:ticket_detail' ticket.id %}" class="btn btn-sm btn-outline-primary float-end">
+                        View Details
+                    </a>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+{% else %}
+    <div class="text-center mt-5">
+        <h4>No tickets found</h4>
+        <p class="text-muted">Create your first ticket to get started!</p>
+        <a href="{% url 'tickets:create_ticket' %}" class="btn btn-primary">Create Your First Ticket</a>
+    </div>
+{% endif %}
+{% endblock %}

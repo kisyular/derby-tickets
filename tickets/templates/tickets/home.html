@@ -1,0 +1,120 @@
+{% extends 'tickets/base.html' %}
+
+{% block title %}Home - Ticket Management System{% endblock %}
+
+{% block content %}
+{% if user.is_authenticated %}
+    <!-- Authenticated User Dashboard -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <h2>Welcome back, {{ user.first_name|default:user.username }}!</h2>
+            <p class="text-muted">Here's your ticket overview.</p>
+        </div>
+    </div>
+
+    <div class="row mb-4">
+        <div class="col-md-4">
+            <div class="card bg-primary text-white">
+                <div class="card-body">
+                    <h5 class="card-title">📋 My Tickets</h5>
+                    <h2>{{ user_tickets|length }}</h2>
+                    <p class="card-text">Total tickets assigned to you</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card bg-success text-white">
+                <div class="card-body">
+                    <h5 class="card-title">✅ Quick Actions</h5>
+                    <a href="{% url 'tickets:create_ticket' %}" class="btn btn-light btn-sm">Create Ticket</a>
+                    <a href="{% url 'tickets:ticket_list' %}" class="btn btn-outline-light btn-sm">View All</a>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card bg-info text-white">
+                <div class="card-body">
+                    <h5 class="card-title">👤 Your Role</h5>
+                    <p class="card-text">
+                        {% if user.is_staff %}
+                            <span class="badge bg-warning">Staff Member</span>
+                        {% else %}
+                            <span class="badge bg-light text-dark">User</span>
+                        {% endif %}
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {% if user_tickets %}
+        <div class="row">
+            <div class="col-12">
+                <h4>Your Recent Tickets</h4>
+                <div class="row">
+                    {% for ticket in user_tickets %}
+                        <div class="col-md-6 col-lg-4 mb-3">
+                            <div class="card">
+                                <div class="card-body">
+                                    <h6 class="card-title">{{ ticket.title|truncatechars:30 }}</h6>
+                                    <p class="card-text text-muted">{{ ticket.description|truncatechars:50 }}</p>
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <span class="badge bg-{% if ticket.status == 'open' %}primary{% elif ticket.status == 'in_progress' %}warning{% else %}success{% endif %}">
+                                            {{ ticket.get_status_display }}
+                                        </span>
+                                        <a href="{% url 'tickets:ticket_detail' ticket.id %}" class="btn btn-outline-primary btn-sm">View</a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    {% else %}
+        <div class="text-center py-5">
+            <h4 class="text-muted">No tickets yet</h4>
+            <p class="text-muted">Create your first ticket to get started.</p>
+            <a href="{% url 'tickets:create_ticket' %}" class="btn btn-primary">Create Ticket</a>
+        </div>
+    {% endif %}
+
+{% else %}
+    <!-- Unauthenticated User Landing Page -->
+    <div class="jumbotron bg-light p-5 rounded-lg mb-4">
+        <h1 class="display-4">Welcome to Ticket Management System</h1>
+        <p class="lead">A secure ticketing system for authorized users only.</p>
+        <hr class="my-4">
+        <p>Please sign in with your administrator-provided credentials to access the system.</p>
+        <div class="mt-4">
+            <a class="btn btn-primary btn-lg" href="{% url 'tickets:login' %}" role="button">Sign In</a>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-4">
+            <div class="card text-center">
+                <div class="card-body">
+                    <h5 class="card-title">� Secure Access</h5>
+                    <p class="card-text">Only authorized users with admin-created accounts can access the system.</p>
+                </div>
+            </div>
+        </div>
+    <div class="col-md-4">
+        <div class="card text-center">
+            <div class="card-body">
+                <h5 class="card-title">🔍 Search</h5>
+                <p class="card-text">Find tickets quickly with our search feature.</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card text-center">
+            <div class="card-body">
+                <h5 class="card-title">⚙️ Settings</h5>
+                <p class="card-text">Configure your ticket management preferences.</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

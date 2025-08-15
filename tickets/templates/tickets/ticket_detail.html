@@ -1,0 +1,85 @@
+{% extends 'tickets/base.html' %}
+
+{% block title %}{{ ticket.title }} - Ticket Management System{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h4>{{ ticket.title }}</h4>
+                <span class="badge 
+                    {% if ticket.priority == 'urgent' %}bg-danger
+                    {% elif ticket.priority == 'high' %}bg-warning
+                    {% elif ticket.priority == 'medium' %}bg-info
+                    {% else %}bg-secondary
+                    {% endif %} fs-6">
+                    {{ ticket.get_priority_display }} Priority
+                </span>
+            </div>
+            <div class="card-body">
+                <h6>Description:</h6>
+                <p class="mb-4">{{ ticket.description|linebreaks }}</p>
+                
+                <div class="row">
+                    <div class="col-md-6">
+                        <p><strong>Status:</strong> 
+                            <span class="badge 
+                                {% if ticket.status == 'open' %}bg-primary
+                                {% elif ticket.status == 'in_progress' %}bg-warning
+                                {% else %}bg-success
+                                {% endif %}">
+                                {{ ticket.get_status_display }}
+                            </span>
+                        </p>
+                    </div>
+                    <div class="col-md-6">
+                        <p><strong>Priority:</strong> {{ ticket.get_priority_display }}</p>
+                    </div>
+                </div>
+                
+                <div class="row">
+                    <div class="col-md-6">
+                        <p><strong>Created:</strong> {{ ticket.created_at|date:"F d, Y g:i A" }}</p>
+                    </div>
+                    <div class="col-md-6">
+                        <p><strong>Last Updated:</strong> {{ ticket.updated_at|date:"F d, Y g:i A" }}</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">
+                <h6>Actions</h6>
+            </div>
+            <div class="card-body">
+                <div class="d-grid gap-2">
+                    <button class="btn btn-warning" onclick="alert('Edit functionality coming soon!')">
+                        Edit Ticket
+                    </button>
+                    <button class="btn btn-danger" onclick="alert('Delete functionality coming soon!')">
+                        Delete Ticket
+                    </button>
+                    <a href="{% url 'tickets:ticket_list' %}" class="btn btn-secondary">
+                        Back to List
+                    </a>
+                </div>
+            </div>
+        </div>
+        
+        <div class="card mt-3">
+            <div class="card-header">
+                <h6>Ticket Information</h6>
+            </div>
+            <div class="card-body">
+                <p><strong>Ticket ID:</strong> #{{ ticket.id }}</p>
+                <p><strong>Status:</strong> {{ ticket.get_status_display }}</p>
+                <p><strong>Priority:</strong> {{ ticket.get_priority_display }}</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
