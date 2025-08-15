@@ -2,6 +2,7 @@ from django.shortcuts import render, get_object_or_404, redirect
 from django.http import HttpResponse
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth import authenticate, login, logout
+from django.contrib.auth.models import User
 from django.contrib import messages
 from django.db import models
 from .models import Ticket
@@ -36,17 +37,31 @@ def create_ticket(request):
         title = request.POST.get('title')
         description = request.POST.get('description')
         priority = request.POST.get('priority', 'medium')
+        assigned_to_id = request.POST.get('assigned_to')
+        
+        # Get assigned_to user if provided and is admin
+        assigned_to = None
+        if assigned_to_id:
+            try:
+                assigned_to = User.objects.get(id=assigned_to_id, profile__role='admin')
+            except User.DoesNotExist:
+                messages.error(request, 'Invalid user assignment. Only admin users can be assigned tickets.')
+                assigned_to = None
         
         ticket = Ticket.objects.create(
             title=title,
             description=description,
             priority=priority,
-            created_by=request.user
+            created_by=request.user,
+            assigned_to=assigned_to
         )
         messages.success(request, 'Ticket created successfully!')
         return redirect('tickets:ticket_detail', ticket_id=ticket.id)
     
-    return render(request, 'tickets/create_ticket.html')
+    # Get admin users for assignment dropdown
+    admin_users = Ticket.get_assignable_users()
+    context = {'admin_users': admin_users}
+    return render(request, 'tickets/create_ticket.html', context)
 
 def home(request):
     """Home page view"""

@@ -36,10 +36,12 @@
                 <div class="card-body">
                     <h5 class="card-title">👤 Your Role</h5>
                     <p class="card-text">
-                        {% if user.is_staff %}
-                            <span class="badge bg-warning">Staff Member</span>
+                        {% if user.profile.role == 'admin' %}
+                            <span class="badge bg-warning">Admin User</span>
+                            <small class="d-block text-light mt-1">Can be assigned tickets</small>
                         {% else %}
-                            <span class="badge bg-light text-dark">User</span>
+                            <span class="badge bg-light text-dark">Regular User</span>
+                            <small class="d-block text-light mt-1">Can create tickets</small>
                         {% endif %}
                     </p>
                 </div>
@@ -95,26 +97,28 @@
         <div class="col-md-4">
             <div class="card text-center">
                 <div class="card-body">
-                    <h5 class="card-title">� Secure Access</h5>
+                    <h5 class="card-title">🔒 Secure Access</h5>
                     <p class="card-text">Only authorized users with admin-created accounts can access the system.</p>
                 </div>
             </div>
         </div>
-    <div class="col-md-4">
-        <div class="card text-center">
-            <div class="card-body">
-                <h5 class="card-title">🔍 Search</h5>
-                <p class="card-text">Find tickets quickly with our search feature.</p>
+        <div class="col-md-4">
+            <div class="card text-center">
+                <div class="card-body">
+                    <h5 class="card-title">🔍 Search</h5>
+                    <p class="card-text">Find tickets quickly with our search feature.</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card text-center">
+                <div class="card-body">
+                    <h5 class="card-title">⚙️ Settings</h5>
+                    <p class="card-text">Configure your ticket management preferences.</p>
+                </div>
             </div>
         </div>
     </div>
-    <div class="col-md-4">
-        <div class="card text-center">
-            <div class="card-body">
-                <h5 class="card-title">⚙️ Settings</h5>
-                <p class="card-text">Configure your ticket management preferences.</p>
-            </div>
-        </div>
-    </div>
-</div>
+
+{% endif %}
 {% endblock %}

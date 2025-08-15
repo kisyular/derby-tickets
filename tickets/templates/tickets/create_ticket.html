@@ -35,6 +35,23 @@
                         <div class="form-text">Select the appropriate priority level for this ticket.</div>
                     </div>
                     
+                    <div class="mb-3">
+                        <label for="assigned_to" class="form-label">Assign to Admin (Optional)</label>
+                        <select class="form-select" id="assigned_to" name="assigned_to">
+                            <option value="">-- Select Admin User --</option>
+                            {% for admin_user in admin_users %}
+                                <option value="{{ admin_user.id }}">
+                                    {{ admin_user.first_name|default:admin_user.username }} 
+                                    {% if admin_user.first_name and admin_user.last_name %}
+                                        {{ admin_user.last_name }}
+                                    {% endif %}
+                                    ({{ admin_user.username }})
+                                </option>
+                            {% endfor %}
+                        </select>
+                        <div class="form-text">Only admin users can be assigned to tickets. Leave empty to assign later.</div>
+                    </div>
+                    
                     <div class="d-flex justify-content-between">
                         <a href="{% url 'tickets:ticket_list' %}" class="btn btn-secondary">Cancel</a>
                         <button type="submit" class="btn btn-primary">Create Ticket</button>

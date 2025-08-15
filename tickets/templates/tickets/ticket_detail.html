@@ -46,6 +46,21 @@
                         <p><strong>Last Updated:</strong> {{ ticket.updated_at|date:"F d, Y g:i A" }}</p>
                     </div>
                 </div>
+
+                <div class="row">
+                    <div class="col-md-6">
+                        <p><strong>Created by:</strong> {{ ticket.created_by.first_name|default:ticket.created_by.username }}</p>
+                    </div>
+                    <div class="col-md-6">
+                        <p><strong>Assigned to:</strong> 
+                            {% if ticket.assigned_to %}
+                                {{ ticket.assigned_to.first_name|default:ticket.assigned_to.username }}
+                            {% else %}
+                                <span class="text-muted">Unassigned</span>
+                            {% endif %}
+                        </p>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
