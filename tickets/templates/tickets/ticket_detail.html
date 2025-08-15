@@ -49,12 +49,25 @@
 
                 <div class="row">
                     <div class="col-md-6">
-                        <p><strong>Created by:</strong> {{ ticket.created_by.first_name|default:ticket.created_by.username }}</p>
+                        <p><strong>Created by:</strong> 
+                            {% if ticket.creator_profile %}
+                                {{ ticket.creator_profile.full_name }} ({{ ticket.creator_profile.email }})
+                                {% if ticket.creator_profile.department %}
+                                    <br><small class="text-muted">{{ ticket.creator_profile.department }}</small>
+                                {% endif %}
+                            {% else %}
+                                {{ ticket.created_by.first_name }} {{ ticket.created_by.last_name }} ({{ ticket.created_by.username }})
+                            {% endif %}
+                        </p>
                     </div>
                     <div class="col-md-6">
                         <p><strong>Assigned to:</strong> 
                             {% if ticket.assigned_to %}
-                                {{ ticket.assigned_to.first_name|default:ticket.assigned_to.username }}
+                                {% if ticket.assignee_profile %}
+                                    {{ ticket.assignee_profile.full_name }} ({{ ticket.assignee_profile.email_address }})
+                                {% else %}
+                                    {{ ticket.assigned_to.first_name }} {{ ticket.assigned_to.last_name }} ({{ ticket.assigned_to.username }})
+                                {% endif %}
                             {% else %}
                                 <span class="text-muted">Unassigned</span>
                             {% endif %}

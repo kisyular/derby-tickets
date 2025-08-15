@@ -5,9 +5,11 @@ from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.models import User
 from django.contrib import messages
 from django.db import models
-from .models import Ticket
+from .models import Ticket, EndUser, Admin
 
 # Create your views here.
+
+# Restore proper authentication with User model linked to custom profiles
 
 @login_required
 def ticket_list(request):
@@ -39,27 +41,27 @@ def create_ticket(request):
         priority = request.POST.get('priority', 'medium')
         assigned_to_id = request.POST.get('assigned_to')
         
-        # Get assigned_to user if provided and is admin
+        # Get assigned_to admin if provided
         assigned_to = None
         if assigned_to_id:
             try:
-                assigned_to = User.objects.get(id=assigned_to_id, profile__role='admin')
+                assigned_to = User.objects.get(id=assigned_to_id, is_staff=True)
             except User.DoesNotExist:
-                messages.error(request, 'Invalid user assignment. Only admin users can be assigned tickets.')
-                assigned_to = None
+                messages.error(request, 'Invalid admin assignment.')
         
+        # Create ticket with current user as creator
         ticket = Ticket.objects.create(
             title=title,
             description=description,
             priority=priority,
-            created_by=request.user,
+            created_by=request.user,  # Automatically use logged-in user
             assigned_to=assigned_to
         )
         messages.success(request, 'Ticket created successfully!')
         return redirect('tickets:ticket_detail', ticket_id=ticket.id)
     
-    # Get admin users for assignment dropdown
-    admin_users = Ticket.get_assignable_users()
+    # Get admin users for assignment dropdown (only for staff users to assign)
+    admin_users = User.objects.filter(is_staff=True) if request.user.is_staff else []
     context = {'admin_users': admin_users}
     return render(request, 'tickets/create_ticket.html', context)
 
@@ -70,7 +72,31 @@ def home(request):
         user_tickets = Ticket.objects.filter(
             models.Q(created_by=request.user) | models.Q(assigned_to=request.user)
         ).distinct()[:5]  # Show latest 5 tickets
-        context = {'user_tickets': user_tickets}
+        
+        # Get user profile info
+        profile_info = {}
+        if hasattr(request.user, 'end_user_profile'):
+            profile = request.user.end_user_profile
+            profile_info = {
+                'type': 'End User',
+                'role': profile.role,
+                'location': profile.location,
+                'department': profile.department
+            }
+        elif hasattr(request.user, 'admin_profile'):
+            profile = request.user.admin_profile
+            profile_info = {
+                'type': 'Admin',
+                'role': profile.role
+            }
+        
+        context = {
+            'user_tickets': user_tickets,
+            'profile_info': profile_info,
+            'total_tickets': Ticket.objects.count(),
+            'total_end_users': EndUser.objects.count(),
+            'total_admins': Admin.objects.count()
+        }
     else:
         context = {}
     return render(request, 'tickets/home.html', context)

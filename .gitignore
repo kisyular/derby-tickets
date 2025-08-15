@@ -15,3 +15,5 @@ migrations/
 *.pyc
 .vscode/
 *.txt
+*sample*
+*test*
