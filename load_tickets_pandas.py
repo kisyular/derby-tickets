@@ -222,7 +222,7 @@ def load_tickets_from_csv(csv_path):
                     location = safe_str(row.get('Location', ''))
                     
                     # Parse dates
-                    created_on = parse_datetime(row.get('Created On', ''))
+                    created_at = parse_datetime(row.get('Created On', ''))
                     closed_on = parse_datetime(row.get('Closed On', ''))
                     due_on = parse_datetime(row.get('Due On', ''))
                     
@@ -262,8 +262,8 @@ def load_tickets_from_csv(csv_path):
                     }
                     mapped_priority = priority_mapping.get(priority.lower(), 'Medium')
                     
-                    # Create ticket
-                    ticket = Ticket.objects.create(
+                    # Create ticket with custom dates from CSV
+                    ticket = Ticket(
                         ticket_number=ticket_number,
                         title=summary,
                         description=description or 'No description provided',
@@ -272,16 +272,13 @@ def load_tickets_from_csv(csv_path):
                         status=mapped_status,
                         priority=mapped_priority,
                         category=category or 'General',
-                        created_at=created_on or datetime.now(pytz.UTC),
-                        updated_at=created_on or datetime.now(pytz.UTC),
+                        created_at=created_at or datetime.now(pytz.UTC),
+                        closed_on=closed_on,
+                        due_on=due_on,
                     )
                     
-                    # Set additional dates if available
-                    if closed_on:
-                        ticket.closed_on = closed_on
-                    if due_on:
-                        ticket.due_on = due_on
-                    ticket.save()
+                    # Save with use_auto_now=False to preserve CSV dates
+                    ticket.save(use_auto_now=False)
                     
                     created_count += 1
                     

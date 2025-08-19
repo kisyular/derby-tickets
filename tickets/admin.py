@@ -92,12 +92,14 @@ class UserProfileAdmin(admin.ModelAdmin):
 
 @admin.register(Ticket)
 class TicketAdmin(admin.ModelAdmin):
-    list_display = ['id', 'title', 'created_by', 'assigned_to', 'status', 'priority', 'created_at', 'updated_at']
-    list_filter = ['status', 'priority', 'created_at', 'created_by', 'assigned_to']
-    search_fields = ['title', 'description', 'created_by__username', 'created_by__first_name', 'created_by__last_name', 'created_by__email', 
+    list_display = ['ticket_number', 'title', 'created_by', 'assigned_to', 'status', 'priority', 'category', 'created_at', 'closed_on', 'due_on']
+    list_filter = ['status', 'priority', 'category', 'created_at', 'closed_on', 'created_by', 'assigned_to']
+    search_fields = ['ticket_number', 'title', 'description', 'category', 'created_by__username', 'created_by__first_name', 'created_by__last_name', 'created_by__email', 
                      'assigned_to__username', 'assigned_to__first_name', 'assigned_to__last_name', 'assigned_to__email']
-    list_editable = ['created_by', 'assigned_to', 'status', 'priority']
+    list_editable = ['assigned_to', 'status', 'priority', 'category', 'created_by']
     ordering = ['-created_at']
+    date_hierarchy = 'created_at'
+    readonly_fields = ['updated_at', 'first_response_at', 'status_changed_at', 'last_user_response_at']
     
     def get_queryset(self, request):
         return super().get_queryset(request).select_related('created_by', 'assigned_to')
@@ -113,13 +115,20 @@ class TicketAdmin(admin.ModelAdmin):
     
     fieldsets = (
         ('Ticket Information', {
-            'fields': ('title', 'description')
+            'fields': ('ticket_number', 'title', 'description', 'category')
         }),
         ('Assignment', {
             'fields': ('created_by', 'assigned_to')
         }),
-        ('Status', {
+        ('Status & Priority', {
             'fields': ('status', 'priority')
+        }),
+        ('Dates', {
+            'fields': ('created_at', 'closed_on', 'due_on')
+        }),
+        ('System Tracking (Read-only)', {
+            'fields': ('updated_at', 'first_response_at', 'status_changed_at', 'last_user_response_at'),
+            'classes': ['collapse'],
         }),
     )
 

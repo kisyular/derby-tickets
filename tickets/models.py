@@ -68,6 +68,7 @@ class Ticket(models.Model):
         max_length=20,
         choices=[
             ('Open', 'Open'),
+            ('In Progress', 'In Progress'),
             ('Closed', 'Closed'),
         ],
         default='Open'
@@ -89,8 +90,20 @@ class Ticket(models.Model):
     closed_on = models.DateTimeField(null=True, blank=True, help_text="When ticket was closed")
     due_on = models.DateTimeField(null=True, blank=True, help_text="Due date for the ticket")
     
-    created_at = models.DateTimeField(auto_now_add=True)
+    # Date fields
+    created_at = models.DateTimeField(null=True, blank=True, help_text="When ticket was created")
     updated_at = models.DateTimeField(auto_now=True)
+
+    def save(self, *args, **kwargs):
+        """Override save to handle auto timestamps based on use_auto_now flag"""
+        use_auto_now = kwargs.pop('use_auto_now', True)
+        
+        if use_auto_now and not self.created_at:
+            # For new tickets created through web interface - set current time
+            from django.utils import timezone
+            self.created_at = timezone.now()
+        
+        super().save(*args, **kwargs)
 
     def __str__(self):
         return self.title
