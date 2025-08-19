@@ -1,124 +1,268 @@
 {% extends 'tickets/base.html' %}
 
-{% block title %}Home - Ticket Management System{% endblock %}
+{% block title %}Dashboard - Ticket Management System{% endblock %}
 
 {% block content %}
-{% if user.is_authenticated %}
-    <!-- Authenticated User Dashboard -->
-    <div class="row mb-4">
-        <div class="col-12">
-            <h2>Welcome back, {{ user.first_name|default:user.username }}!</h2>
-            <p class="text-muted">Here's your ticket overview.</p>
-        </div>
-    </div>
-
-    <div class="row mb-4">
-        <div class="col-md-4">
-            <div class="card bg-primary text-white">
-                <div class="card-body">
-                    <h5 class="card-title">📋 My Tickets</h5>
-                    <h2>{{ user_tickets|length }}</h2>
-                    <p class="card-text">Total tickets assigned to you</p>
-                </div>
+<!-- Content Header (Page header) -->
+<div class="content-header">
+    <div class="container-fluid">
+        <div class="row mb-2">
+            <div class="col-sm-6">
+                <h1 class="m-0">Dashboard</h1>
             </div>
-        </div>
-        <div class="col-md-4">
-            <div class="card bg-success text-white">
-                <div class="card-body">
-                    <h5 class="card-title">✅ Quick Actions</h5>
-                    <a href="{% url 'tickets:create_ticket' %}" class="btn btn-light btn-sm">Create Ticket</a>
-                    <a href="{% url 'tickets:ticket_list' %}" class="btn btn-outline-light btn-sm">View All</a>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-4">
-            <div class="card bg-info text-white">
-                <div class="card-body">
-                    <h5 class="card-title">👤 Your Role</h5>
-                    <p class="card-text">
-                        {% if user.profile.role == 'admin' %}
-                            <span class="badge bg-warning">Admin User</span>
-                            <small class="d-block text-light mt-1">Can be assigned tickets</small>
-                        {% else %}
-                            <span class="badge bg-light text-dark">Regular User</span>
-                            <small class="d-block text-light mt-1">Can create tickets</small>
-                        {% endif %}
-                    </p>
-                </div>
+            <div class="col-sm-6">
+                <ol class="breadcrumb float-sm-right">
+                    <li class="breadcrumb-item active">Dashboard</li>
+                </ol>
             </div>
         </div>
     </div>
+</div>
 
-    {% if user_tickets %}
+<!-- Main content -->
+<section class="content">
+    <div class="container-fluid">
+
+        <!-- Info boxes (Stat boxes) -->
+        <div class="row">
+            <div class="col-lg-3 col-6">
+                <!-- Total Tickets -->
+                <div class="small-box bg-info">
+                    <div class="inner">
+                        <h3>{{ total_tickets }}</h3>
+                        <p>Total Tickets</p>
+                    </div>
+                    <div class="icon">
+                        <i class="fas fa-ticket-alt"></i>
+                    </div>
+                    <a href="{% url 'tickets:ticket_list' %}" class="small-box-footer">
+                        More info <i class="fas fa-arrow-circle-right"></i>
+                    </a>
+                </div>
+            </div>
+
+            <div class="col-lg-3 col-6">
+                <!-- Open Tickets -->
+                <div class="small-box bg-success">
+                    <div class="inner">
+                        <h3>{{ open_tickets }}</h3>
+                        <p>Open Tickets</p>
+                    </div>
+                    <div class="icon">
+                        <i class="fas fa-folder-open"></i>
+                    </div>
+                    <a href="{% url 'tickets:ticket_list' %}?status=Open" class="small-box-footer">
+                        More info <i class="fas fa-arrow-circle-right"></i>
+                    </a>
+                </div>
+            </div>
+
+            <div class="col-lg-3 col-6">
+                <!-- In Progress Tickets -->
+                <div class="small-box bg-warning">
+                    <div class="inner">
+                        <h3>{{ in_progress_tickets }}</h3>
+                        <p>In Progress</p>
+                    </div>
+                    <div class="icon">
+                        <i class="fas fa-clock"></i>
+                    </div>
+                    <a href="{% url 'tickets:ticket_list' %}?status=In%20Progress" class="small-box-footer">
+                        More info <i class="fas fa-arrow-circle-right"></i>
+                    </a>
+                </div>
+            </div>
+
+            <div class="col-lg-3 col-6">
+                <!-- Closed Tickets -->
+                <div class="small-box bg-danger">
+                    <div class="inner">
+                        <h3>{{ closed_tickets }}</h3>
+                        <p>Closed Tickets</p>
+                    </div>
+                    <div class="icon">
+                        <i class="fas fa-check-circle"></i>
+                    </div>
+                    <a href="{% url 'tickets:ticket_list' %}?status=Closed" class="small-box-footer">
+                        More info <i class="fas fa-arrow-circle-right"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Quick Actions Row -->
         <div class="row">
             <div class="col-12">
-                <h4>Your Recent Tickets</h4>
-                <div class="row">
-                    {% for ticket in user_tickets %}
-                        <div class="col-md-6 col-lg-4 mb-3">
-                            <div class="card">
-                                <div class="card-body">
-                                    <h6 class="card-title">{{ ticket.title|truncatechars:30 }}</h6>
-                                    <p class="card-text text-muted">{{ ticket.description|truncatechars:50 }}</p>
-                                    <div class="d-flex justify-content-between align-items-center">
-                                        <span class="badge bg-{% if ticket.status == 'open' %}primary{% elif ticket.status == 'in_progress' %}warning{% else %}success{% endif %}">
-                                            {{ ticket.get_status_display }}
-                                        </span>
-                                        <a href="{% url 'tickets:ticket_detail' ticket.id %}" class="btn btn-outline-primary btn-sm">View</a>
-                                    </div>
-                                </div>
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">
+                            <i class="fas fa-bolt"></i> Quick Actions
+                        </h3>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-4">
+                                <a href="{% url 'tickets:create_ticket' %}" class="btn btn-success btn-lg btn-block">
+                                    <i class="fas fa-plus-circle"></i> Create New Ticket
+                                </a>
+                            </div>
+                            <div class="col-md-4">
+                                <a href="{% url 'tickets:ticket_list' %}" class="btn btn-primary btn-lg btn-block">
+                                    <i class="fas fa-list"></i> View All Tickets
+                                </a>
+                            </div>
+                            <div class="col-md-4">
+                                {% if user.is_staff %}
+                                    <a href="/admin/" target="_blank" class="btn btn-warning btn-lg btn-block">
+                                        <i class="fas fa-cogs"></i> Admin Panel
+                                    </a>
+                                {% else %}
+                                    <a href="{% url 'tickets:ticket_list' %}?status=Open" class="btn btn-info btn-lg btn-block">
+                                        <i class="fas fa-folder-open"></i> My Open Tickets
+                                    </a>
+                                {% endif %}
                             </div>
                         </div>
-                    {% endfor %}
+                    </div>
                 </div>
             </div>
         </div>
-    {% else %}
-        <div class="text-center py-5">
-            <h4 class="text-muted">No tickets yet</h4>
-            <p class="text-muted">Create your first ticket to get started.</p>
-            <a href="{% url 'tickets:create_ticket' %}" class="btn btn-primary">Create Ticket</a>
-        </div>
-    {% endif %}
 
-{% else %}
-    <!-- Unauthenticated User Landing Page -->
-    <div class="jumbotron bg-light p-5 rounded-lg mb-4">
-        <h1 class="display-4">Welcome to Ticket Management System</h1>
-        <p class="lead">A secure ticketing system for authorized users only.</p>
-        <hr class="my-4">
-        <p>Please sign in with your administrator-provided credentials to access the system.</p>
-        <div class="mt-4">
-            <a class="btn btn-primary btn-lg" href="{% url 'tickets:login' %}" role="button">Sign In</a>
+        <!-- Recent Tickets -->
+        <div class="row">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">
+                            <i class="fas fa-history"></i> Recent Tickets
+                        </h3>
+                        <div class="card-tools">
+                            <a href="{% url 'tickets:ticket_list' %}" class="btn btn-tool">
+                                <i class="fas fa-external-link-alt"></i> View All
+                            </a>
+                        </div>
+                    </div>
+                    <div class="card-body table-responsive p-0">
+                        {% if recent_tickets %}
+                            <table class="table table-hover text-nowrap">
+                                <thead>
+                                    <tr>
+                                        <th>ID</th>
+                                        <th>Title</th>
+                                        <th>Priority</th>
+                                        <th>Status</th>
+                                        <th>Created</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for ticket in recent_tickets %}
+                                        <tr class="{% if ticket.priority == 'Urgent' %}ticket-priority-urgent{% elif ticket.priority == 'High' %}ticket-priority-high{% elif ticket.priority == 'Medium' %}ticket-priority-medium{% else %}ticket-priority-low{% endif %}">
+                                            <td>{{ ticket.id }}</td>
+                                            <td>
+                                                <a href="{% url 'tickets:ticket_detail' ticket.pk %}">
+                                                    {{ ticket.title|truncatechars:50 }}
+                                                </a>
+                                            </td>
+                                            <td>
+                                                {% if ticket.priority == 'Urgent' %}
+                                                    <span class="badge badge-danger">
+                                                        <i class="fas fa-exclamation-triangle"></i> {{ ticket.priority }}
+                                                    </span>
+                                                {% elif ticket.priority == 'High' %}
+                                                    <span class="badge badge-warning">
+                                                        <i class="fas fa-exclamation-circle"></i> {{ ticket.priority }}
+                                                    </span>
+                                                {% elif ticket.priority == 'Medium' %}
+                                                    <span class="badge badge-info">
+                                                        <i class="fas fa-info-circle"></i> {{ ticket.priority }}
+                                                    </span>
+                                                {% else %}
+                                                    <span class="badge badge-secondary">
+                                                        <i class="fas fa-minus-circle"></i> {{ ticket.priority }}
+                                                    </span>
+                                                {% endif %}
+                                            </td>
+                                            <td>
+                                                {% if ticket.status == 'Open' %}
+                                                    <span class="badge badge-success">{{ ticket.status }}</span>
+                                                {% elif ticket.status == 'In Progress' %}
+                                                    <span class="badge badge-warning">{{ ticket.status }}</span>
+                                                {% else %}
+                                                    <span class="badge badge-secondary">{{ ticket.status }}</span>
+                                                {% endif %}
+                                            </td>
+                                            <td>
+                                                <small>{{ ticket.created_at|date:"M d, Y H:i" }}</small>
+                                            </td>
+                                            <td>
+                                                <a href="{% url 'tickets:ticket_detail' ticket.pk %}" 
+                                                   class="btn btn-sm btn-outline-primary" 
+                                                   data-toggle="tooltip" 
+                                                   title="View Details">
+                                                    <i class="fas fa-eye"></i>
+                                                </a>
+                                            </td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        {% else %}
+                            <div class="p-4 text-center">
+                                <i class="fas fa-inbox fa-3x text-muted mb-3"></i>
+                                <p class="text-muted">No tickets found. <a href="{% url 'tickets:create_ticket' %}">Create your first ticket</a>!</p>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
         </div>
+
+        <!-- Priority Distribution Chart (if you want to add charts later) -->
+        {% comment %}
+        <div class="row">
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">
+                            <i class="fas fa-chart-pie"></i> Priority Distribution
+                        </h3>
+                    </div>
+                    <div class="card-body">
+                        <!-- Chart will go here -->
+                        <canvas id="priorityChart" style="min-height: 250px; height: 250px; max-height: 250px; max-width: 100%;"></canvas>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">
+                            <i class="fas fa-chart-bar"></i> Status Overview
+                        </h3>
+                    </div>
+                    <div class="card-body">
+                        <!-- Chart will go here -->
+                        <canvas id="statusChart" style="min-height: 250px; height: 250px; max-height: 250px; max-width: 100%;"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endcomment %}
     </div>
+</section>
+{% endblock %}
 
-    <div class="row">
-        <div class="col-md-4">
-            <div class="card text-center">
-                <div class="card-body">
-                    <h5 class="card-title">🔒 Secure Access</h5>
-                    <p class="card-text">Only authorized users with admin-created accounts can access the system.</p>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-4">
-            <div class="card text-center">
-                <div class="card-body">
-                    <h5 class="card-title">🔍 Search</h5>
-                    <p class="card-text">Find tickets quickly with our search feature.</p>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-4">
-            <div class="card text-center">
-                <div class="card-body">
-                    <h5 class="card-title">⚙️ Settings</h5>
-                    <p class="card-text">Configure your ticket management preferences.</p>
-                </div>
-            </div>
-        </div>
-    </div>
-
-{% endif %}
+{% block extra_js %}
+<script>
+    $(document).ready(function() {
+        // Add any dashboard-specific JavaScript here
+        console.log('Dashboard loaded successfully!');
+        
+        // Example: Auto-refresh ticket counts every 5 minutes
+        // setInterval(function() {
+        //     location.reload();
+        // }, 300000);
+    });
+</script>
 {% endblock %}

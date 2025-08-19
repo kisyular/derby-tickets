@@ -1,11 +1,10 @@
 from django.shortcuts import render, get_object_or_404, redirect
-from django.http import HttpResponse
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.models import User
 from django.contrib import messages
-from django.db import models
-from .models import Ticket, EndUser, Admin
+from django.db.models import Q
+from .models import Ticket, UserProfile, Comment
 
 # Create your views here.
 
@@ -13,23 +12,95 @@ from .models import Ticket, EndUser, Admin
 
 @login_required
 def ticket_list(request):
-    """Display a list of all tickets"""
+    """Display a list of all tickets with filtering"""
     # Users can see all tickets they created or are assigned to
     tickets = Ticket.objects.filter(
-        models.Q(created_by=request.user) | models.Q(assigned_to=request.user)
+        Q(created_by=request.user) | Q(assigned_to=request.user)
     ).distinct()
+    
+    # Apply filters
+    status_filter = request.GET.get('status')
+    priority_filter = request.GET.get('priority')
+    search_query = request.GET.get('search')
+    
+    if status_filter:
+        tickets = tickets.filter(status=status_filter)
+    
+    if priority_filter:
+        tickets = tickets.filter(priority=priority_filter)
+    
+    if search_query:
+        tickets = tickets.filter(
+            Q(title__icontains=search_query) | Q(description__icontains=search_query)
+        )
+    
+    # Order by most recent first
+    tickets = tickets.order_by('-updated_at')
+    
     context = {'tickets': tickets}
     return render(request, 'tickets/ticket_list.html', context)
 
 @login_required
 def ticket_detail(request, ticket_id):
-    """Display details of a specific ticket"""
+    """Display details of a specific ticket with edit functionality and comments"""
     ticket = get_object_or_404(Ticket, id=ticket_id)
+    
     # Check if user has permission to view this ticket
     if ticket.created_by != request.user and ticket.assigned_to != request.user and not request.user.is_staff:
         messages.error(request, "You don't have permission to view this ticket.")
         return redirect('tickets:ticket_list')
-    context = {'ticket': ticket}
+    
+    # Handle POST requests
+    if request.method == 'POST':
+        action = request.POST.get('action', 'edit_ticket')
+        
+        if action == 'edit_ticket' and (ticket.created_by == request.user or request.user.is_staff):
+            # Handle ticket editing
+            title = request.POST.get('title')
+            description = request.POST.get('description')
+            priority = request.POST.get('priority')
+            status = request.POST.get('status')
+            
+            if title and priority and status:
+                ticket.title = title
+                ticket.description = description
+                ticket.priority = priority
+                ticket.status = status
+                ticket.save()
+                messages.success(request, 'Ticket updated successfully!')
+                return redirect('tickets:ticket_detail', ticket_id=ticket.id)
+            else:
+                messages.error(request, 'Please fill in all required fields.')
+        
+        elif action == 'add_comment':
+            # Handle comment adding
+            comment_content = request.POST.get('comment_content', '').strip()
+            is_internal = request.POST.get('is_internal') == 'on'
+            
+            if comment_content:
+                Comment.objects.create(
+                    ticket=ticket,
+                    author=request.user,
+                    content=comment_content,
+                    is_internal=is_internal and request.user.is_staff  # Only staff can create internal comments
+                )
+                messages.success(request, 'Comment added successfully!')
+                return redirect('tickets:ticket_detail', ticket_id=ticket.id)
+            else:
+                messages.error(request, 'Comment content is required.')
+    
+    # Get comments for the ticket
+    comments = ticket.comments.all()
+    
+    # Filter out internal comments for non-staff users
+    if not request.user.is_staff:
+        comments = comments.filter(is_internal=False)
+    
+    context = {
+        'ticket': ticket,
+        'comments': comments,
+        'can_add_internal_comments': request.user.is_staff
+    }
     return render(request, 'tickets/ticket_detail.html', context)
 
 @login_required
@@ -38,16 +109,25 @@ def create_ticket(request):
     if request.method == 'POST':
         title = request.POST.get('title')
         description = request.POST.get('description')
-        priority = request.POST.get('priority', 'medium')
+        priority = request.POST.get('priority', 'Medium')
         assigned_to_id = request.POST.get('assigned_to')
         
-        # Get assigned_to admin if provided
+        # Validate required fields
+        if not title or not priority:
+            messages.error(request, 'Title and priority are required.')
+            # Get only staff users for assignment dropdown (only for admin/staff users to assign)
+            assignable_users = User.objects.filter(is_staff=True) if (request.user.is_staff or request.user.is_superuser) else []
+            context = {'admin_users': assignable_users}
+            return render(request, 'tickets/create_ticket.html', context)
+        
+        # Get assigned_to user if provided (only allow if current user is staff/admin)
         assigned_to = None
-        if assigned_to_id:
+        if assigned_to_id and (request.user.is_staff or request.user.is_superuser):
             try:
+                # Only allow assignment to staff users
                 assigned_to = User.objects.get(id=assigned_to_id, is_staff=True)
             except User.DoesNotExist:
-                messages.error(request, 'Invalid admin assignment.')
+                messages.error(request, 'Invalid user assignment. Can only assign to staff users.')
         
         # Create ticket with current user as creator
         ticket = Ticket.objects.create(
@@ -57,48 +137,63 @@ def create_ticket(request):
             created_by=request.user,  # Automatically use logged-in user
             assigned_to=assigned_to
         )
-        messages.success(request, 'Ticket created successfully!')
+        messages.success(request, f'Ticket #{ticket.id} created successfully!')
         return redirect('tickets:ticket_detail', ticket_id=ticket.id)
     
-    # Get admin users for assignment dropdown (only for staff users to assign)
-    admin_users = User.objects.filter(is_staff=True) if request.user.is_staff else []
-    context = {'admin_users': admin_users}
+    # Get only staff users for assignment dropdown (only for admin/staff users to assign)
+    assignable_users = User.objects.filter(is_staff=True) if (request.user.is_staff or request.user.is_superuser) else []
+    
+    context = {'admin_users': assignable_users}
     return render(request, 'tickets/create_ticket.html', context)
 
 def home(request):
-    """Home page view"""
+    """Home page view with enhanced dashboard"""
     if request.user.is_authenticated:
-        # Show dashboard with user's tickets
+        # Get comprehensive ticket statistics
         user_tickets = Ticket.objects.filter(
-            models.Q(created_by=request.user) | models.Q(assigned_to=request.user)
-        ).distinct()[:5]  # Show latest 5 tickets
+            Q(created_by=request.user) | Q(assigned_to=request.user)
+        ).distinct()
+        
+        # Recent tickets (last 5)
+        recent_tickets = user_tickets.order_by('-updated_at')[:5]
+        
+        # Ticket counts by status
+        total_tickets = user_tickets.count()
+        open_tickets = user_tickets.filter(status='Open').count()
+        in_progress_tickets = user_tickets.filter(status='In Progress').count()
+        closed_tickets = user_tickets.filter(status='Closed').count()
         
         # Get user profile info
         profile_info = {}
-        if hasattr(request.user, 'end_user_profile'):
-            profile = request.user.end_user_profile
+        if hasattr(request.user, 'userprofile'):
+            profile = request.user.userprofile
             profile_info = {
-                'type': 'End User',
-                'role': profile.role,
-                'location': profile.location,
-                'department': profile.department
+                'type': 'Admin User' if request.user.is_staff else 'Regular User',
+                'role': profile.role or 'Not Set',
+                'location': profile.location or 'Not Set',
+                'department': profile.department or 'Not Set'
             }
-        elif hasattr(request.user, 'admin_profile'):
-            profile = request.user.admin_profile
+        else:
             profile_info = {
-                'type': 'Admin',
-                'role': profile.role
+                'type': 'Admin User' if request.user.is_staff else 'Regular User',
+                'role': 'Not Set',
+                'location': 'Not Set',
+                'department': 'Not Set'
             }
         
         context = {
-            'user_tickets': user_tickets,
+            'recent_tickets': recent_tickets,
             'profile_info': profile_info,
-            'total_tickets': Ticket.objects.count(),
-            'total_end_users': EndUser.objects.count(),
-            'total_admins': Admin.objects.count()
+            'total_tickets': total_tickets,
+            'open_tickets': open_tickets,
+            'in_progress_tickets': in_progress_tickets,
+            'closed_tickets': closed_tickets,
+            'total_users': User.objects.count(),
+            'total_staff': User.objects.filter(is_staff=True).count()
         }
     else:
         context = {}
+    
     return render(request, 'tickets/home.html', context)
 
 def user_login(request):

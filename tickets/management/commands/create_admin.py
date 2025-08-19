@@ -1,14 +1,15 @@
 from django.core.management.base import BaseCommand
 from django.contrib.auth.models import User
 from tickets.models import UserProfile
+import os
 
 class Command(BaseCommand):
     help = 'Create initial admin user for the ticket system'
 
     def add_arguments(self, parser):
-        parser.add_argument('--username', type=str, default='admin', help='Admin username')
-        parser.add_argument('--email', type=str, default='admin@example.com', help='Admin email')
-        parser.add_argument('--password', type=str, default='admin123', help='Admin password')
+        parser.add_argument('--username', type=str, default=os.environ.get('DJANGO_ADMIN_USERNAME'), help='Admin username')
+        parser.add_argument('--email', type=str, default=os.environ.get('DJANGO_ADMIN_EMAIL'), help='Admin email')
+        parser.add_argument('--password', type=str, default=os.environ.get('DJANGO_ADMIN_PASSWORD'), help='Admin password')
 
     def handle(self, *args, **options):
         username = options['username']
@@ -25,8 +26,8 @@ class Command(BaseCommand):
             username=username,
             email=email,
             password=password,
-            first_name='System',
-            last_name='Administrator'
+            first_name=os.environ.get('DJANGO_ADMIN_FIRST_NAME', 'System'),
+            last_name=os.environ.get('DJANGO_ADMIN_LAST_NAME', 'Administrator')
         )
         
         # Ensure the user profile has admin role
