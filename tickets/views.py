@@ -109,6 +109,7 @@ def create_ticket(request):
     if request.method == 'POST':
         title = request.POST.get('title')
         description = request.POST.get('description')
+        category = request.POST.get('category', '')
         priority = request.POST.get('priority', 'Medium')
         assigned_to_id = request.POST.get('assigned_to')
         
@@ -133,6 +134,7 @@ def create_ticket(request):
         ticket = Ticket.objects.create(
             title=title,
             description=description,
+            category=category,
             priority=priority,
             created_by=request.user,  # Automatically use logged-in user
             assigned_to=assigned_to

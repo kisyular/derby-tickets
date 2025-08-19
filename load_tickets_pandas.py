@@ -272,6 +272,8 @@ def load_tickets_from_csv(csv_path):
                         status=mapped_status,
                         priority=mapped_priority,
                         category=category or 'General',
+                        location=location or '',
+                        department=department or '',
                         created_at=created_at or datetime.now(pytz.UTC),
                         closed_on=closed_on,
                         due_on=due_on,

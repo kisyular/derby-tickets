@@ -52,6 +52,8 @@ class Ticket(models.Model):
     title = models.CharField(max_length=200)
     description = models.TextField()
     category = models.CharField(max_length=100, blank=True, help_text="Ticket category")
+    location = models.CharField(max_length=100, blank=True, help_text="User's location when ticket was created")
+    department = models.CharField(max_length=100, blank=True, help_text="User's department when ticket was created")
 
     # Direct relationships to User model
     created_by = models.ForeignKey(User, on_delete=models.PROTECT, related_name='created_tickets')
@@ -95,13 +97,21 @@ class Ticket(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
 
     def save(self, *args, **kwargs):
-        """Override save to handle auto timestamps based on use_auto_now flag"""
+        """Override save to handle auto timestamps and user profile info"""
         use_auto_now = kwargs.pop('use_auto_now', True)
         
         if use_auto_now and not self.created_at:
             # For new tickets created through web interface - set current time
             from django.utils import timezone
             self.created_at = timezone.now()
+        
+        # Auto-populate location and department from user profile if not set
+        if self.created_by and hasattr(self.created_by, 'userprofile'):
+            profile = self.created_by.userprofile
+            if not self.location and profile.location:
+                self.location = profile.location
+            if not self.department and profile.department:
+                self.department = profile.department
         
         super().save(*args, **kwargs)
 

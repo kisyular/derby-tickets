@@ -92,8 +92,8 @@ class UserProfileAdmin(admin.ModelAdmin):
 
 @admin.register(Ticket)
 class TicketAdmin(admin.ModelAdmin):
-    list_display = ['ticket_number', 'title', 'created_by', 'assigned_to', 'status', 'priority', 'category', 'created_at', 'closed_on', 'due_on']
-    list_filter = ['status', 'priority', 'category', 'created_at', 'closed_on', 'created_by', 'assigned_to']
+    list_display = ['ticket_number', 'title', 'created_by', 'assigned_to', 'status', 'priority', 'category', 'location', 'department', 'created_at', 'closed_on', 'due_on']
+    list_filter = ['status', 'priority', 'category', 'location', 'department', 'created_at', 'closed_on', 'created_by', 'assigned_to']
     search_fields = ['ticket_number', 'title', 'description', 'category', 'created_by__username', 'created_by__first_name', 'created_by__last_name', 'created_by__email', 
                      'assigned_to__username', 'assigned_to__first_name', 'assigned_to__last_name', 'assigned_to__email']
     list_editable = ['assigned_to', 'status', 'priority', 'category', 'created_by']
@@ -122,6 +122,10 @@ class TicketAdmin(admin.ModelAdmin):
         }),
         ('Status & Priority', {
             'fields': ('status', 'priority')
+        }),
+        ('Location & Department', {
+            'fields': ('location', 'department'),
+            'description': 'Automatically populated from user profile when ticket is created'
         }),
         ('Dates', {
             'fields': ('created_at', 'closed_on', 'due_on')
