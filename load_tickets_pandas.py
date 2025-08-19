@@ -19,7 +19,7 @@ django.setup()
 # Now import Django models after setup
 from django.db import transaction
 from django.contrib.auth.models import User
-from tickets.models import Ticket, UserProfile
+from tickets.models import Ticket, UserProfile, Category
 
 def parse_datetime(date_str):
     """Parse datetime strings from the CSV with various formats."""
@@ -56,6 +56,38 @@ def parse_datetime(date_str):
     
     print(f"Warning: Could not parse date: {date_str}")
     return None
+
+def find_or_create_category(category_name):
+    """Find an existing category by name or create 'Other' as fallback."""
+    if not category_name or pd.isna(category_name):
+        # Return 'Other' category as default
+        try:
+            return Category.objects.get(name='Other')
+        except Category.DoesNotExist:
+            print("Warning: 'Other' category not found, creating it...")
+            other_category = Category(name='Other')
+            other_category.save(use_auto_now=False)  # Use current timestamp
+            return other_category
+    
+    category_name = str(category_name).strip()
+    
+    # Try to find exact match first
+    try:
+        return Category.objects.get(name=category_name)
+    except Category.DoesNotExist:
+        # Try case-insensitive match
+        try:
+            return Category.objects.get(name__iexact=category_name)
+        except Category.DoesNotExist:
+            # If not found, return 'Other' category
+            print(f"Warning: Category '{category_name}' not found, using 'Other'")
+            try:
+                return Category.objects.get(name='Other')
+            except Category.DoesNotExist:
+                print("Warning: 'Other' category not found, creating it...")
+                other_category = Category(name='Other')
+                other_category.save(use_auto_now=False)
+                return other_category
 
 def find_or_create_user(name, department=None, location=None):
     """Find or create a user by name, handling various name formats."""
@@ -242,6 +274,9 @@ def load_tickets_from_csv(csv_path):
                     created_by = find_or_create_user(created_by_name, department, location)
                     assigned_to = find_or_create_user(assigned_to_name, department, location)
                     
+                    # Find category by name
+                    category_obj = find_or_create_category(category)
+                    
                     # Map status values
                     status_mapping = {
                         'open': 'Open',
@@ -271,7 +306,7 @@ def load_tickets_from_csv(csv_path):
                         assigned_to=assigned_to,
                         status=mapped_status,
                         priority=mapped_priority,
-                        category=category or 'General',
+                        category=category_obj,
                         location=location or '',
                         department=department or '',
                         created_at=created_at or datetime.now(pytz.UTC),

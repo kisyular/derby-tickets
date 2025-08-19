@@ -101,27 +101,11 @@
                                         id="id_category" 
                                         name="category">
                                     <option value="">Select Category (Optional)</option>
-                                    <option value="Software" {% if form.category.value == 'Software' %}selected{% endif %}>
-                                        💻 Software - Applications, programs, and software issues
-                                    </option>
-                                    <option value="Hardware" {% if form.category.value == 'Hardware' %}selected{% endif %}>
-                                        🖥️ Hardware - Computer equipment, printers, devices
-                                    </option>
-                                    <option value="Network" {% if form.category.value == 'Network' %}selected{% endif %}>
-                                        🌐 Network - Internet, email, connectivity issues
-                                    </option>
-                                    <option value="Access" {% if form.category.value == 'Access' %}selected{% endif %}>
-                                        🔐 Access - Passwords, permissions, account issues
-                                    </option>
-                                    <option value="Project" {% if form.category.value == 'Project' %}selected{% endif %}>
-                                        📋 Project - Project requests and planning
-                                    </option>
-                                    <option value="End User Support" {% if form.category.value == 'End User Support' %}selected{% endif %}>
-                                        👤 End User Support - General user assistance
-                                    </option>
-                                    <option value="Other" {% if form.category.value == 'Other' %}selected{% endif %}>
-                                        📝 Other - General requests and other issues
-                                    </option>
+                                    {% for category in categories %}
+                                        <option value="{{ category.id }}" {% if form.category.value == category.id %}selected{% endif %}>
+                                            {{ category.name }}
+                                        </option>
+                                    {% endfor %}
                                 </select>
                                 <small class="form-text text-muted">
                                     Choose the category that best describes your request to help with proper assignment.

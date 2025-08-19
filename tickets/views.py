@@ -4,7 +4,7 @@ from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.models import User
 from django.contrib import messages
 from django.db.models import Q
-from .models import Ticket, UserProfile, Comment
+from .models import Ticket, UserProfile, Comment, Category
 
 # Create your views here.
 
@@ -109,17 +109,26 @@ def create_ticket(request):
     if request.method == 'POST':
         title = request.POST.get('title')
         description = request.POST.get('description')
-        category = request.POST.get('category', '')
+        category_id = request.POST.get('category', '')
         priority = request.POST.get('priority', 'Medium')
         assigned_to_id = request.POST.get('assigned_to')
         
         # Validate required fields
         if not title or not priority:
             messages.error(request, 'Title and priority are required.')
-            # Get only staff users for assignment dropdown (only for admin/staff users to assign)
+            # Get categories and staff users for dropdowns
+            categories = Category.objects.all().order_by('name')
             assignable_users = User.objects.filter(is_staff=True) if (request.user.is_staff or request.user.is_superuser) else []
-            context = {'admin_users': assignable_users}
+            context = {'admin_users': assignable_users, 'categories': categories}
             return render(request, 'tickets/create_ticket.html', context)
+        
+        # Get category if provided
+        category = None
+        if category_id:
+            try:
+                category = Category.objects.get(id=category_id)
+            except Category.DoesNotExist:
+                messages.error(request, 'Invalid category selected.')
         
         # Get assigned_to user if provided (only allow if current user is staff/admin)
         assigned_to = None
@@ -134,7 +143,7 @@ def create_ticket(request):
         ticket = Ticket.objects.create(
             title=title,
             description=description,
-            category=category,
+            category=category,  # Now it's a ForeignKey object
             priority=priority,
             created_by=request.user,  # Automatically use logged-in user
             assigned_to=assigned_to
@@ -142,10 +151,11 @@ def create_ticket(request):
         messages.success(request, f'Ticket #{ticket.id} created successfully!')
         return redirect('tickets:ticket_detail', ticket_id=ticket.id)
     
-    # Get only staff users for assignment dropdown (only for admin/staff users to assign)
+    # Get categories and staff users for dropdowns
+    categories = Category.objects.all().order_by('name')
     assignable_users = User.objects.filter(is_staff=True) if (request.user.is_staff or request.user.is_superuser) else []
     
-    context = {'admin_users': assignable_users}
+    context = {'admin_users': assignable_users, 'categories': categories}
     return render(request, 'tickets/create_ticket.html', context)
 
 def home(request):

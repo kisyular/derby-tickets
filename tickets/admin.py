@@ -1,7 +1,7 @@
 from django.contrib import admin
 from django.contrib.auth.models import User
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
-from .models import Ticket, UserProfile, Comment
+from .models import Ticket, UserProfile, Comment, Category
 
 # Register your models here.
 
@@ -98,8 +98,10 @@ class TicketAdmin(admin.ModelAdmin):
                      'assigned_to__username', 'assigned_to__first_name', 'assigned_to__last_name', 'assigned_to__email']
     list_editable = ['assigned_to', 'status', 'priority', 'category', 'created_by']
     ordering = ['-created_at']
+    list_per_page = 25  # Default number of items per page
+    list_max_show_all = 500  # Maximum items to show when "Show all" is clicked
     date_hierarchy = 'created_at'
-    readonly_fields = ['updated_at', 'first_response_at', 'status_changed_at', 'last_user_response_at']
+    readonly_fields = ['ticket_number', 'updated_at', 'first_response_at', 'status_changed_at', 'last_user_response_at']
     
     def get_queryset(self, request):
         return super().get_queryset(request).select_related('created_by', 'assigned_to')
@@ -115,7 +117,7 @@ class TicketAdmin(admin.ModelAdmin):
     
     fieldsets = (
         ('Ticket Information', {
-            'fields': ('ticket_number', 'title', 'description', 'category')
+            'fields': ('title', 'description', 'category')
         }),
         ('Assignment', {
             'fields': ('created_by', 'assigned_to')
@@ -126,6 +128,11 @@ class TicketAdmin(admin.ModelAdmin):
         ('Location & Department', {
             'fields': ('location', 'department'),
             'description': 'Automatically populated from user profile when ticket is created'
+        }),
+        ('Ticket Details (Auto-generated)', {
+            'fields': ('ticket_number',),
+            'classes': ['collapse'],
+            'description': 'Automatically generated when ticket is created'
         }),
         ('Dates', {
             'fields': ('created_at', 'closed_on', 'due_on')
@@ -177,3 +184,22 @@ class CommentAdmin(admin.ModelAdmin):
 # Re-register Ticket with comments
 admin.site.unregister(Ticket)
 admin.site.register(Ticket, TicketAdminWithComments)
+
+# Category Admin
+@admin.register(Category)
+class CategoryAdmin(admin.ModelAdmin):
+    list_display = ['name', 'created_at', 'updated_at']
+    list_filter = ['created_at', 'updated_at']
+    search_fields = ['name']
+    ordering = ['name']
+    readonly_fields = ['created_at', 'updated_at']
+    
+    fieldsets = (
+        ('Category Information', {
+            'fields': ('name',)
+        }),
+        ('Timestamps (Read-only)', {
+            'fields': ('created_at', 'updated_at'),
+            'classes': ['collapse'],
+        }),
+    )

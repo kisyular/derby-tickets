@@ -46,12 +46,39 @@ class UserProfile(models.Model):
     def email(self):
         return self.user.email
 
+class Category(models.Model):
+    """Category model for ticket categorization with legacy timestamp support"""
+    name = models.CharField(max_length=100, unique=True)
+    created_at = models.DateTimeField(null=True, blank=True, help_text="When category was created")
+    updated_at = models.DateTimeField(null=True, blank=True, help_text="When category was last updated")
+
+    def save(self, *args, **kwargs):
+        """Override save to handle auto timestamps based on use_auto_now flag"""
+        use_auto_now = kwargs.pop('use_auto_now', True)
+        
+        if use_auto_now:
+            # For new categories created through web interface - set current time
+            from django.utils import timezone
+            now = timezone.now()
+            if not self.created_at:
+                self.created_at = now
+            self.updated_at = now
+        
+        super().save(*args, **kwargs)
+
+    def __str__(self):
+        return self.name
+
+    class Meta:
+        verbose_name_plural = "Categories"
+        ordering = ['name']
+
 class Ticket(models.Model):
     """Simplified ticket model using only Django User"""
     ticket_number = models.CharField(max_length=50, unique=True, blank=True, null=True, help_text="Sequential ticket number from external system")
     title = models.CharField(max_length=200)
     description = models.TextField()
-    category = models.CharField(max_length=100, blank=True, help_text="Ticket category")
+    category = models.ForeignKey(Category, on_delete=models.SET_NULL, null=True, blank=True, help_text="Ticket category")
     location = models.CharField(max_length=100, blank=True, help_text="User's location when ticket was created")
     department = models.CharField(max_length=100, blank=True, help_text="User's department when ticket was created")
 
@@ -97,13 +124,17 @@ class Ticket(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
 
     def save(self, *args, **kwargs):
-        """Override save to handle auto timestamps and user profile info"""
+        """Override save to handle auto timestamps, user profile info, and ticket number generation"""
         use_auto_now = kwargs.pop('use_auto_now', True)
         
         if use_auto_now and not self.created_at:
             # For new tickets created through web interface - set current time
             from django.utils import timezone
             self.created_at = timezone.now()
+        
+        # Auto-generate ticket number for new tickets if not set
+        if not self.ticket_number:
+            self.ticket_number = self._generate_ticket_number()
         
         # Auto-populate location and department from user profile if not set
         if self.created_by and hasattr(self.created_by, 'userprofile'):
@@ -114,6 +145,38 @@ class Ticket(models.Model):
                 self.department = profile.department
         
         super().save(*args, **kwargs)
+    
+    def _generate_ticket_number(self):
+        """Generate a unique ticket number."""
+        # Get the highest existing ticket number
+        last_ticket = Ticket.objects.filter(
+            ticket_number__isnull=False,
+            ticket_number__regex=r'^\d+$'  # Only numeric ticket numbers
+        ).extra(
+            select={'ticket_num_int': 'CAST(ticket_number AS INTEGER)'}
+        ).order_by('-ticket_num_int').first()
+        
+        if last_ticket and last_ticket.ticket_number.isdigit():
+            next_number = int(last_ticket.ticket_number) + 1
+        else:
+            # If no existing numeric tickets, start from a reasonable number
+            # Check if we have any imported tickets to continue the sequence
+            all_tickets = Ticket.objects.filter(ticket_number__isnull=False)
+            if all_tickets.exists():
+                # Find the highest numeric ticket number
+                max_num = 0
+                for ticket in all_tickets:
+                    try:
+                        num = int(ticket.ticket_number)
+                        if num > max_num:
+                            max_num = num
+                    except ValueError:
+                        continue
+                next_number = max_num + 1 if max_num > 0 else 1
+            else:
+                next_number = 1
+        
+        return str(next_number)
 
     def __str__(self):
         return self.title

@@ -23,6 +23,63 @@
 <!-- Main content -->
 <section class="content">
     <div class="container-fluid">
+               <!-- Summary Cards -->
+        <div class="row">
+            <div class="col-md-3">
+                <div class="info-box">
+                    <span class="info-box-icon bg-info"><i class="fas fa-list"></i></span>
+                    <div class="info-box-content">
+                        <span class="info-box-text">Total</span>
+                        <span class="info-box-number">{{ tickets|length }}</span>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="info-box">
+                    <span class="info-box-icon bg-success"><i class="fas fa-folder-open"></i></span>
+                    <div class="info-box-content">
+                        <span class="info-box-text">Open</span>
+                        <span class="info-box-number">
+                            {% for ticket in tickets %}
+                                {% if ticket.status == 'Open' %}
+                                    {% if forloop.first %}1{% else %}{{ forloop.counter }}{% endif %}
+                                {% endif %}
+                            {% empty %}0{% endfor %}
+                        </span>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="info-box">
+                    <span class="info-box-icon bg-warning"><i class="fas fa-clock"></i></span>
+                    <div class="info-box-content">
+                        <span class="info-box-text">In Progress</span>
+                        <span class="info-box-number">
+                            {% for ticket in tickets %}
+                                {% if ticket.status == 'In Progress' %}
+                                    {% if forloop.first %}1{% else %}{{ forloop.counter }}{% endif %}
+                                {% endif %}
+                            {% empty %}0{% endfor %}
+                        </span>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="info-box">
+                    <span class="info-box-icon bg-danger"><i class="fas fa-check-circle"></i></span>
+                    <div class="info-box-content">
+                        <span class="info-box-text">Closed</span>
+                        <span class="info-box-number">
+                            {% for ticket in tickets %}
+                                {% if ticket.status == 'Closed' %}
+                                    {% if forloop.first %}1{% else %}{{ forloop.counter }}{% endif %}
+                                {% endif %}
+                            {% empty %}0{% endfor %}
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
         <!-- Filter and Actions Row -->
         <div class="row mb-3">
             <div class="col-12">
@@ -249,63 +306,7 @@
             </div>
         </div>
 
-        <!-- Summary Cards -->
-        <div class="row">
-            <div class="col-md-3">
-                <div class="info-box">
-                    <span class="info-box-icon bg-info"><i class="fas fa-list"></i></span>
-                    <div class="info-box-content">
-                        <span class="info-box-text">Total</span>
-                        <span class="info-box-number">{{ tickets|length }}</span>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-3">
-                <div class="info-box">
-                    <span class="info-box-icon bg-success"><i class="fas fa-folder-open"></i></span>
-                    <div class="info-box-content">
-                        <span class="info-box-text">Open</span>
-                        <span class="info-box-number">
-                            {% for ticket in tickets %}
-                                {% if ticket.status == 'Open' %}
-                                    {% if forloop.first %}1{% else %}{{ forloop.counter }}{% endif %}
-                                {% endif %}
-                            {% empty %}0{% endfor %}
-                        </span>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-3">
-                <div class="info-box">
-                    <span class="info-box-icon bg-warning"><i class="fas fa-clock"></i></span>
-                    <div class="info-box-content">
-                        <span class="info-box-text">In Progress</span>
-                        <span class="info-box-number">
-                            {% for ticket in tickets %}
-                                {% if ticket.status == 'In Progress' %}
-                                    {% if forloop.first %}1{% else %}{{ forloop.counter }}{% endif %}
-                                {% endif %}
-                            {% empty %}0{% endfor %}
-                        </span>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-3">
-                <div class="info-box">
-                    <span class="info-box-icon bg-danger"><i class="fas fa-check-circle"></i></span>
-                    <div class="info-box-content">
-                        <span class="info-box-text">Closed</span>
-                        <span class="info-box-number">
-                            {% for ticket in tickets %}
-                                {% if ticket.status == 'Closed' %}
-                                    {% if forloop.first %}1{% else %}{{ forloop.counter }}{% endif %}
-                                {% endif %}
-                            {% empty %}0{% endfor %}
-                        </span>
-                    </div>
-                </div>
-            </div>
-        </div>
+ 
     </div>
 </section>
 {% endblock %}
