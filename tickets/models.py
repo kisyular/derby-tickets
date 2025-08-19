@@ -48,8 +48,10 @@ class UserProfile(models.Model):
 
 class Ticket(models.Model):
     """Simplified ticket model using only Django User"""
+    ticket_number = models.CharField(max_length=50, unique=True, blank=True, null=True, help_text="Sequential ticket number from external system")
     title = models.CharField(max_length=200)
     description = models.TextField()
+    category = models.CharField(max_length=100, blank=True, help_text="Ticket category")
 
     # Direct relationships to User model
     created_by = models.ForeignKey(User, on_delete=models.PROTECT, related_name='created_tickets')
@@ -66,7 +68,6 @@ class Ticket(models.Model):
         max_length=20,
         choices=[
             ('Open', 'Open'),
-            ('In Progress', 'In Progress'),
             ('Closed', 'Closed'),
         ],
         default='Open'
@@ -77,11 +78,17 @@ class Ticket(models.Model):
             ('Low', 'Low'),
             ('Medium', 'Medium'),
             ('High', 'High'),
-            ('Urgent', 'Urgent'),
         ],
         default='Medium'
     )
 
+    # Response time tracking fields
+    first_response_at = models.DateTimeField(null=True, blank=True, help_text="When first response was provided")
+    status_changed_at = models.DateTimeField(null=True, blank=True, help_text="When status was last changed")
+    last_user_response_at = models.DateTimeField(null=True, blank=True, help_text="When user last responded")
+    closed_on = models.DateTimeField(null=True, blank=True, help_text="When ticket was closed")
+    due_on = models.DateTimeField(null=True, blank=True, help_text="Due date for the ticket")
+    
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
