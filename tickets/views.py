@@ -127,16 +127,24 @@ def ticket_detail(request, ticket_id):
             else:
                 messages.error(request, 'Comment content is required.')
     
-    # Get comments for the ticket
-    comments = ticket.comments.all()
+    # Get comments for the ticket (newest first)
+    comments = ticket.comments.all().order_by('-created_at')
     
     # Filter out internal comments for non-staff users
     if not request.user.is_staff:
         comments = comments.filter(is_internal=False)
     
+    # Get related tickets using basic rule-based approach
+    try:
+        from .related_tickets import get_related_tickets_for_display
+        related_tickets = get_related_tickets_for_display(ticket)
+    except ImportError:
+        related_tickets = []
+    
     context = {
         'ticket': ticket,
         'comments': comments,
+        'related_tickets': related_tickets,
         'can_add_internal_comments': request.user.is_staff
     }
     return render(request, 'tickets/ticket_detail.html', context)

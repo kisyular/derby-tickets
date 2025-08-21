@@ -155,7 +155,7 @@ class CommentInline(admin.TabularInline):
     extra = 1
     fields = ('author', 'content', 'is_internal', 'created_at')
     readonly_fields = ('created_at',)
-    ordering = ['created_at']
+    ordering = ['-created_at']  # Newest first
 
 # Update TicketAdmin to include comments inline
 class TicketAdminWithComments(TicketAdmin):

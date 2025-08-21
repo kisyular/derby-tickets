@@ -214,7 +214,7 @@ class Comment(models.Model):
     is_internal = models.BooleanField(default=False, help_text="Internal notes visible only to staff")
     
     class Meta:
-        ordering = ['created_at']  # Oldest first for conversation flow
+        ordering = ['-created_at']  # Newest first for better UX
         verbose_name = 'Comment'
         verbose_name_plural = 'Comments'
     
