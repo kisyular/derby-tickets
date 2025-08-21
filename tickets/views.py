@@ -37,16 +37,32 @@ def ticket_list(request):
     # Order by most recent first
     tickets = tickets.order_by('-updated_at')
 
-    # Calculate status counts
+    # Calculate status and priority counts
     open_count = tickets.filter(status='Open').count()
     in_progress_count = tickets.filter(status='In Progress').count()
     closed_count = tickets.filter(status='Closed').count()
+    urgent_count = tickets.filter(priority='Urgent').count()
 
     # For admin/staff users, get all tickets assigned to them (regardless of creator)
     assigned_tickets = []
     assigned_count = 0
     if request.user.is_staff or request.user.is_superuser:
-        assigned_tickets = Ticket.objects.filter(assigned_to=request.user).order_by('-updated_at')
+        assigned_tickets = Ticket.objects.filter(assigned_to=request.user)
+        
+        # Apply the same filters to assigned tickets
+        if status_filter:
+            assigned_tickets = assigned_tickets.filter(status=status_filter)
+        
+        if priority_filter:
+            assigned_tickets = assigned_tickets.filter(priority=priority_filter)
+        
+        if search_query:
+            assigned_tickets = assigned_tickets.filter(
+                Q(title__icontains=search_query) | Q(description__icontains=search_query)
+            )
+        
+        # Order by most recent first
+        assigned_tickets = assigned_tickets.order_by('-updated_at')
         assigned_count = assigned_tickets.count()
 
     context = {
@@ -54,6 +70,7 @@ def ticket_list(request):
         'open_count': open_count,
         'in_progress_count': in_progress_count,
         'closed_count': closed_count,
+        'urgent_count': urgent_count,
         'assigned_tickets': assigned_tickets,
         'assigned_count': assigned_count,
     }

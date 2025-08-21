@@ -108,6 +108,7 @@ class Ticket(models.Model):
             ('Low', 'Low'),
             ('Medium', 'Medium'),
             ('High', 'High'),
+            ('Urgent', 'Urgent'),
         ],
         default='Medium'
     )

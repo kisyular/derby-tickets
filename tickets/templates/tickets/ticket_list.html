@@ -43,18 +43,19 @@
                     </div>
                 </div>
             </div>
+
             <div class="col-md-3">
                 <div class="info-box">
-                    <span class="info-box-icon bg-warning"><i class="fas fa-clock"></i></span>
+                    <span class="info-box-icon bg-danger"><i class="fas fa-exclamation-triangle"></i></span>
                     <div class="info-box-content">
-                        <span class="info-box-text">In Progress</span>
-                        <span class="info-box-number">{{ in_progress_count }}</span>
+                        <span class="info-box-text">Urgent</span>
+                        <span class="info-box-number">{{ urgent_count }}</span>
                     </div>
                 </div>
             </div>
             <div class="col-md-3">
                 <div class="info-box">
-                    <span class="info-box-icon bg-danger"><i class="fas fa-check-circle"></i></span>
+                    <span class="info-box-icon bg-secondary"><i class="fas fa-check-circle"></i></span>
                     <div class="info-box-content">
                         <span class="info-box-text">Closed</span>
                         <span class="info-box-number">{{ closed_count }}</span>
@@ -71,6 +72,11 @@
                             <i class="fas fa-filter"></i> Filters & Actions
                         </h3>
                         <div class="card-tools">
+                            {% if user.is_staff or user.is_superuser %}
+                                <small class="text-muted mr-3">
+                                    <i class="fas fa-info-circle"></i> Filters apply to both tables
+                                </small>
+                            {% endif %}
                             <a href="{% url 'tickets:create_ticket' %}" class="btn btn-success btn-sm">
                                 <i class="fas fa-plus-circle"></i> Create New Ticket
                             </a>
@@ -303,7 +309,7 @@
                         <h3 class="card-title">
                             <i class="fas fa-user-check"></i> 
                             Tickets Assigned to Me
-                            ({{ assigned_count }})
+                            ({{ assigned_count }}{% if request.GET.status or request.GET.priority or request.GET.search %} filtered{% endif %})
                         </h3>
                         <div class="card-tools">
                             <div class="btn-group">
