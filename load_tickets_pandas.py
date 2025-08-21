@@ -282,8 +282,6 @@ def load_tickets_from_csv(csv_path):
                         'open': 'Open',
                         'closed': 'Closed', 
                         'in progress': 'In Progress',
-                        'pending': 'Open',  # Map pending to Open
-                        'resolved': 'Closed',  # Map resolved to Closed
                     }
                     mapped_status = status_mapping.get(status.lower(), 'Open')
                     
@@ -292,8 +290,6 @@ def load_tickets_from_csv(csv_path):
                         'low': 'Low',
                         'medium': 'Medium',
                         'high': 'High',
-                        'urgent': 'High',  # Map urgent to High
-                        'critical': 'High',  # Map critical to High
                     }
                     mapped_priority = priority_mapping.get(priority.lower(), 'Medium')
                     
