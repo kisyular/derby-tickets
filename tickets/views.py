@@ -13,9 +13,9 @@ from .models import Ticket, UserProfile, Comment, Category
 @login_required
 def ticket_list(request):
     """Display a list of all tickets with filtering"""
-    # Users can see all tickets they created or are assigned to
+    # Users can see all tickets they created
     tickets = Ticket.objects.filter(
-        Q(created_by=request.user) | Q(assigned_to=request.user)
+        Q(created_by=request.user)
     ).distinct()
     
     # Apply filters
@@ -36,8 +36,27 @@ def ticket_list(request):
     
     # Order by most recent first
     tickets = tickets.order_by('-updated_at')
-    
-    context = {'tickets': tickets}
+
+    # Calculate status counts
+    open_count = tickets.filter(status='Open').count()
+    in_progress_count = tickets.filter(status='In Progress').count()
+    closed_count = tickets.filter(status='Closed').count()
+
+    # For admin/staff users, get all tickets assigned to them (regardless of creator)
+    assigned_tickets = []
+    assigned_count = 0
+    if request.user.is_staff or request.user.is_superuser:
+        assigned_tickets = Ticket.objects.filter(assigned_to=request.user).order_by('-updated_at')
+        assigned_count = assigned_tickets.count()
+
+    context = {
+        'tickets': tickets,
+        'open_count': open_count,
+        'in_progress_count': in_progress_count,
+        'closed_count': closed_count,
+        'assigned_tickets': assigned_tickets,
+        'assigned_count': assigned_count,
+    }
     return render(request, 'tickets/ticket_list.html', context)
 
 @login_required
