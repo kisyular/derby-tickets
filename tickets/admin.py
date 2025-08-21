@@ -142,6 +142,12 @@ class TicketAdmin(admin.ModelAdmin):
             'classes': ['collapse'],
         }),
     )
+    
+    def save_model(self, request, obj, form, change):
+        """Save model and track who made the changes for email notifications."""
+        # Set the user who made the changes for email notifications
+        obj._updated_by = request.user
+        super().save_model(request, obj, form, change)
 
 # Inline for Comments to be displayed within Ticket admin
 class CommentInline(admin.TabularInline):

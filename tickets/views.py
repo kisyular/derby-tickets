@@ -102,6 +102,8 @@ def ticket_detail(request, ticket_id):
                 ticket.description = description
                 ticket.priority = priority
                 ticket.status = status
+                # Set the user who made the changes for email notifications
+                ticket._updated_by = request.user
                 ticket.save()
                 messages.success(request, 'Ticket updated successfully!')
                 return redirect('tickets:ticket_detail', ticket_id=ticket.id)
