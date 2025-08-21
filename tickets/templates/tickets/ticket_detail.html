@@ -9,19 +9,8 @@
         <div class="row mb-2">
             <div class="col-sm-6">
                 <h1 class="m-0">Ticket #{{ ticket.id }}</h1>
-            <                        </div>
-                        {% if user.is_staff %}
-                        <div class="col-md-6">
-                            <div class="form-group">
-                                <label for="status">Status</label>
-                                <select class="form-control" id="status" name="status">
-                                    <option value="Open" {% if ticket.status == 'Open' %}selected{% endif %}>Open</option>
-                                    <option value="In Progress" {% if ticket.status == 'In Progress' %}selected{% endif %}>In Progress</option>
-                                    <option value="Closed" {% if ticket.status == 'Closed' %}selected{% endif %}>Closed</option>
-                                </select>
-                            </div>
-                        </div>
-                        {% endif %}      <div class="col-sm-6">
+            </div>
+            <div class="col-sm-6">
                 <ol class="breadcrumb float-sm-right">
                     <li class="breadcrumb-item"><a href="{% url 'tickets:home' %}">Home</a></li>
                     <li class="breadcrumb-item"><a href="{% url 'tickets:ticket_list' %}">Tickets</a></li>
