@@ -1,0 +1,251 @@
+{% extends 'tickets/base.html' %} {% block title %}Data Upload Dashboard -
+Admin{% endblock %} {% block content %}
+<!-- Content Header (Page header) -->
+<div class="content-header">
+  <div class="container-fluid">
+    <div class="row mb-2">
+      <div class="col-sm-6">
+        <h1 class="m-0">📁 Data Upload Dashboard</h1>
+      </div>
+      <div class="col-sm-6">
+        <ol class="breadcrumb float-sm-right">
+          <li class="breadcrumb-item">
+            <a href="{% url 'tickets:home' %}">Dashboard</a>
+          </li>
+          <li class="breadcrumb-item active">Data Upload</li>
+        </ol>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Main content -->
+<section class="content">
+  <div class="container-fluid">
+    <!-- Current Data Stats -->
+    <div class="row">
+      <div class="col-lg-4 col-6">
+        <div class="small-box bg-info">
+          <div class="inner">
+            <h3>{{ total_tickets }}</h3>
+            <p>Total Tickets</p>
+          </div>
+          <div class="icon">
+            <i class="fas fa-ticket-alt"></i>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-lg-4 col-6">
+        <div class="small-box bg-success">
+          <div class="inner">
+            <h3>{{ total_categories }}</h3>
+            <p>Total Categories</p>
+          </div>
+          <div class="icon">
+            <i class="fas fa-tags"></i>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-lg-4 col-6">
+        <div class="small-box bg-warning">
+          <div class="inner">
+            <h3>{{ total_users }}</h3>
+            <p>Total Users</p>
+          </div>
+          <div class="icon">
+            <i class="fas fa-users"></i>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Upload Options -->
+    <div class="row">
+      <div class="col-md-6">
+        <div class="card card-primary">
+          <div class="card-header">
+            <h3 class="card-title">
+              <i class="fas fa-upload"></i> Upload Tickets
+            </h3>
+          </div>
+          <div class="card-body">
+            <p>Upload tickets from CSV file with support for:</p>
+            <ul>
+              <li>Bulk ticket import</li>
+              <li>User auto-creation</li>
+              <li>Category assignment</li>
+              <li>Date parsing</li>
+              <li>Data validation</li>
+            </ul>
+            <div class="row">
+              <div class="col-6">
+                <a
+                  href="{% url 'tickets:upload_tickets' %}"
+                  class="btn btn-primary btn-block"
+                >
+                  <i class="fas fa-file-upload"></i> Upload Tickets
+                </a>
+              </div>
+              <div class="col-6">
+                <a
+                  href="{% url 'tickets:download_sample_csv' 'tickets' %}"
+                  class="btn btn-outline-primary btn-block"
+                >
+                  <i class="fas fa-download"></i> Sample CSV
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-md-6">
+        <div class="card card-success">
+          <div class="card-header">
+            <h3 class="card-title">
+              <i class="fas fa-tags"></i> Manage Categories
+            </h3>
+          </div>
+          <div class="card-body">
+            <p>Manage ticket categories with options for:</p>
+            <ul>
+              <li>CSV bulk upload</li>
+              <li>Manual category creation</li>
+              <li>Category validation</li>
+              <li>Duplicate detection</li>
+              <li>Predefined categories</li>
+            </ul>
+            <div class="row">
+              <div class="col-6">
+                <a
+                  href="{% url 'tickets:upload_categories' %}"
+                  class="btn btn-success btn-block"
+                >
+                  <i class="fas fa-cog"></i> Manage Categories
+                </a>
+              </div>
+              <div class="col-6">
+                <a
+                  href="{% url 'tickets:download_sample_csv' 'categories' %}"
+                  class="btn btn-outline-success btn-block"
+                >
+                  <i class="fas fa-download"></i> Sample CSV
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Management Commands Info -->
+    <div class="row">
+      <div class="col-12">
+        <div class="card card-info">
+          <div class="card-header">
+            <h3 class="card-title">
+              <i class="fas fa-terminal"></i> Management Commands
+            </h3>
+          </div>
+          <div class="card-body">
+            <p>
+              For advanced users, you can also use Django management commands:
+            </p>
+            <div class="row">
+              <div class="col-md-6">
+                <h5>Data Loading Commands:</h5>
+                <code>python manage.py load_tickets file.csv --clean</code
+                ><br />
+                <code>python manage.py load_categories --clean</code><br />
+                <code>python manage.py clean_tickets --confirm</code>
+              </div>
+              <div class="col-md-6">
+                <h5>Database Inspection:</h5>
+                <code>python manage.py scan_database</code><br />
+                <code>python manage.py scan_database --model tickets</code
+                ><br />
+                <code>python manage.py scan_database --limit 10</code>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="row">
+      <div class="col-12">
+        <div class="card card-warning">
+          <div class="card-header">
+            <h3 class="card-title">
+              <i class="fas fa-tools"></i> Quick Actions
+            </h3>
+          </div>
+          <div class="card-body">
+            <div class="row">
+              <div class="col-md-3">
+                <form
+                  method="post"
+                  action="{% url 'tickets:process_upload' %}"
+                  onsubmit="return confirm('Load predefined categories? This will add standard IT categories.')"
+                >
+                  {% csrf_token %}
+                  <input
+                    type="hidden"
+                    name="action"
+                    value="load_predefined_categories"
+                  />
+                  <button type="submit" class="btn btn-warning btn-block">
+                    <i class="fas fa-download"></i> Load Predefined Categories
+                  </button>
+                </form>
+                <small class="text-muted">Loads standard IT categories</small>
+              </div>
+              <div class="col-md-3">
+                <a
+                  href="{% url 'tickets:scan_database' %}"
+                  class="btn btn-info btn-block"
+                >
+                  <i class="fas fa-search"></i> Scan Database
+                </a>
+                <small class="text-muted">View current database contents</small>
+              </div>
+              <div class="col-md-3">
+                <a
+                  href="{% url 'tickets:ticket_list' %}"
+                  class="btn btn-primary btn-block"
+                >
+                  <i class="fas fa-list"></i> View All Tickets
+                </a>
+                <small class="text-muted">Browse uploaded tickets</small>
+              </div>
+              <div class="col-md-3">
+                <a
+                  href="{% url 'tickets:security_dashboard' %}"
+                  class="btn btn-secondary btn-block"
+                >
+                  <i class="fas fa-shield-alt"></i> Security Dashboard
+                </a>
+                <small class="text-muted">Monitor system security</small>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+{% endblock %} {% block extra_js %}
+<script>
+  $(document).ready(function() {
+      // Display success/error messages if any
+      {% if messages %}
+          {% for message in messages %}
+              toastr.{{ message.tags }}('{{ message }}');
+          {% endfor %}
+      {% endif %}
+  });
+</script>
+{% endblock %}

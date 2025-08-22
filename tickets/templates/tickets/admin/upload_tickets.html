@@ -1,0 +1,942 @@
+{% extends 'tickets/base.html' %} {% block title %}Upload Tickets - Admin{%
+endblock %} {% block extra_css %}
+<style>
+  .upload-area {
+    border: 2px dashed #007bff;
+    border-radius: 10px;
+    padding: 40px;
+    text-align: center;
+    background-color: #f8f9fa;
+    transition: all 0.3s ease;
+    cursor: pointer;
+  }
+
+  .upload-area:hover {
+    border-color: #0056b3;
+    background-color: #e9ecef;
+  }
+
+  .upload-area.dragover {
+    border-color: #28a745;
+    background-color: #d4edda;
+  }
+
+  .file-info {
+    display: none;
+    margin-top: 20px;
+  }
+
+  .preview-table {
+    max-height: 400px;
+    overflow-y: auto;
+  }
+
+  .step {
+    display: none;
+  }
+
+  .step.active {
+    display: block;
+  }
+
+  .step-indicator {
+    counter-reset: step;
+  }
+
+  .step-indicator li {
+    counter-increment: step;
+    position: relative;
+    display: inline-block;
+    padding: 10px 20px;
+    margin: 0 10px;
+    background: #f8f9fa;
+    border-radius: 5px;
+  }
+
+  .step-indicator li.completed {
+    background: #28a745;
+    color: white;
+  }
+
+  .step-indicator li.active {
+    background: #007bff;
+    color: white;
+  }
+
+  .progress-bar-custom {
+    height: 25px;
+    font-size: 14px;
+    line-height: 25px;
+  }
+</style>
+{% endblock %} {% block content %}
+<!-- Content Header -->
+<div class="content-header">
+  <div class="container-fluid">
+    <div class="row mb-2">
+      <div class="col-sm-6">
+        <h1 class="m-0">📂 Upload Tickets</h1>
+      </div>
+      <div class="col-sm-6">
+        <ol class="breadcrumb float-sm-right">
+          <li class="breadcrumb-item">
+            <a href="{% url 'tickets:home' %}">Dashboard</a>
+          </li>
+          <li class="breadcrumb-item">
+            <a href="{% url 'tickets:data_upload_dashboard' %}">Data Upload</a>
+          </li>
+          <li class="breadcrumb-item active">Upload Tickets</li>
+        </ol>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Main content -->
+<section class="content">
+  <div class="container-fluid">
+    <!-- Step Indicator -->
+    <div class="row mb-4">
+      <div class="col-12">
+        <div class="card">
+          <div class="card-body">
+            <ol
+              class="step-indicator list-unstyled d-flex justify-content-center"
+            >
+              <li id="step-1-indicator" class="active">1. Select File</li>
+              <li id="step-2-indicator">2. Preview Data</li>
+              <li id="step-3-indicator">3. Configure Import</li>
+              <li id="step-4-indicator">4. Process & Results</li>
+            </ol>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Step 1: File Selection -->
+    <div id="step-1" class="step active">
+      <div class="row">
+        <div class="col-md-8 offset-md-2">
+          <div class="card card-primary">
+            <div class="card-header">
+              <h3 class="card-title">
+                <i class="fas fa-file-upload"></i> Select CSV File
+              </h3>
+            </div>
+            <div class="card-body">
+              <form id="upload-form" enctype="multipart/form-data">
+                {% csrf_token %}
+
+                <!-- Drag & Drop Area -->
+                <div class="upload-area" id="upload-area">
+                  <i
+                    class="fas fa-cloud-upload-alt fa-3x text-primary mb-3"
+                  ></i>
+                  <h4>Drag & Drop CSV File Here</h4>
+                  <p class="text-muted">or click to browse files</p>
+                  <input
+                    type="file"
+                    id="file-input"
+                    name="csv_file"
+                    accept=".csv"
+                    style="display: none"
+                  />
+                </div>
+
+                <!-- File Info -->
+                <div class="file-info" id="file-info">
+                  <div class="alert alert-info">
+                    <strong id="file-name"></strong>
+                    <br />
+                    <small
+                      >Size: <span id="file-size"></span> | Type:
+                      <span id="file-type"></span
+                    ></small>
+                  </div>
+                </div>
+
+                <!-- Sample Format Info -->
+                <div class="mt-4">
+                  <h5>Expected CSV Format:</h5>
+                  <div class="table-responsive">
+                    <table class="table table-sm table-bordered">
+                      <thead class="table-light">
+                        <tr>
+                          <th>ticket_id</th>
+                          <th>user_email</th>
+                          <th>category</th>
+                          <th>subject</th>
+                          <th>description</th>
+                          <th>priority</th>
+                          <th>status</th>
+                          <th>created_at</th>
+                          <th>resolved_at</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        <tr class="text-muted">
+                          <td>TKT001</td>
+                          <td>user@company.com</td>
+                          <td>Software</td>
+                          <td>Login Issue</td>
+                          <td>Cannot access system</td>
+                          <td>High</td>
+                          <td>Resolved</td>
+                          <td>2024-01-15 10:30:00</td>
+                          <td>2024-01-15 14:00:00</td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+                  <div class="mt-2">
+                    <a
+                      href="{% url 'tickets:download_sample_csv' 'tickets' %}"
+                      class="btn btn-outline-primary btn-sm"
+                    >
+                      <i class="fas fa-download"></i> Download Sample CSV
+                    </a>
+                  </div>
+                </div>
+              </form>
+            </div>
+            <div class="card-footer">
+              <button
+                type="button"
+                class="btn btn-primary"
+                id="next-step-1"
+                disabled
+              >
+                Next: Preview Data <i class="fas fa-arrow-right"></i>
+              </button>
+              <a
+                href="{% url 'tickets:data_upload_dashboard' %}"
+                class="btn btn-secondary float-right"
+              >
+                <i class="fas fa-arrow-left"></i> Back to Dashboard
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Step 2: Preview Data -->
+    <div id="step-2" class="step">
+      <div class="row">
+        <div class="col-12">
+          <div class="card card-info">
+            <div class="card-header">
+              <h3 class="card-title">
+                <i class="fas fa-eye"></i> Preview Data
+              </h3>
+            </div>
+            <div class="card-body">
+              <!-- Progress Bar -->
+              <div
+                class="progress mb-3"
+                style="display: none"
+                id="preview-progress"
+              >
+                <div
+                  class="progress-bar progress-bar-striped progress-bar-animated progress-bar-custom"
+                  role="progressbar"
+                  style="width: 0%"
+                >
+                  Analyzing file...
+                </div>
+              </div>
+
+              <!-- File Stats -->
+              <div class="row mb-3" id="file-stats" style="display: none">
+                <div class="col-md-3">
+                  <div class="info-box bg-info">
+                    <span class="info-box-icon"
+                      ><i class="fas fa-file"></i
+                    ></span>
+                    <div class="info-box-content">
+                      <span class="info-box-text">Total Rows</span>
+                      <span class="info-box-number" id="total-rows">0</span>
+                    </div>
+                  </div>
+                </div>
+                <div class="col-md-3">
+                  <div class="info-box bg-success">
+                    <span class="info-box-icon"
+                      ><i class="fas fa-check"></i
+                    ></span>
+                    <div class="info-box-content">
+                      <span class="info-box-text">Valid Rows</span>
+                      <span class="info-box-number" id="valid-rows">0</span>
+                    </div>
+                  </div>
+                </div>
+                <div class="col-md-3">
+                  <div class="info-box bg-warning">
+                    <span class="info-box-icon"
+                      ><i class="fas fa-exclamation"></i
+                    ></span>
+                    <div class="info-box-content">
+                      <span class="info-box-text">Warnings</span>
+                      <span class="info-box-number" id="warning-count">0</span>
+                    </div>
+                  </div>
+                </div>
+                <div class="col-md-3">
+                  <div class="info-box bg-danger">
+                    <span class="info-box-icon"
+                      ><i class="fas fa-times"></i
+                    ></span>
+                    <div class="info-box-content">
+                      <span class="info-box-text">Errors</span>
+                      <span class="info-box-number" id="error-count">0</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Validation Messages -->
+              <div id="validation-messages"></div>
+
+              <!-- Data Preview Table -->
+              <div
+                class="preview-table"
+                id="preview-table-container"
+                style="display: none"
+              >
+                <h5>Data Preview (First 10 rows):</h5>
+                <div class="table-responsive">
+                  <table
+                    class="table table-striped table-sm"
+                    id="preview-table"
+                  >
+                    <thead class="table-dark"></thead>
+                    <tbody></tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+            <div class="card-footer">
+              <button type="button" class="btn btn-secondary" id="prev-step-2">
+                <i class="fas fa-arrow-left"></i> Previous
+              </button>
+              <button
+                type="button"
+                class="btn btn-info"
+                id="next-step-2"
+                disabled
+              >
+                Next: Configure Import <i class="fas fa-arrow-right"></i>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Step 3: Configure Import -->
+    <div id="step-3" class="step">
+      <div class="row">
+        <div class="col-md-6">
+          <div class="card card-warning">
+            <div class="card-header">
+              <h3 class="card-title">
+                <i class="fas fa-cog"></i> Import Configuration
+              </h3>
+            </div>
+            <div class="card-body">
+              <form id="config-form">
+                <div class="form-group">
+                  <label for="clean-before-import">
+                    <input
+                      type="checkbox"
+                      id="clean-before-import"
+                      name="clean_before_import"
+                    />
+                    Clean existing tickets before import
+                  </label>
+                  <small class="form-text text-muted">
+                    This will delete all existing tickets and user profiles
+                    before importing new data.
+                  </small>
+                </div>
+
+                <div class="form-group">
+                  <label for="update-existing">
+                    <input
+                      type="checkbox"
+                      id="update-existing"
+                      name="update_existing"
+                      checked
+                    />
+                    Update existing tickets if found
+                  </label>
+                  <small class="form-text text-muted">
+                    Update tickets with the same ticket_id instead of creating
+                    duplicates.
+                  </small>
+                </div>
+
+                <div class="form-group">
+                  <label for="create-users">
+                    <input
+                      type="checkbox"
+                      id="create-users"
+                      name="create_users"
+                      checked
+                    />
+                    Automatically create missing users
+                  </label>
+                  <small class="form-text text-muted">
+                    Create user profiles for email addresses not found in the
+                    system.
+                  </small>
+                </div>
+
+                <div class="form-group">
+                  <label for="create-categories">
+                    <input
+                      type="checkbox"
+                      id="create-categories"
+                      name="create_categories"
+                      checked
+                    />
+                    Automatically create missing categories
+                  </label>
+                  <small class="form-text text-muted">
+                    Create category entries for categories not found in the
+                    system.
+                  </small>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-md-6">
+          <div class="card card-info">
+            <div class="card-header">
+              <h3 class="card-title">
+                <i class="fas fa-info-circle"></i> Import Summary
+              </h3>
+            </div>
+            <div class="card-body">
+              <div id="import-summary">
+                <p>
+                  <strong>File:</strong> <span id="summary-filename">-</span>
+                </p>
+                <p>
+                  <strong>Total Records:</strong>
+                  <span id="summary-total">-</span>
+                </p>
+                <p>
+                  <strong>Valid Records:</strong>
+                  <span id="summary-valid">-</span>
+                </p>
+                <p>
+                  <strong>Estimated Processing Time:</strong>
+                  <span id="summary-time">-</span>
+                </p>
+              </div>
+
+              <div class="alert alert-warning">
+                <h6>
+                  <i class="fas fa-exclamation-triangle"></i> Important Notes:
+                </h6>
+                <ul class="mb-0">
+                  <li>This operation cannot be undone easily</li>
+                  <li>Large files may take several minutes to process</li>
+                  <li>Ensure you have a database backup if needed</li>
+                  <li>Invalid records will be skipped and logged</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="col-12">
+          <div class="card-footer">
+            <button type="button" class="btn btn-secondary" id="prev-step-3">
+              <i class="fas fa-arrow-left"></i> Previous
+            </button>
+            <button type="button" class="btn btn-warning" id="start-import">
+              <i class="fas fa-play"></i> Start Import Process
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Step 4: Process & Results -->
+    <div id="step-4" class="step">
+      <div class="row">
+        <div class="col-12">
+          <div class="card card-success">
+            <div class="card-header">
+              <h3 class="card-title">
+                <i class="fas fa-cogs"></i> Import Process
+              </h3>
+            </div>
+            <div class="card-body">
+              <!-- Import Progress -->
+              <div class="mb-4">
+                <h5>Import Progress:</h5>
+                <div class="progress">
+                  <div
+                    class="progress-bar progress-bar-striped progress-bar-animated progress-bar-custom"
+                    id="import-progress"
+                    role="progressbar"
+                    style="width: 0%"
+                  >
+                    Initializing...
+                  </div>
+                </div>
+                <div class="mt-2">
+                  <span id="progress-text">Preparing to import...</span>
+                </div>
+              </div>
+
+              <!-- Real-time Log -->
+              <div class="mb-4">
+                <h5>Import Log:</h5>
+                <div class="card">
+                  <div
+                    class="card-body p-2"
+                    style="
+                      height: 300px;
+                      overflow-y: auto;
+                      background-color: #f8f9fa;
+                      font-family: monospace;
+                    "
+                  >
+                    <div id="import-log">
+                      <div class="text-muted">
+                        Waiting for import to start...
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Results Summary -->
+              <div id="results-summary" style="display: none">
+                <h5>Import Results:</h5>
+                <div class="row">
+                  <div class="col-md-3">
+                    <div class="info-box bg-success">
+                      <span class="info-box-icon"
+                        ><i class="fas fa-check"></i
+                      ></span>
+                      <div class="info-box-content">
+                        <span class="info-box-text">Processed</span>
+                        <span class="info-box-number" id="result-processed"
+                          >0</span
+                        >
+                      </div>
+                    </div>
+                  </div>
+                  <div class="col-md-3">
+                    <div class="info-box bg-info">
+                      <span class="info-box-icon"
+                        ><i class="fas fa-plus"></i
+                      ></span>
+                      <div class="info-box-content">
+                        <span class="info-box-text">Created</span>
+                        <span class="info-box-number" id="result-created"
+                          >0</span
+                        >
+                      </div>
+                    </div>
+                  </div>
+                  <div class="col-md-3">
+                    <div class="info-box bg-warning">
+                      <span class="info-box-icon"
+                        ><i class="fas fa-edit"></i
+                      ></span>
+                      <div class="info-box-content">
+                        <span class="info-box-text">Updated</span>
+                        <span class="info-box-number" id="result-updated"
+                          >0</span
+                        >
+                      </div>
+                    </div>
+                  </div>
+                  <div class="col-md-3">
+                    <div class="info-box bg-danger">
+                      <span class="info-box-icon"
+                        ><i class="fas fa-times"></i
+                      ></span>
+                      <div class="info-box-content">
+                        <span class="info-box-text">Failed</span>
+                        <span class="info-box-number" id="result-failed"
+                          >0</span
+                        >
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="card-footer">
+              <a
+                href="{% url 'tickets:data_upload_dashboard' %}"
+                class="btn btn-success"
+                id="finish-button"
+                style="display: none"
+              >
+                <i class="fas fa-check"></i> Finish & Return to Dashboard
+              </a>
+              <a
+                href="{% url 'tickets:ticket_list' %}"
+                class="btn btn-primary"
+                id="view-tickets-button"
+                style="display: none"
+              >
+                <i class="fas fa-list"></i> View Imported Tickets
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+{% endblock %} {% block extra_js %}
+<script>
+  $(document).ready(function () {
+    let currentStep = 1;
+    let uploadedFile = null;
+    let validationResults = null;
+
+    // File upload handling
+    $("#upload-area").on("click", function () {
+      $("#file-input").click();
+    });
+
+    // Drag and drop
+    $("#upload-area").on("dragover", function (e) {
+      e.preventDefault();
+      $(this).addClass("dragover");
+    });
+
+    $("#upload-area").on("dragleave", function (e) {
+      e.preventDefault();
+      $(this).removeClass("dragover");
+    });
+
+    $("#upload-area").on("drop", function (e) {
+      e.preventDefault();
+      $(this).removeClass("dragover");
+      const files = e.originalEvent.dataTransfer.files;
+      if (files.length > 0) {
+        handleFileSelection(files[0]);
+      }
+    });
+
+    $("#file-input").on("change", function () {
+      if (this.files.length > 0) {
+        handleFileSelection(this.files[0]);
+      }
+    });
+
+    function handleFileSelection(file) {
+      if (!file.name.toLowerCase().endsWith(".csv")) {
+        toastr.error("Please select a CSV file.");
+        return;
+      }
+
+      uploadedFile = file;
+      $("#file-name").text(file.name);
+      $("#file-size").text(formatFileSize(file.size));
+      $("#file-type").text(file.type || "text/csv");
+      $("#file-info").show();
+      $("#next-step-1").prop("disabled", false);
+    }
+
+    function formatFileSize(bytes) {
+      if (bytes === 0) return "0 Bytes";
+      const k = 1024;
+      const sizes = ["Bytes", "KB", "MB", "GB"];
+      const i = Math.floor(Math.log(bytes) / Math.log(k));
+      return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + " " + sizes[i];
+    }
+
+    // Step navigation
+    $("#next-step-1").on("click", function () {
+      if (uploadedFile) {
+        goToStep(2);
+        previewFile();
+      }
+    });
+
+    $("#prev-step-2").on("click", function () {
+      goToStep(1);
+    });
+
+    $("#next-step-2").on("click", function () {
+      goToStep(3);
+      updateImportSummary();
+    });
+
+    $("#prev-step-3").on("click", function () {
+      goToStep(2);
+    });
+
+    $("#start-import").on("click", function () {
+      goToStep(4);
+      startImport();
+    });
+
+    function goToStep(step) {
+      // Hide all steps
+      $(".step").removeClass("active");
+      $(".step-indicator li").removeClass("active completed");
+
+      // Show current step
+      $("#step-" + step).addClass("active");
+      $("#step-" + step + "-indicator").addClass("active");
+
+      // Mark completed steps
+      for (let i = 1; i < step; i++) {
+        $("#step-" + i + "-indicator").addClass("completed");
+      }
+
+      currentStep = step;
+    }
+
+    function previewFile() {
+      if (!uploadedFile) return;
+
+      $("#preview-progress").show();
+      const progressBar = $("#preview-progress .progress-bar");
+
+      // Simulate progress
+      let progress = 0;
+      const progressInterval = setInterval(function () {
+        progress += 10;
+        progressBar.css("width", progress + "%");
+        if (progress >= 50) {
+          clearInterval(progressInterval);
+        }
+      }, 100);
+
+      const formData = new FormData();
+      formData.append("csv_file", uploadedFile);
+      formData.append("action", "validate");
+      formData.append(
+        "csrfmiddlewaretoken",
+        $("[name=csrfmiddlewaretoken]").val()
+      );
+
+      $.ajax({
+        url: '{% url "tickets:process_upload" %}',
+        type: "POST",
+        data: formData,
+        processData: false,
+        contentType: false,
+        success: function (response) {
+          clearInterval(progressInterval);
+          progressBar.css("width", "100%");
+
+          setTimeout(function () {
+            $("#preview-progress").hide();
+            displayValidationResults(response);
+          }, 500);
+        },
+        error: function (xhr, status, error) {
+          clearInterval(progressInterval);
+          $("#preview-progress").hide();
+          toastr.error("Error validating file: " + error);
+        },
+      });
+    }
+
+    function displayValidationResults(results) {
+      validationResults = results;
+
+      // Update stats
+      $("#total-rows").text(results.stats.total_rows);
+      $("#valid-rows").text(results.stats.valid_rows);
+      $("#warning-count").text(results.stats.warnings);
+      $("#error-count").text(results.stats.errors);
+      $("#file-stats").show();
+
+      // Show validation messages
+      let messagesHtml = "";
+      if (results.validation_errors.length > 0) {
+        messagesHtml +=
+          '<div class="alert alert-danger"><h6>Validation Errors:</h6><ul>';
+        results.validation_errors.forEach((error) => {
+          messagesHtml += "<li>" + error + "</li>";
+        });
+        messagesHtml += "</ul></div>";
+      }
+
+      if (results.validation_warnings.length > 0) {
+        messagesHtml +=
+          '<div class="alert alert-warning"><h6>Validation Warnings:</h6><ul>';
+        results.validation_warnings.forEach((warning) => {
+          messagesHtml += "<li>" + warning + "</li>";
+        });
+        messagesHtml += "</ul></div>";
+      }
+
+      if (results.stats.errors === 0) {
+        messagesHtml +=
+          '<div class="alert alert-success"><i class="fas fa-check"></i> File validation passed! Ready to import.</div>';
+        $("#next-step-2").prop("disabled", false);
+      } else {
+        messagesHtml +=
+          '<div class="alert alert-danger"><i class="fas fa-times"></i> File has validation errors. Please fix them before importing.</div>';
+      }
+
+      $("#validation-messages").html(messagesHtml);
+
+      // Show preview table
+      if (results.preview_data && results.preview_data.length > 0) {
+        const table = $("#preview-table");
+        const thead = table.find("thead");
+        const tbody = table.find("tbody");
+
+        // Create header
+        thead.empty();
+        if (results.headers) {
+          let headerRow = "<tr>";
+          results.headers.forEach((header) => {
+            headerRow += "<th>" + header + "</th>";
+          });
+          headerRow += "</tr>";
+          thead.html(headerRow);
+        }
+
+        // Create rows
+        tbody.empty();
+        results.preview_data.forEach((row) => {
+          let tableRow = "<tr>";
+          results.headers.forEach((header) => {
+            tableRow += "<td>" + (row[header] || "") + "</td>";
+          });
+          tableRow += "</tr>";
+          tbody.append(tableRow);
+        });
+
+        $("#preview-table-container").show();
+      }
+    }
+
+    function updateImportSummary() {
+      if (validationResults) {
+        $("#summary-filename").text(uploadedFile.name);
+        $("#summary-total").text(validationResults.stats.total_rows);
+        $("#summary-valid").text(validationResults.stats.valid_rows);
+
+        const estimatedTime = Math.ceil(
+          validationResults.stats.valid_rows / 100
+        ); // Rough estimate
+        $("#summary-time").text(estimatedTime + " minute(s)");
+      }
+    }
+
+    function startImport() {
+      const config = {
+        clean_before_import: $("#clean-before-import").is(":checked"),
+        update_existing: $("#update-existing").is(":checked"),
+        create_users: $("#create-users").is(":checked"),
+        create_categories: $("#create-categories").is(":checked"),
+      };
+
+      const formData = new FormData();
+      formData.append("csv_file", uploadedFile);
+      formData.append("action", "import");
+      formData.append("config", JSON.stringify(config));
+      formData.append(
+        "csrfmiddlewaretoken",
+        $("[name=csrfmiddlewaretoken]").val()
+      );
+
+      let progress = 0;
+      const progressBar = $("#import-progress");
+      const progressText = $("#progress-text");
+      const importLog = $("#import-log");
+
+      // Start progress simulation
+      progressText.text("Starting import process...");
+      importLog.html(
+        '<div class="text-info">[' +
+          new Date().toLocaleTimeString() +
+          "] Starting import process...</div>"
+      );
+
+      const progressInterval = setInterval(function () {
+        if (progress < 90) {
+          progress += Math.random() * 10;
+          progressBar.css("width", Math.min(progress, 90) + "%");
+        }
+      }, 1000);
+
+      $.ajax({
+        url: '{% url "tickets:process_upload" %}',
+        type: "POST",
+        data: formData,
+        processData: false,
+        contentType: false,
+        success: function (response) {
+          clearInterval(progressInterval);
+          progressBar.css("width", "100%");
+          progressText.text("Import completed successfully!");
+
+          // Update log
+          importLog.append(
+            '<div class="text-success">[' +
+              new Date().toLocaleTimeString() +
+              "] Import completed successfully!</div>"
+          );
+          importLog.append(
+            '<div class="text-info">[' +
+              new Date().toLocaleTimeString() +
+              "] Processing results...</div>"
+          );
+
+          // Show results
+          displayImportResults(response);
+        },
+        error: function (xhr, status, error) {
+          clearInterval(progressInterval);
+          progressBar
+            .removeClass("progress-bar-animated")
+            .addClass("bg-danger");
+          progressText.text("Import failed: " + error);
+          importLog.append(
+            '<div class="text-danger">[' +
+              new Date().toLocaleTimeString() +
+              "] Import failed: " +
+              error +
+              "</div>"
+          );
+          toastr.error("Import failed: " + error);
+        },
+      });
+    }
+
+    function displayImportResults(results) {
+      $("#result-processed").text(results.stats.processed || 0);
+      $("#result-created").text(results.stats.created || 0);
+      $("#result-updated").text(results.stats.updated || 0);
+      $("#result-failed").text(results.stats.failed || 0);
+
+      $("#results-summary").show();
+      $("#finish-button").show();
+      $("#view-tickets-button").show();
+
+      if (results.success) {
+        toastr.success("Import completed successfully!");
+      } else {
+        toastr.warning(
+          "Import completed with some issues. Check the log for details."
+        );
+      }
+    }
+  });
+</script>
+{% endblock %}

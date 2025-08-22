@@ -349,6 +349,12 @@
               <a href="/admin/" target="_blank" class="dropdown-item">
                 <i class="fas fa-cogs mr-2"></i> Admin Panel
               </a>
+              <a
+                href="{% url 'tickets:security_dashboard' %}"
+                class="dropdown-item"
+              >
+                <i class="fas fa-shield-alt mr-2"></i> Security Dashboard
+              </a>
               {% endif %}
               <div class="dropdown-divider"></div>
               <a href="{% url 'tickets:logout' %}" class="dropdown-item">
@@ -433,6 +439,34 @@
                     Admin Panel
                     <i class="fas fa-external-link-alt right"></i>
                   </p>
+                </a>
+              </li>
+
+              <li class="nav-item">
+                <a
+                  href="{% url 'tickets:security_dashboard' %}"
+                  class="nav-link {% if 'security' in request.resolver_match.url_name %}active{% endif %}"
+                >
+                  <i class="nav-icon fas fa-shield-alt"></i>
+                  <p>
+                    Security Dashboard
+                    <span
+                      class="badge badge-danger right"
+                      id="security-alerts"
+                      style="display: none"
+                      >!</span
+                    >
+                  </p>
+                </a>
+              </li>
+
+              <li class="nav-item">
+                <a
+                  href="{% url 'tickets:data_upload_dashboard' %}"
+                  class="nav-link {% if 'upload' in request.resolver_match.url_name or 'data_upload' in request.resolver_match.url_name %}active{% endif %}"
+                >
+                  <i class="nav-icon fas fa-upload"></i>
+                  <p>Data Upload</p>
                 </a>
               </li>
               {% endif %} {% else %}

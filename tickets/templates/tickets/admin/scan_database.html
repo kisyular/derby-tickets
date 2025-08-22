@@ -1,0 +1,343 @@
+{% extends 'tickets/base.html' %} {% block title %}Database Scanner - Admin
+{%endblock %} {% block content %}
+<!-- Content Header -->
+<div class="content-header">
+  <div class="container-fluid">
+    <div class="row mb-2">
+      <div class="col-sm-6">
+        <h1 class="m-0">🔍 Database Scanner</h1>
+      </div>
+      <div class="col-sm-6">
+        <ol class="breadcrumb float-sm-right">
+          <li class="breadcrumb-item">
+            <a href="{% url 'tickets:home' %}">Dashboard</a>
+          </li>
+          <li class="breadcrumb-item">
+            <a href="{% url 'tickets:data_upload_dashboard' %}">Data Upload</a>
+          </li>
+          <li class="breadcrumb-item active">Database Scanner</li>
+        </ol>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Main content -->
+<section class="content">
+  <div class="container-fluid">
+    <!-- Database Stats -->
+    <div class="row">
+      <div class="col-lg-4 col-6">
+        <div class="small-box bg-info">
+          <div class="inner">
+            <h3>{{ total_tickets }}</h3>
+            <p>Total Tickets</p>
+          </div>
+          <div class="icon">
+            <i class="fas fa-ticket-alt"></i>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-lg-4 col-6">
+        <div class="small-box bg-success">
+          <div class="inner">
+            <h3>{{ total_categories }}</h3>
+            <p>Total Categories</p>
+          </div>
+          <div class="icon">
+            <i class="fas fa-tags"></i>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-lg-4 col-6">
+        <div class="small-box bg-warning">
+          <div class="inner">
+            <h3>{{ total_users }}</h3>
+            <p>Total Users</p>
+          </div>
+          <div class="icon">
+            <i class="fas fa-users"></i>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="row">
+      <!-- Recent Tickets -->
+      <div class="col-md-8">
+        <div class="card">
+          <div class="card-header">
+            <h3 class="card-title">
+              <i class="fas fa-clock"></i> Recent Tickets
+            </h3>
+            <div class="card-tools">
+              <button type="button" class="btn btn-tool" id="refresh-tickets">
+                <i class="fas fa-sync-alt"></i>
+              </button>
+            </div>
+          </div>
+          <div class="card-body table-responsive p-0">
+            {% if recent_tickets %}
+            <table class="table table-striped">
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>Title</th>
+                  <th>User</th>
+                  <th>Category</th>
+                  <th>Status</th>
+                  <th>Created</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for ticket in recent_tickets %}
+                <tr>
+                  <td>
+                    <a href="{% url 'tickets:ticket_detail' ticket.id %}">
+                      {{ ticket.ticket_number|default:ticket.id }}
+                    </a>
+                  </td>
+                  <td>{{ ticket.title|truncatechars:30 }}</td>
+                  <td>{{ ticket.created_by.email }}</td>
+                  <td>
+                    {% if ticket.category %}
+                    <span class="badge badge-info"
+                      >{{ ticket.category.name }}</span
+                    >
+                    {% else %}
+                    <span class="badge badge-secondary">None</span>
+                    {% endif %}
+                  </td>
+                  <td>
+                    {% if ticket.status == 'Open' %}
+                    <span class="badge badge-danger">{{ ticket.status }}</span>
+                    {% elif ticket.status == 'In Progress' %}
+                    <span class="badge badge-warning">{{ ticket.status }}</span>
+                    {% elif ticket.status == 'Resolved' %}
+                    <span class="badge badge-success">{{ ticket.status }}</span>
+                    {% else %}
+                    <span class="badge badge-secondary"
+                      >{{ ticket.status }}</span
+                    >
+                    {% endif %}
+                  </td>
+                  <td>{{ ticket.created_at|date:"M d, Y H:i" }}</td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+            {% else %}
+            <div class="text-center p-4">
+              <p class="text-muted">No tickets found</p>
+            </div>
+            {% endif %}
+          </div>
+          <div class="card-footer">
+            <a href="{% url 'tickets:ticket_list' %}" class="btn btn-primary">
+              <i class="fas fa-list"></i> View All Tickets
+            </a>
+          </div>
+        </div>
+      </div>
+
+      <!-- Categories -->
+      <div class="col-md-4">
+        <div class="card">
+          <div class="card-header">
+            <h3 class="card-title"><i class="fas fa-tags"></i> Categories</h3>
+          </div>
+          <div class="card-body" style="max-height: 788px; overflow-y: auto">
+            {% if categories %} {% for category in categories %}
+            <div
+              class="d-flex justify-content-between align-items-center mb-2 p-2"
+              style="border: 1px solid #dee2e6; border-radius: 5px"
+            >
+              <div>
+                <strong>{{ category.name }}</strong>
+                {% if category.description %}
+                <small class="text-muted d-block"
+                  >{{ category.description|truncatechars:40 }}</small
+                >
+                {% endif %}
+              </div>
+              <span class="badge badge-info"
+                >{{ category.ticket_set.count }}</span
+              >
+            </div>
+            {% endfor %} {% else %}
+            <div class="text-center text-muted">
+              <p>No categories found</p>
+            </div>
+            {% endif %}
+          </div>
+          <div class="card-footer">
+            <a
+              href="{% url 'tickets:upload_categories' %}"
+              class="btn btn-success btn-sm"
+            >
+              <i class="fas fa-plus"></i> Manage Categories
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Recent Users -->
+    <div class="row">
+      <div class="col-12">
+        <div class="card">
+          <div class="card-header">
+            <h3 class="card-title">
+              <i class="fas fa-users"></i> Recent Users
+            </h3>
+          </div>
+          <div class="card-body table-responsive p-0">
+            {% if recent_users %}
+            <table class="table table-striped">
+              <thead>
+                <tr>
+                  <th>Email</th>
+                  <th>Name</th>
+                  <th>Staff</th>
+                  <th>Active</th>
+                  <th>Last Login</th>
+                  <th>Date Joined</th>
+                  <th>Tickets</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for user in recent_users %}
+                <tr>
+                  <td>{{ user.email }}</td>
+                  <td>{{ user.get_full_name|default:"-" }}</td>
+                  <td>
+                    {% if user.is_staff %}
+                    <span class="badge badge-warning">Staff</span>
+                    {% else %}
+                    <span class="badge badge-secondary">User</span>
+                    {% endif %}
+                  </td>
+                  <td>
+                    {% if user.is_active %}
+                    <span class="badge badge-success">Active</span>
+                    {% else %}
+                    <span class="badge badge-danger">Inactive</span>
+                    {% endif %}
+                  </td>
+                  <td>
+                    {% if user.last_login %} {{ user.last_login|date:"M d, Y
+                    H:i" }} {% else %}
+                    <span class="text-muted">Never</span>
+                    {% endif %}
+                  </td>
+                  <td>{{ user.date_joined|date:"M d, Y H:i" }}</td>
+                  <td>
+                    <span class="badge badge-info"
+                      >{{ user.created_tickets.count }}</span
+                    >
+                  </td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+            {% else %}
+            <div class="text-center p-4">
+              <p class="text-muted">No users found</p>
+            </div>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Actions -->
+    <div class="row">
+      <div class="col-12">
+        <div class="card card-secondary">
+          <div class="card-header">
+            <h3 class="card-title">
+              <i class="fas fa-tools"></i> Database Actions
+            </h3>
+          </div>
+          <div class="card-body">
+            <div class="row">
+              <div class="col-md-3">
+                <button
+                  type="button"
+                  class="btn btn-info btn-block"
+                  onclick="refreshData()"
+                >
+                  <i class="fas fa-sync-alt"></i> Refresh Data
+                </button>
+              </div>
+              <div class="col-md-3">
+                <a
+                  href="{% url 'tickets:upload_tickets' %}"
+                  class="btn btn-primary btn-block"
+                >
+                  <i class="fas fa-upload"></i> Upload Tickets
+                </a>
+              </div>
+              <div class="col-md-3">
+                <a
+                  href="{% url 'tickets:upload_categories' %}"
+                  class="btn btn-success btn-block"
+                >
+                  <i class="fas fa-tags"></i> Manage Categories
+                </a>
+              </div>
+              <div class="col-md-3">
+                <a
+                  href="{% url 'tickets:data_upload_dashboard' %}"
+                  class="btn btn-secondary btn-block"
+                >
+                  <i class="fas fa-arrow-left"></i> Back to Dashboard
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+{% endblock %} {% block extra_js %}
+<script>
+  $(document).ready(function () {
+    // Auto-refresh every 30 seconds
+    setInterval(refreshData, 30000);
+  });
+
+  function refreshData() {
+    $("#refresh-tickets").find("i").addClass("fa-spin");
+
+    $.ajax({
+      url: '{% url "tickets:scan_database" %}',
+      type: "GET",
+      headers: {
+        Accept: "application/json",
+      },
+      success: function (response) {
+        if (response.success) {
+          // Update stats
+          $(".small-box.bg-info .inner h3").text(response.stats.total_tickets);
+          $(".small-box.bg-success .inner h3").text(
+            response.stats.total_categories
+          );
+          $(".small-box.bg-warning .inner h3").text(response.stats.total_users);
+
+          toastr.success("Data refreshed successfully");
+        }
+      },
+      error: function () {
+        toastr.error("Failed to refresh data");
+      },
+      complete: function () {
+        $("#refresh-tickets").find("i").removeClass("fa-spin");
+      },
+    });
+  }
+</script>
+{% endblock %}

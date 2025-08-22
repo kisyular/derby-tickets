@@ -1,0 +1,776 @@
+{% extends 'tickets/base.html' %} {% block title %}Manage Categories - Admin
+{%endblock %} {% block extra_css %}
+<style>
+  .upload-area {
+    border: 2px dashed #28a745;
+    border-radius: 10px;
+    padding: 30px;
+    text-align: center;
+    background-color: #f8f9fa;
+    transition: all 0.3s ease;
+    cursor: pointer;
+  }
+
+  .upload-area:hover {
+    border-color: #1e7e34;
+    background-color: #e9ecef;
+  }
+
+  .upload-area.dragover {
+    border-color: #007bff;
+    background-color: #cce5ff;
+  }
+
+  .category-item {
+    border: 1px solid #dee2e6;
+    border-radius: 5px;
+    padding: 10px;
+    margin: 5px 0;
+    background: #f8f9fa;
+  }
+
+  .category-item.new {
+    border-color: #28a745;
+    background: #d4edda;
+  }
+
+  .category-item.duplicate {
+    border-color: #ffc107;
+    background: #fff3cd;
+  }
+
+  .predefined-categories {
+    max-height: 300px;
+    overflow-y: auto;
+  }
+</style>
+{% endblock %} {% block content %}
+<!-- Content Header -->
+<div class="content-header">
+  <div class="container-fluid">
+    <div class="row mb-2">
+      <div class="col-sm-6">
+        <h1 class="m-0">🏷️ Manage Categories</h1>
+      </div>
+      <div class="col-sm-6">
+        <ol class="breadcrumb float-sm-right">
+          <li class="breadcrumb-item">
+            <a href="{% url 'tickets:home' %}">Dashboard</a>
+          </li>
+          <li class="breadcrumb-item">
+            <a href="{% url 'tickets:data_upload_dashboard' %}">Data Upload</a>
+          </li>
+          <li class="breadcrumb-item active">Manage Categories</li>
+        </ol>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Main content -->
+<section class="content">
+  <div class="container-fluid">
+    <!-- Current Categories Stats -->
+    <div class="row">
+      <div class="col-lg-4 col-6">
+        <div class="small-box bg-success">
+          <div class="inner">
+            <h3 id="current-category-count">{{ total_categories }}</h3>
+            <p>Current Categories</p>
+          </div>
+          <div class="icon">
+            <i class="fas fa-tags"></i>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-lg-4 col-6">
+        <div class="small-box bg-info">
+          <div class="inner">
+            <h3>{{ tickets_with_categories }}</h3>
+            <p>Tickets with Categories</p>
+          </div>
+          <div class="icon">
+            <i class="fas fa-ticket-alt"></i>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-lg-4 col-6">
+        <div class="small-box bg-warning">
+          <div class="inner">
+            <h3>{{ tickets_without_categories }}</h3>
+            <p>Uncategorized Tickets</p>
+          </div>
+          <div class="icon">
+            <i class="fas fa-question-circle"></i>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="row">
+      <!-- Upload/Manual Entry -->
+      <div class="col-md-6">
+        <div class="card card-success">
+          <div class="card-header">
+            <h3 class="card-title">
+              <i class="fas fa-upload"></i> Upload Categories from CSV
+            </h3>
+          </div>
+          <div class="card-body">
+            <form id="upload-form" enctype="multipart/form-data">
+              {% csrf_token %}
+
+              <!-- Drag & Drop Area -->
+              <div class="upload-area" id="upload-area">
+                <i class="fas fa-cloud-upload-alt fa-2x text-success mb-2"></i>
+                <h5>Drop CSV File Here</h5>
+                <p class="text-muted mb-2">or click to browse</p>
+                <input
+                  type="file"
+                  id="file-input"
+                  name="csv_file"
+                  accept=".csv"
+                  style="display: none"
+                />
+                <small class="text-muted"
+                  >Expected columns: category_name, description
+                  (optional)</small
+                >
+              </div>
+
+              <!-- File Info -->
+              <div class="mt-3" id="file-info" style="display: none">
+                <div class="alert alert-info">
+                  <strong id="file-name"></strong>
+                  <br />
+                  <small>Size: <span id="file-size"></span></small>
+                </div>
+              </div>
+
+              <!-- Options -->
+              <div class="mt-3">
+                <div class="form-group">
+                  <label>
+                    <input
+                      type="checkbox"
+                      id="clean-categories"
+                      name="clean_categories"
+                    />
+                    Clean existing categories before import
+                  </label>
+                  <small class="form-text text-muted">
+                    ⚠️ This will delete all existing categories and tickets'
+                    category assignments
+                  </small>
+                </div>
+                <div class="form-group">
+                  <label>
+                    <input
+                      type="checkbox"
+                      id="skip-duplicates"
+                      name="skip_duplicates"
+                      checked
+                    />
+                    Skip duplicate categories
+                  </label>
+                  <small class="form-text text-muted">
+                    Don't create categories that already exist
+                  </small>
+                </div>
+              </div>
+
+              <button
+                type="button"
+                id="upload-categories-btn"
+                class="btn btn-success"
+                disabled
+              >
+                <i class="fas fa-upload"></i> Upload Categories
+              </button>
+              <a
+                href="{% url 'tickets:download_sample_csv' 'categories' %}"
+                class="btn btn-outline-success"
+              >
+                <i class="fas fa-download"></i> Sample CSV
+              </a>
+            </form>
+          </div>
+        </div>
+
+        <!-- Manual Category Entry -->
+        <div class="card card-info mt-3">
+          <div class="card-header">
+            <h3 class="card-title">
+              <i class="fas fa-plus"></i> Add Single Category
+            </h3>
+          </div>
+          <div class="card-body">
+            <form id="manual-category-form">
+              {% csrf_token %}
+              <div class="form-group">
+                <label for="manual-category-name">Category Name:</label>
+                <input
+                  type="text"
+                  class="form-control"
+                  id="manual-category-name"
+                  name="category_name"
+                  placeholder="e.g., Software Issues"
+                  required
+                />
+              </div>
+              <div class="form-group">
+                <label for="manual-category-desc"
+                  >Description (Optional):</label
+                >
+                <textarea
+                  class="form-control"
+                  id="manual-category-desc"
+                  name="description"
+                  rows="2"
+                  placeholder="Brief description of this category"
+                ></textarea>
+              </div>
+              <button type="submit" class="btn btn-info">
+                <i class="fas fa-plus"></i> Add Category
+              </button>
+            </form>
+          </div>
+        </div>
+      </div>
+
+      <!-- Predefined Categories & Preview -->
+      <div class="col-md-6">
+        <div class="card card-primary">
+          <div class="card-header">
+            <h3 class="card-title">
+              <i class="fas fa-list"></i> Predefined Categories
+            </h3>
+          </div>
+          <div class="card-body">
+            <p>Load standard IT support categories:</p>
+
+            <div class="predefined-categories">
+              <div class="category-item">
+                <strong>Hardware Issues</strong>
+                <small class="text-muted d-block"
+                  >Computer, printer, device problems</small
+                >
+              </div>
+              <div class="category-item">
+                <strong>Software Issues</strong>
+                <small class="text-muted d-block"
+                  >Application bugs, installation problems</small
+                >
+              </div>
+              <div class="category-item">
+                <strong>Network Issues</strong>
+                <small class="text-muted d-block"
+                  >Internet, WiFi, connectivity problems</small
+                >
+              </div>
+              <div class="category-item">
+                <strong>Security</strong>
+                <small class="text-muted d-block"
+                  >Password, access, security concerns</small
+                >
+              </div>
+              <div class="category-item">
+                <strong>Email Issues</strong>
+                <small class="text-muted d-block"
+                  >Email setup, problems, access</small
+                >
+              </div>
+              <div class="category-item">
+                <strong>Account Management</strong>
+                <small class="text-muted d-block"
+                  >User accounts, permissions, access</small
+                >
+              </div>
+              <div class="category-item">
+                <strong>General Support</strong>
+                <small class="text-muted d-block"
+                  >General questions and assistance</small
+                >
+              </div>
+            </div>
+
+            <div class="mt-3">
+              <button
+                type="button"
+                id="load-predefined-btn"
+                class="btn btn-primary"
+              >
+                <i class="fas fa-download"></i> Load Predefined Categories
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Current Categories List -->
+        <div class="card card-secondary mt-3">
+          <div class="card-header">
+            <h3 class="card-title">
+              <i class="fas fa-eye"></i> Current Categories
+            </h3>
+            <div class="card-tools">
+              <button
+                type="button"
+                class="btn btn-tool"
+                id="refresh-categories"
+              >
+                <i class="fas fa-sync-alt"></i>
+              </button>
+            </div>
+          </div>
+          <div class="card-body">
+            <div id="current-categories-list">
+              <div class="text-center text-muted">
+                <i class="fas fa-spinner fa-spin"></i> Loading categories...
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Upload Progress & Results -->
+    <div class="row mt-3" id="upload-results" style="display: none">
+      <div class="col-12">
+        <div class="card card-warning">
+          <div class="card-header">
+            <h3 class="card-title">
+              <i class="fas fa-cogs"></i> Upload Progress
+            </h3>
+          </div>
+          <div class="card-body">
+            <!-- Progress Bar -->
+            <div class="mb-3">
+              <div class="progress">
+                <div
+                  class="progress-bar progress-bar-striped progress-bar-animated"
+                  id="upload-progress"
+                  role="progressbar"
+                  style="width: 0%"
+                >
+                  Processing...
+                </div>
+              </div>
+              <div class="mt-2">
+                <span id="progress-text">Preparing upload...</span>
+              </div>
+            </div>
+
+            <!-- Upload Log -->
+            <div class="mb-3">
+              <h6>Upload Log:</h6>
+              <div class="card">
+                <div
+                  class="card-body p-2"
+                  style="
+                    height: 200px;
+                    overflow-y: auto;
+                    background-color: #f8f9fa;
+                    font-family: monospace;
+                    font-size: 12px;
+                  "
+                >
+                  <div id="upload-log"></div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Results Summary -->
+            <div id="upload-summary" style="display: none">
+              <h6>Upload Summary:</h6>
+              <div class="row">
+                <div class="col-md-3">
+                  <div class="info-box bg-success">
+                    <span class="info-box-icon"
+                      ><i class="fas fa-plus"></i
+                    ></span>
+                    <div class="info-box-content">
+                      <span class="info-box-text">Created</span>
+                      <span class="info-box-number" id="categories-created"
+                        >0</span
+                      >
+                    </div>
+                  </div>
+                </div>
+                <div class="col-md-3">
+                  <div class="info-box bg-warning">
+                    <span class="info-box-icon"
+                      ><i class="fas fa-copy"></i
+                    ></span>
+                    <div class="info-box-content">
+                      <span class="info-box-text">Duplicates</span>
+                      <span class="info-box-number" id="categories-duplicates"
+                        >0</span
+                      >
+                    </div>
+                  </div>
+                </div>
+                <div class="col-md-3">
+                  <div class="info-box bg-danger">
+                    <span class="info-box-icon"
+                      ><i class="fas fa-times"></i
+                    ></span>
+                    <div class="info-box-content">
+                      <span class="info-box-text">Errors</span>
+                      <span class="info-box-number" id="categories-errors"
+                        >0</span
+                      >
+                    </div>
+                  </div>
+                </div>
+                <div class="col-md-3">
+                  <div class="info-box bg-info">
+                    <span class="info-box-icon"
+                      ><i class="fas fa-list"></i
+                    ></span>
+                    <div class="info-box-content">
+                      <span class="info-box-text">Total</span>
+                      <span class="info-box-number" id="categories-total"
+                        >0</span
+                      >
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="card-footer">
+            <button type="button" class="btn btn-secondary" id="close-results">
+              <i class="fas fa-times"></i> Close
+            </button>
+            <a
+              href="{% url 'tickets:data_upload_dashboard' %}"
+              class="btn btn-success"
+              id="return-dashboard"
+              style="display: none"
+            >
+              <i class="fas fa-arrow-left"></i> Return to Dashboard
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+{% endblock %} {% block extra_js %}
+<script>
+  $(document).ready(function () {
+    let uploadedFile = null;
+
+    // Load current categories on page load
+    loadCurrentCategories();
+
+    // File upload handling
+    $("#upload-area").on("click", function () {
+      $("#file-input").click();
+    });
+
+    // Drag and drop
+    $("#upload-area").on("dragover", function (e) {
+      e.preventDefault();
+      $(this).addClass("dragover");
+    });
+
+    $("#upload-area").on("dragleave", function (e) {
+      e.preventDefault();
+      $(this).removeClass("dragover");
+    });
+
+    $("#upload-area").on("drop", function (e) {
+      e.preventDefault();
+      $(this).removeClass("dragover");
+      const files = e.originalEvent.dataTransfer.files;
+      if (files.length > 0) {
+        handleFileSelection(files[0]);
+      }
+    });
+
+    $("#file-input").on("change", function () {
+      if (this.files.length > 0) {
+        handleFileSelection(this.files[0]);
+      }
+    });
+
+    function handleFileSelection(file) {
+      if (!file.name.toLowerCase().endsWith(".csv")) {
+        toastr.error("Please select a CSV file.");
+        return;
+      }
+
+      uploadedFile = file;
+      $("#file-name").text(file.name);
+      $("#file-size").text(formatFileSize(file.size));
+      $("#file-info").show();
+      $("#upload-categories-btn").prop("disabled", false);
+    }
+
+    function formatFileSize(bytes) {
+      if (bytes === 0) return "0 Bytes";
+      const k = 1024;
+      const sizes = ["Bytes", "KB", "MB"];
+      const i = Math.floor(Math.log(bytes) / Math.log(k));
+      return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + " " + sizes[i];
+    }
+
+    // Upload categories from CSV
+    $("#upload-categories-btn").on("click", function () {
+      if (!uploadedFile) {
+        toastr.error("Please select a file first.");
+        return;
+      }
+
+      const cleanCategories = $("#clean-categories").is(":checked");
+      if (cleanCategories) {
+        if (
+          !confirm(
+            "⚠️ This will delete ALL existing categories and remove category assignments from tickets. Continue?"
+          )
+        ) {
+          return;
+        }
+      }
+
+      uploadCategories("csv");
+    });
+
+    // Load predefined categories
+    $("#load-predefined-btn").on("click", function () {
+      if (
+        !confirm(
+          "Load predefined IT support categories? This will add standard categories to your system."
+        )
+      ) {
+        return;
+      }
+      uploadCategories("predefined");
+    });
+
+    // Manual category form
+    $("#manual-category-form").on("submit", function (e) {
+      e.preventDefault();
+
+      const categoryName = $("#manual-category-name").val().trim();
+      if (!categoryName) {
+        toastr.error("Please enter a category name.");
+        return;
+      }
+
+      const formData = new FormData();
+      formData.append("action", "add_single");
+      formData.append("category_name", categoryName);
+      formData.append("description", $("#manual-category-desc").val().trim());
+      formData.append(
+        "csrfmiddlewaretoken",
+        $("[name=csrfmiddlewaretoken]").val()
+      );
+
+      $.ajax({
+        url: '{% url "tickets:process_upload" %}',
+        type: "POST",
+        data: formData,
+        processData: false,
+        contentType: false,
+        success: function (response) {
+          if (response.success) {
+            toastr.success("Category added successfully!");
+            $("#manual-category-form")[0].reset();
+            loadCurrentCategories();
+            updateCategoryCount();
+          } else {
+            toastr.error(response.message || "Failed to add category");
+          }
+        },
+        error: function (xhr, status, error) {
+          toastr.error("Error adding category: " + error);
+        },
+      });
+    });
+
+    function uploadCategories(type) {
+      showUploadProgress();
+
+      const formData = new FormData();
+      formData.append("action", "upload_categories");
+      formData.append("upload_type", type);
+      formData.append(
+        "csrfmiddlewaretoken",
+        $("[name=csrfmiddlewaretoken]").val()
+      );
+
+      if (type === "csv") {
+        formData.append("csv_file", uploadedFile);
+        formData.append(
+          "clean_categories",
+          $("#clean-categories").is(":checked")
+        );
+        formData.append(
+          "skip_duplicates",
+          $("#skip-duplicates").is(":checked")
+        );
+      }
+
+      let progress = 0;
+      const progressInterval = setInterval(function () {
+        if (progress < 90) {
+          progress += Math.random() * 15;
+          updateProgress(Math.min(progress, 90), "Processing categories...");
+        }
+      }, 500);
+
+      addLogEntry("Starting category upload...");
+
+      $.ajax({
+        url: '{% url "tickets:process_upload" %}',
+        type: "POST",
+        data: formData,
+        processData: false,
+        contentType: false,
+        success: function (response) {
+          clearInterval(progressInterval);
+          updateProgress(100, "Upload completed!");
+
+          addLogEntry("Upload completed successfully!");
+          displayUploadResults(response);
+
+          // Refresh data
+          loadCurrentCategories();
+          updateCategoryCount();
+        },
+        error: function (xhr, status, error) {
+          clearInterval(progressInterval);
+          updateProgress(100, "Upload failed: " + error, "bg-danger");
+          addLogEntry("Upload failed: " + error, "error");
+          toastr.error("Upload failed: " + error);
+        },
+      });
+    }
+
+    function showUploadProgress() {
+      $("#upload-results").show();
+      $("#upload-summary").hide();
+      $("#return-dashboard").hide();
+      $("#upload-log").empty();
+      updateProgress(0, "Initializing...");
+    }
+
+    function updateProgress(percent, text, className = "") {
+      const progressBar = $("#upload-progress");
+      progressBar.css("width", percent + "%");
+      if (className) {
+        progressBar
+          .removeClass("progress-bar-striped progress-bar-animated")
+          .addClass(className);
+      }
+      $("#progress-text").text(text);
+    }
+
+    function addLogEntry(message, type = "info") {
+      const timestamp = new Date().toLocaleTimeString();
+      const logClass = type === "error" ? "text-danger" : "text-info";
+      $("#upload-log").append(
+        `<div class="${logClass}">[${timestamp}] ${message}</div>`
+      );
+      $("#upload-log").scrollTop($("#upload-log")[0].scrollHeight);
+    }
+
+    function displayUploadResults(results) {
+      $("#categories-created").text(results.stats.created || 0);
+      $("#categories-duplicates").text(results.stats.duplicates || 0);
+      $("#categories-errors").text(results.stats.errors || 0);
+      $("#categories-total").text(results.stats.total || 0);
+
+      $("#upload-summary").show();
+      $("#return-dashboard").show();
+
+      if (results.success) {
+        toastr.success("Categories uploaded successfully!");
+      } else {
+        toastr.warning("Upload completed with some issues.");
+      }
+    }
+
+    function loadCurrentCategories() {
+      $.ajax({
+        url: '{% url "tickets:process_upload" %}',
+        type: "POST",
+        data: {
+          action: "list_categories",
+          csrfmiddlewaretoken: $("[name=csrfmiddlewaretoken]").val(),
+        },
+        success: function (response) {
+          displayCurrentCategories(response.categories || []);
+        },
+        error: function () {
+          $("#current-categories-list").html(
+            '<div class="text-danger">Error loading categories</div>'
+          );
+        },
+      });
+    }
+
+    function displayCurrentCategories(categories) {
+      const container = $("#current-categories-list");
+
+      if (categories.length === 0) {
+        container.html(
+          '<div class="text-muted text-center">No categories found</div>'
+        );
+        return;
+      }
+
+      let html = "";
+      categories.forEach((category) => {
+        html += `
+                <div class="category-item">
+                    <strong>${category.name}</strong>
+                    ${
+                      category.description
+                        ? `<small class="text-muted d-block">${category.description}</small>`
+                        : ""
+                    }
+                    <small class="text-info d-block">${
+                      category.ticket_count || 0
+                    } tickets</small>
+                </div>
+            `;
+      });
+
+      container.html(html);
+    }
+
+    function updateCategoryCount() {
+      $.ajax({
+        url: '{% url "tickets:process_upload" %}',
+        type: "POST",
+        data: {
+          action: "category_stats",
+          csrfmiddlewaretoken: $("[name=csrfmiddlewaretoken]").val(),
+        },
+        success: function (response) {
+          $("#current-category-count").text(response.total_categories || 0);
+        },
+      });
+    }
+
+    // Refresh categories button
+    $("#refresh-categories").on("click", function () {
+      $(this).find("i").addClass("fa-spin");
+      loadCurrentCategories();
+      setTimeout(() => {
+        $(this).find("i").removeClass("fa-spin");
+      }, 1000);
+    });
+
+    // Close results
+    $("#close-results").on("click", function () {
+      $("#upload-results").hide();
+    });
+  });
+</script>
+{% endblock %}
