@@ -1,0 +1,182 @@
+<!-- Security Actions AJAX Content -->
+<div class="row">
+  <div class="col-md-6">
+    <div class="card">
+      <div class="card-header">
+        <h3 class="card-title"><i class="fas fa-lock"></i> Locked Accounts</h3>
+      </div>
+      <div class="card-body">
+        {% if locked_accounts %} {% for account in locked_accounts %}
+        <div
+          class="d-flex justify-content-between align-items-center mb-2 p-2 bg-light rounded"
+        >
+          <div>
+            <strong>{{ account.username }}</strong>
+            <small class="text-muted d-block"
+              >{{ account.attempts }} failed attempts</small
+            >
+          </div>
+          <form
+            method="post"
+            action="{% url 'tickets:security_actions' %}"
+            style="display: inline"
+          >
+            {% csrf_token %}
+            <input type="hidden" name="action" value="unlock_user" />
+            <input
+              type="hidden"
+              name="username"
+              value="{{ account.username }}"
+            />
+            <button type="submit" class="btn btn-sm btn-success">
+              <i class="fas fa-unlock"></i> Unlock
+            </button>
+          </form>
+        </div>
+        {% endfor %} {% else %}
+        <p class="text-muted text-center">No locked accounts found.</p>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
+  <div class="col-md-6">
+    <div class="card">
+      <div class="card-header">
+        <h3 class="card-title"><i class="fas fa-ban"></i> Blocked IPs</h3>
+      </div>
+      <div class="card-body">
+        {% if locked_ips %} {% for ip in locked_ips %}
+        <div
+          class="d-flex justify-content-between align-items-center mb-2 p-2 bg-light rounded"
+        >
+          <div>
+            <strong>{{ ip.ip_address }}</strong>
+            <small class="text-muted d-block"
+              >{{ ip.attempts }} failed attempts</small
+            >
+          </div>
+          <form
+            method="post"
+            action="{% url 'tickets:security_actions' %}"
+            style="display: inline"
+          >
+            {% csrf_token %}
+            <input type="hidden" name="action" value="unlock_ip" />
+            <input
+              type="hidden"
+              name="ip_address"
+              value="{{ ip.ip_address }}"
+            />
+            <button type="submit" class="btn btn-sm btn-success">
+              <i class="fas fa-unlock"></i> Unlock
+            </button>
+          </form>
+        </div>
+        {% endfor %} {% else %}
+        <p class="text-muted text-center">No blocked IPs found.</p>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="row">
+  <div class="col-12">
+    <div class="card">
+      <div class="card-header">
+        <h3 class="card-title">
+          <i class="fas fa-exclamation-triangle"></i> Critical Unresolved Events
+        </h3>
+      </div>
+      <div class="card-body table-responsive p-0">
+        {% if critical_events %}
+        <table class="table table-hover text-nowrap">
+          <thead>
+            <tr>
+              <th>Time</th>
+              <th>Event Type</th>
+              <th>Description</th>
+              <th>User</th>
+              <th>IP</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for event in critical_events %}
+            <tr>
+              <td>
+                <small>{{ event.timestamp|date:"M d, H:i" }}</small>
+              </td>
+              <td>{{ event.get_event_type_display }}</td>
+              <td>{{ event.description|truncatechars:60 }}</td>
+              <td>{{ event.username_attempted|default:"-" }}</td>
+              <td>{{ event.ip_address|default:"-" }}</td>
+              <td>
+                <form
+                  method="post"
+                  action="{% url 'tickets:security_actions' %}"
+                  style="display: inline"
+                >
+                  {% csrf_token %}
+                  <input type="hidden" name="action" value="resolve_event" />
+                  <input type="hidden" name="event_id" value="{{ event.id }}" />
+                  <button
+                    type="submit"
+                    class="btn btn-sm btn-success"
+                    onclick="return confirm('Mark this event as resolved?')"
+                    data-toggle="tooltip"
+                    title="Mark as Resolved"
+                  >
+                    <i class="fas fa-check"></i>
+                  </button>
+                </form>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+        {% else %}
+        <div class="p-4 text-center">
+          <i class="fas fa-check-circle fa-3x text-success mb-3"></i>
+          <p class="text-muted">No critical unresolved events.</p>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="row">
+  <div class="col-12">
+    <div class="card">
+      <div class="card-header">
+        <h3 class="card-title">
+          <i class="fas fa-tools"></i> Security Actions
+        </h3>
+      </div>
+      <div class="card-body">
+        <div class="row">
+          <div class="col-md-6">
+            <form method="post" action="{% url 'tickets:security_actions' %}">
+              {% csrf_token %}
+              <input type="hidden" name="action" value="clear_all_lockouts" />
+              <button
+                type="submit"
+                class="btn btn-warning btn-block"
+                onclick="return confirm('This will clear ALL account and IP lockouts. Are you sure?')"
+              >
+                <i class="fas fa-unlock-alt"></i> Clear All Lockouts
+              </button>
+            </form>
+          </div>
+          <div class="col-md-6">
+            <button class="btn btn-info btn-block" onclick="location.reload()">
+              <i class="fas fa-sync-alt"></i> Refresh Data
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

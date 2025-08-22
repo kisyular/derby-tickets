@@ -1,0 +1,79 @@
+<!-- Active Sessions AJAX Content -->
+<div class="row">
+  <div class="col-12">
+    <div class="card">
+      <div class="card-header">
+        <h3 class="card-title"><i class="fas fa-users"></i> Active Sessions</h3>
+        <div class="card-tools">
+          <button class="btn btn-tool" onclick="location.reload()">
+            <i class="fas fa-sync-alt"></i> Refresh
+          </button>
+        </div>
+      </div>
+      <div class="card-body table-responsive p-0">
+        {% if sessions %}
+        <table class="table table-hover text-nowrap">
+          <thead>
+            <tr>
+              <th>User</th>
+              <th>IP Address</th>
+              <th>User Agent</th>
+              <th>Last Activity</th>
+              <th>Duration</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for session in sessions %}
+            <tr>
+              <td>{{ session.user.username }}</td>
+              <td>{{ session.ip_address|default:"-" }}</td>
+              <td>
+                <small
+                  >{{ session.user_agent|truncatechars:50|default:"-" }}</small
+                >
+              </td>
+              <td>
+                <small>{{ session.last_activity|date:"M d, H:i" }}</small>
+              </td>
+              <td>
+                <small>{{ session.last_activity|timesince }}</small>
+              </td>
+              <td>
+                <form
+                  method="post"
+                  action="{% url 'tickets:security_actions' %}"
+                  style="display: inline"
+                >
+                  {% csrf_token %}
+                  <input type="hidden" name="action" value="force_logout" />
+                  <input
+                    type="hidden"
+                    name="session_id"
+                    value="{{ session.id }}"
+                  />
+                  <button
+                    type="submit"
+                    class="btn btn-sm btn-outline-danger"
+                    onclick="return confirm('Force logout this user?')"
+                    data-toggle="tooltip"
+                    title="Force Logout"
+                  >
+                    <i class="fas fa-sign-out-alt"></i>
+                  </button>
+                </form>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+        {% else %}
+        <div class="p-4 text-center">
+          <i class="fas fa-users fa-3x text-muted mb-3"></i>
+          <p class="text-muted">No active sessions found.</p>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>

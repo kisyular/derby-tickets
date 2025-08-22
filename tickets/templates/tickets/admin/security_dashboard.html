@@ -1,0 +1,521 @@
+{% extends 'tickets/base.html' %}
+{% block title %}Security Dashboard - Admin
+{%endblock %} {% block content %}
+<!-- Content Header (Page header) -->
+<div class="content-header">
+  <div class="container-fluid">
+    <div class="row mb-2">
+      <div class="col-sm-6">
+        <h1 class="m-0">🔒 Security Dashboard</h1>
+      </div>
+      <div class="col-sm-6">
+        <ol class="breadcrumb float-sm-right">
+          <li class="breadcrumb-item">
+            <a href="{% url 'tickets:home' %}">Dashboard</a>
+          </li>
+          <li class="breadcrumb-item active">Security Dashboard</li>
+        </ol>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Main content -->
+<section class="content">
+  <div class="container-fluid">
+    <!-- Time Range Selector -->
+    <div class="row">
+      <div class="col-12">
+        <div class="card">
+          <div class="card-header">
+            <h3 class="card-title"><i class="fas fa-clock"></i> Time Range</h3>
+          </div>
+          <div class="card-body">
+            <div class="btn-group" role="group">
+              {% for range in time_ranges %}
+              <a
+                href="?hours={{ range }}"
+                class="btn {% if hours == range %}btn-primary{% else %}btn-outline-primary{% endif %}"
+              >
+                {% if range == 1 %}1 Hour
+                {% elif range == 6 %}6 Hours
+                {% elif range == 12 %}12 Hours
+                {% elif range == 24 %}1 Day
+                {% elif range == 48 %}2 Days
+                {% elif range == 168 %}1 Week
+                {% endif %}
+              </a>
+              {% endfor %}
+            </div>
+            <small class="text-muted ml-3"
+              >Currently showing last {{ hours }} hours</small
+            >
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Security Metrics (Stat boxes) -->
+    <div class="row">
+      <div class="col-lg-3 col-6">
+        <!-- Total Security Events -->
+        <div class="small-box bg-danger">
+          <div class="inner">
+            <h3>{{ summary.security_events.total|default:0 }}</h3>
+            <p>Security Events</p>
+          </div>
+          <div class="icon">
+            <i class="fas fa-exclamation-triangle"></i>
+          </div>
+          <a href="#" onclick="showEventsTab()" class="small-box-footer">
+            View Details <i class="fas fa-arrow-circle-right"></i>
+          </a>
+        </div>
+      </div>
+
+      <div class="col-lg-3 col-6">
+        <!-- Critical Unresolved -->
+        <div class="small-box bg-warning">
+          <div class="inner">
+            <h3>{{ summary.security_events.critical_unresolved|default:0 }}</h3>
+            <p>Critical Unresolved</p>
+          </div>
+          <div class="icon">
+            <i class="fas fa-skull"></i>
+          </div>
+          <a href="#" onclick="showEventsTab()" class="small-box-footer">
+            View Details <i class="fas fa-arrow-circle-right"></i>
+          </a>
+        </div>
+      </div>
+
+      <div class="col-lg-3 col-6">
+        <!-- Login Attempts -->
+        <div class="small-box bg-info">
+          <div class="inner">
+            <h3>{{ summary.login_attempts.total|default:0 }}</h3>
+            <p>Login Attempts</p>
+          </div>
+          <div class="icon">
+            <i class="fas fa-sign-in-alt"></i>
+          </div>
+          <a href="#" onclick="showLoginsTab()" class="small-box-footer">
+            View Details <i class="fas fa-arrow-circle-right"></i>
+          </a>
+        </div>
+      </div>
+
+      <div class="col-lg-3 col-6">
+        <!-- Success Rate -->
+        <div
+          class="small-box {% if summary.login_attempts.success_rate < 50 %}bg-danger{% elif summary.login_attempts.success_rate < 80 %}bg-warning{% else %}bg-success{% endif %}"
+        >
+          <div class="inner">
+            <h3>
+              {{ summary.login_attempts.success_rate|floatformat:1|default:0 }}%
+            </h3>
+            <p>Login Success Rate</p>
+          </div>
+          <div class="icon">
+            <i class="fas fa-percentage"></i>
+          </div>
+          <a href="#" onclick="showLoginsTab()" class="small-box-footer">
+            View Details <i class="fas fa-arrow-circle-right"></i>
+          </a>
+        </div>
+      </div>
+    </div>
+
+    <!-- Navigation Tabs -->
+    <div class="row">
+      <div class="col-12">
+        <div class="card card-tabs">
+          <div class="card-header p-0 pt-1">
+            <ul class="nav nav-tabs" id="security-tabs" role="tablist">
+              <li class="nav-item">
+                <a
+                  class="nav-link active"
+                  id="overview-tab"
+                  data-toggle="pill"
+                  href="#overview"
+                  role="tab"
+                  aria-controls="overview"
+                  aria-selected="true"
+                >
+                  <i class="fas fa-tachometer-alt"></i> Overview
+                </a>
+              </li>
+              <li class="nav-item">
+                <a
+                  class="nav-link"
+                  id="events-tab"
+                  data-toggle="pill"
+                  href="#events"
+                  role="tab"
+                  aria-controls="events"
+                  aria-selected="false"
+                >
+                  <i class="fas fa-exclamation-triangle"></i> Security Events
+                </a>
+              </li>
+              <li class="nav-item">
+                <a
+                  class="nav-link"
+                  id="logins-tab"
+                  data-toggle="pill"
+                  href="#logins"
+                  role="tab"
+                  aria-controls="logins"
+                  aria-selected="false"
+                >
+                  <i class="fas fa-sign-in-alt"></i> Login Attempts
+                </a>
+              </li>
+              <li class="nav-item">
+                <a
+                  class="nav-link"
+                  id="sessions-tab"
+                  data-toggle="pill"
+                  href="#sessions"
+                  role="tab"
+                  aria-controls="sessions"
+                  aria-selected="false"
+                >
+                  <i class="fas fa-users"></i> Active Sessions
+                </a>
+              </li>
+              <li class="nav-item">
+                <a
+                  class="nav-link"
+                  id="actions-tab"
+                  data-toggle="pill"
+                  href="#actions"
+                  role="tab"
+                  aria-controls="actions"
+                  aria-selected="false"
+                >
+                  <i class="fas fa-shield-alt"></i> Security Actions
+                </a>
+              </li>
+            </ul>
+          </div>
+          <div class="card-body">
+            <div class="tab-content" id="security-tab-content">
+              <!-- Overview Tab -->
+              <div
+                class="tab-pane fade show active"
+                id="overview"
+                role="tabpanel"
+                aria-labelledby="overview-tab"
+              >
+                <!-- Recent Security Events -->
+                <div class="row">
+                  <div class="col-12">
+                    <div class="card">
+                      <div class="card-header">
+                        <h3 class="card-title">
+                          <i class="fas fa-history"></i> Recent Security Events
+                        </h3>
+                        <div class="card-tools">
+                          <button
+                            class="btn btn-tool"
+                            onclick="showEventsTab()"
+                          >
+                            <i class="fas fa-external-link-alt"></i> View All
+                          </button>
+                        </div>
+                      </div>
+                      <div class="card-body table-responsive p-0">
+                        {% if recent_events %}
+                        <table class="table table-hover text-nowrap">
+                          <thead>
+                            <tr>
+                              <th>Time</th>
+                              <th>Event Type</th>
+                              <th>Severity</th>
+                              <th>Description</th>
+                              <th>IP Address</th>
+                              <th>Status</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {% for event in recent_events %}
+                            <tr>
+                              <td>
+                                <small
+                                  >{{ event.timestamp|date:"M d, H:i" }}</small
+                                >
+                              </td>
+                              <td>{{ event.get_event_type_display }}</td>
+                              <td>
+                                {% if event.severity == 'CRITICAL' %}
+                                <span class="badge badge-danger">
+                                  <i class="fas fa-exclamation-triangle"></i>
+                                  {{ event.severity }}
+                                </span>
+                                {% elif event.severity == 'HIGH' %}
+                                <span class="badge badge-warning">
+                                  <i class="fas fa-exclamation-circle"></i>
+                                  {{ event.severity }}
+                                </span>
+                                {% elif event.severity == 'MEDIUM' %}
+                                <span class="badge badge-info">
+                                  <i class="fas fa-info-circle"></i>
+                                  {{ event.severity }}
+                                </span>
+                                {% else %}
+                                <span class="badge badge-secondary">
+                                  <i class="fas fa-minus-circle"></i>
+                                  {{event.severity}}
+                                </span>
+                                {% endif %}
+                              </td>
+                              <td>{{ event.description|truncatechars:60 }}</td>
+                              <td>{{ event.ip_address|default:"-" }}</td>
+                              <td>
+                                {% if event.resolved %}
+                                <span class="badge badge-success"
+                                  >Resolved</span
+                                >
+                                {% else %}
+                                <span class="badge badge-danger">Open</span>
+                                {% endif %}
+                              </td>
+                            </tr>
+                            {% endfor %}
+                          </tbody>
+                        </table>
+                        {% else %}
+                        <div class="p-4 text-center">
+                          <i
+                            class="fas fa-shield-alt fa-3x text-muted mb-3"
+                          ></i>
+                          <p class="text-muted">
+                            No security events found for the selected time
+                            period.
+                          </p>
+                        </div>
+                        {% endif %}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Threat Summary -->
+                <div class="row">
+                  <div class="col-md-6">
+                    <div class="card">
+                      <div class="card-header">
+                        <h3 class="card-title">
+                          <i class="fas fa-crosshairs"></i> Top Threat IPs
+                        </h3>
+                      </div>
+                      <div class="card-body">
+                        {% if summary.login_attempts.threat_ips %}
+                        <div style="max-height: 300px; overflow-y: auto">
+                          {% for ip, count in summary.login_attempts.threat_ips%}
+                          <div
+                            class="d-flex justify-content-between align-items-center mb-2 p-2 bg-light rounded"
+                          >
+                            <strong>{{ ip }}</strong>
+                            <span class="badge badge-danger"
+                              >{{ count }} attempts</span
+                            >
+                          </div>
+                          {% endfor %}
+                        </div>
+                        {% else %}
+                        <p class="text-muted text-center">
+                          No threat IPs detected
+                        </p>
+                        {% endif %}
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="col-md-6">
+                    <div class="card">
+                      <div class="card-header">
+                        <h3 class="card-title">
+                          <i class="fas fa-bullseye"></i> Targeted Usernames
+                        </h3>
+                      </div>
+                      <div class="card-body">
+                        {% if summary.login_attempts.targeted_usernames %}
+                        <div style="max-height: 300px; overflow-y: auto">
+                          {% for username, count in summary.login_attempts.targeted_usernames %}
+                          <div
+                            class="d-flex justify-content-between align-items-center mb-2 p-2 bg-light rounded"
+                          >
+                            <strong>{{ username }}</strong>
+                            <span class="badge badge-warning"
+                              >{{ count }} attempts</span
+                            >
+                          </div>
+                          {% endfor %}
+                        </div>
+                        {% else %}
+                        <p class="text-muted text-center">
+                          No targeted usernames detected
+                        </p>
+                        {% endif %}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Security Events Tab -->
+              <div
+                class="tab-pane fade"
+                id="events"
+                role="tabpanel"
+                aria-labelledby="events-tab"
+              >
+                <div class="text-center py-5" id="events-loading">
+                  <div class="spinner-border" role="status">
+                    <span class="sr-only">Loading...</span>
+                  </div>
+                  <p class="mt-3">Loading security events...</p>
+                </div>
+                <div id="events-content" style="display: none"></div>
+              </div>
+
+              <!-- Login Attempts Tab -->
+              <div
+                class="tab-pane fade"
+                id="logins"
+                role="tabpanel"
+                aria-labelledby="logins-tab"
+              >
+                <div class="text-center py-5" id="logins-loading">
+                  <div class="spinner-border" role="status">
+                    <span class="sr-only">Loading...</span>
+                  </div>
+                  <p class="mt-3">Loading login attempts...</p>
+                </div>
+                <div id="logins-content" style="display: none"></div>
+              </div>
+
+              <!-- Active Sessions Tab -->
+              <div
+                class="tab-pane fade"
+                id="sessions"
+                role="tabpanel"
+                aria-labelledby="sessions-tab"
+              >
+                <div class="text-center py-5" id="sessions-loading">
+                  <div class="spinner-border" role="status">
+                    <span class="sr-only">Loading...</span>
+                  </div>
+                  <p class="mt-3">Loading active sessions...</p>
+                </div>
+                <div id="sessions-content" style="display: none"></div>
+              </div>
+
+              <!-- Security Actions Tab -->
+              <div
+                class="tab-pane fade"
+                id="actions"
+                role="tabpanel"
+                aria-labelledby="actions-tab"
+              >
+                <div class="text-center py-5" id="actions-loading">
+                  <div class="spinner-border" role="status">
+                    <span class="sr-only">Loading...</span>
+                  </div>
+                  <p class="mt-3">Loading security actions...</p>
+                </div>
+                <div id="actions-content" style="display: none"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+{% endblock %} {% block extra_js %}
+<script>
+  $(document).ready(function () {
+    console.log("Security Dashboard loaded successfully!");
+
+    // Handle tab switching with AJAX loading
+    $('#security-tabs a[data-toggle="pill"]').on("shown.bs.tab", function (e) {
+      const targetTab = $(e.target).attr("href");
+      const tabId = targetTab.replace("#", "");
+
+      // Skip overview tab as it's already loaded
+      if (tabId === "overview") return;
+
+      loadTabContent(tabId);
+    });
+
+    function loadTabContent(tabId) {
+      const loadingDiv = $(`#${tabId}-loading`);
+      const contentDiv = $(`#${tabId}-content`);
+      const hours =
+        new URLSearchParams(window.location.search).get("hours") || "24";
+
+      // Show loading, hide content
+      loadingDiv.show();
+      contentDiv.hide();
+
+      // Determine the URL based on tab
+      let url;
+      switch (tabId) {
+        case "events":
+          url = '{% url "tickets:security_events" %}';
+          break;
+        case "logins":
+          url = '{% url "tickets:login_attempts" %}';
+          break;
+        case "sessions":
+          url = '{% url "tickets:active_sessions" %}';
+          break;
+        case "actions":
+          url = '{% url "tickets:security_actions" %}';
+          break;
+        default:
+          return;
+      }
+
+      // Fetch content
+      $.get(url + `?hours=${hours}&ajax=1`)
+        .done(function (html) {
+          contentDiv.html(html);
+          loadingDiv.hide();
+          contentDiv.show();
+        })
+        .fail(function () {
+          console.error("Error loading tab content for:", tabId);
+          contentDiv.html(`
+                    <div class="alert alert-danger">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        Error loading content. Please refresh the page.
+                    </div>
+                `);
+          loadingDiv.hide();
+          contentDiv.show();
+        });
+    }
+
+    // Functions for small-box footer links
+    window.showEventsTab = function () {
+      $("#events-tab").tab("show");
+    };
+
+    window.showLoginsTab = function () {
+      $("#logins-tab").tab("show");
+    };
+
+    window.showSessionsTab = function () {
+      $("#sessions-tab").tab("show");
+    };
+
+    window.showActionsTab = function () {
+      $("#actions-tab").tab("show");
+    };
+  });
+</script>
+{% endblock %}

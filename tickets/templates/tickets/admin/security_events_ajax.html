@@ -1,0 +1,81 @@
+<!-- Security Events AJAX Content -->
+<div class="row">
+  <div class="col-12">
+    <div class="card">
+      <div class="card-header">
+        <h3 class="card-title">
+          <i class="fas fa-exclamation-triangle"></i> Security Events
+        </h3>
+        <div class="card-tools">
+          <button class="btn btn-tool" onclick="location.reload()">
+            <i class="fas fa-sync-alt"></i> Refresh
+          </button>
+        </div>
+      </div>
+      <div class="card-body table-responsive p-0">
+        {% if events %}
+        <table class="table table-hover text-nowrap">
+          <thead>
+            <tr>
+              <th>Time</th>
+              <th>Event Type</th>
+              <th>Severity</th>
+              <th>User</th>
+              <th>IP Address</th>
+              <th>Description</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for event in events %}
+            <tr>
+              <td>
+                <small>{{ event.timestamp|date:"M d, H:i" }}</small>
+              </td>
+              <td>{{ event.get_event_type_display }}</td>
+              <td>
+                {% if event.severity == 'CRITICAL' %}
+                <span class="badge badge-danger">
+                  <i class="fas fa-exclamation-triangle"></i> {{ event.severity
+                  }}
+                </span>
+                {% elif event.severity == 'HIGH' %}
+                <span class="badge badge-warning">
+                  <i class="fas fa-exclamation-circle"></i> {{ event.severity }}
+                </span>
+                {% elif event.severity == 'MEDIUM' %}
+                <span class="badge badge-info">
+                  <i class="fas fa-info-circle"></i> {{ event.severity }}
+                </span>
+                {% else %}
+                <span class="badge badge-secondary">
+                  <i class="fas fa-minus-circle"></i> {{ event.severity }}
+                </span>
+                {% endif %}
+              </td>
+              <td>{{ event.username_attempted|default:"-" }}</td>
+              <td>{{ event.ip_address|default:"-" }}</td>
+              <td>{{ event.description|truncatechars:100 }}</td>
+              <td>
+                {% if event.resolved %}
+                <span class="badge badge-success">Resolved</span>
+                {% else %}
+                <span class="badge badge-danger">Open</span>
+                {% endif %}
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+        {% else %}
+        <div class="p-4 text-center">
+          <i class="fas fa-shield-alt fa-3x text-muted mb-3"></i>
+          <p class="text-muted">
+            No security events found for the selected time period.
+          </p>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
