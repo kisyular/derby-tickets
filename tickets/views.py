@@ -5,6 +5,8 @@ from django.contrib.auth.models import User
 from django.contrib import messages
 from django.db.models import Q
 from .models import Ticket, UserProfile, Comment, Category
+from .security import SecurityManager, domain_required, staff_required
+from .logging_utils import log_auth_event, log_security_event
 
 # Create your views here.
 
@@ -255,21 +257,92 @@ def home(request):
     return render(request, 'tickets/home.html', context)
 
 def user_login(request):
-    """User login view"""
+    """Enhanced user login view with security features"""
     if request.user.is_authenticated:
         return redirect('tickets:home')
     
     if request.method == 'POST':
-        username = request.POST.get('username')
-        password = request.POST.get('password')
+        username = request.POST.get('username', '').strip()
+        password = request.POST.get('password', '')
         
+        if not username or not password:
+            messages.error(request, 'Please provide both username and password.')
+            return render(request, 'tickets/login.html')
+        
+        # Security validation
+        security_check = SecurityManager.validate_login_attempt(username, request)
+        
+        if not security_check['allowed']:
+            messages.error(request, security_check['reason'])
+            
+            # Log the blocked attempt
+            log_auth_event(
+                'LOGIN_BLOCKED',
+                username,
+                request,
+                False,
+                security_check['reason']
+            )
+            
+            return render(request, 'tickets/login.html')
+        
+        # Show remaining attempts if getting close to lockout
+        if security_check['attempts_remaining'] <= 2:
+            messages.warning(
+                request,
+                f'Warning: {security_check["attempts_remaining"]} login attempts remaining before account lockout.'
+            )
+        
+        # Attempt authentication
         user = authenticate(request, username=username, password=password)
+        
         if user is not None:
+            # Additional security checks for authenticated user
+            if not user.is_active:
+                log_security_event(
+                    'INACTIVE_USER_LOGIN',
+                    f'Login attempt by inactive user: {username}',
+                    request,
+                    'WARNING',
+                    user
+                )
+                messages.error(request, 'Account is disabled. Contact administrator.')
+                return render(request, 'tickets/login.html')
+            
+            # Domain restriction check (if using email as username)
+            if '@' in username and not SecurityManager.is_domain_allowed(username):
+                log_security_event(
+                    'UNAUTHORIZED_DOMAIN_SUCCESS',
+                    f'Successful authentication from unauthorized domain: {username}',
+                    request,
+                    'ERROR',
+                    user
+                )
+                messages.error(request, 'Domain not authorized for access.')
+                return render(request, 'tickets/login.html')
+            
+            # Successful login
             login(request, user)
+            
+            # Log successful login (handled by signal)
             messages.success(request, f'Welcome back, {user.first_name or user.username}!')
+            
+            # Security notification for new login
+            if request.session.get('_auth_user_id') != str(user.id):
+                client_ip = request.META.get('REMOTE_ADDR', 'unknown')
+                user_agent = request.META.get('HTTP_USER_AGENT', 'unknown')
+                log_security_event(
+                    'NEW_LOGIN_SESSION',
+                    f'New login session created - IP: {client_ip}, User-Agent: {user_agent[:100]}',
+                    request,
+                    'INFO',
+                    user
+                )
+            
             next_url = request.GET.get('next', 'tickets:home')
             return redirect(next_url)
         else:
+            # Failed authentication - handled by signal, but show user-friendly message
             messages.error(request, 'Invalid username or password.')
     
     return render(request, 'tickets/login.html')

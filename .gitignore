@@ -25,3 +25,4 @@ logs/
 # Security-sensitive documentation
 LOGGING_IMPLEMENTATION.md
 *_IMPLEMENTATION.md
+SECURITY_FEATURES.md 

@@ -53,6 +53,7 @@ MIDDLEWARE = [
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
+    "tickets.security.SecurityMiddleware",  # Our custom security middleware
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
 ]
@@ -382,3 +383,38 @@ if 'test' in sys.argv:
 LOGIN_URL = 'tickets:login'
 LOGIN_REDIRECT_URL = 'tickets:home'
 LOGOUT_REDIRECT_URL = 'tickets:login'
+
+# Security Configuration
+ALLOWED_EMAIL_DOMAINS = ['derbyfab.com']  # Only allow users from these domains
+MAX_LOGIN_ATTEMPTS = 5  # Number of failed attempts before lockout
+LOGIN_LOCKOUT_TIME = 300  # Lockout duration in seconds (5 minutes)
+SUSPICIOUS_ACTIVITY_THRESHOLD = 10  # Threshold for suspicious activity alerts
+
+# Session Security
+SESSION_COOKIE_SECURE = not DEBUG  # Use secure cookies in production
+SESSION_COOKIE_HTTPONLY = True  # Prevent JS access to session cookies
+SESSION_COOKIE_SAMESITE = 'Lax'  # CSRF protection
+SESSION_EXPIRE_AT_BROWSER_CLOSE = True  # End session when browser closes
+SESSION_COOKIE_AGE = 3600 * 8  # 8 hours session timeout
+
+# CSRF Protection
+CSRF_COOKIE_SECURE = not DEBUG  # Use secure cookies in production
+CSRF_COOKIE_HTTPONLY = True  # Prevent JS access to CSRF cookies
+CSRF_COOKIE_SAMESITE = 'Lax'
+
+# Additional Security Headers
+SECURE_BROWSER_XSS_FILTER = True  # Enable XSS filtering
+SECURE_CONTENT_TYPE_NOSNIFF = True  # Prevent MIME sniffing
+X_FRAME_OPTIONS = 'DENY'  # Prevent clickjacking
+
+# Cache configuration for security features (using Django's default cache)
+CACHES = {
+    'default': {
+        'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
+        'LOCATION': 'unique-snowflake',
+        'TIMEOUT': 300,  # 5 minutes default timeout
+        'OPTIONS': {
+            'MAX_ENTRIES': 1000,
+        }
+    }
+}
