@@ -9,6 +9,7 @@ from typing import Any, List
 from django.contrib.auth.models import User
 from django.template.loader import render_to_string
 from django.conf import settings
+from .logging_utils import log_email_sent, log_system_event, performance_monitor
 
 
 def send_email(subject: str, html_body: str, recipients: List[str] = None, in_test: bool = True, attachment_file: str = None) -> bool:
@@ -77,13 +78,25 @@ def send_email(subject: str, html_body: str, recipients: List[str] = None, in_te
             print(f'Email sent successfully! Duration: {duration:.2f}s')
             print(f'Subject: {subject}')
             print(f'Recipients: {", ".join(to_emails)}')
+            
+            # Log successful email sending
+            for recipient in to_emails:
+                log_email_sent(recipient, subject, success=True)
+            
             return True
             
     except Exception as e:
         duration = time.time() - start_time
+        error_msg = str(e)
         print(f'Failed to send email after {duration:.2f}s: {e}')
         print(f'Subject: {subject}')
         print(f'Attempted recipients: {recipients if not in_test else [os.environ.get("DJANGO_TEST_EMAIL")]}')
+        
+        # Log failed email sending
+        for recipient in to_emails:
+            log_email_sent(recipient, subject, success=False, error=error_msg)
+        
+        log_system_event('EMAIL_ERROR', f'Failed to send email: {error_msg}', 'ERROR')
         return False
 
 

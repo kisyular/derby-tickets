@@ -22,3 +22,6 @@ reset_admin_password.py
 debug_*
 security.md
 logs/
+# Security-sensitive documentation
+LOGGING_IMPLEMENTATION.md
+*_IMPLEMENTATION.md

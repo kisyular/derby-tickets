@@ -130,9 +130,253 @@ STATIC_URL = "static/"
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
+# Production-Grade Logging Configuration
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'formatters': {
+        'verbose': {
+            'format': '[{levelname}] {asctime} | {name} | PID:{process} TID:{thread} | {funcName}:{lineno} | {message}',
+            'style': '{',
+            'datefmt': '%Y-%m-%d %H:%M:%S'
+        },
+        'standard': {
+            'format': '[{levelname}] {asctime} | {name} | {message}',
+            'style': '{',
+            'datefmt': '%Y-%m-%d %H:%M:%S'
+        },
+        'security': {
+            'format': '[SECURITY] {asctime} | {name} | IP:{remote_addr} | User:{user} | {message}',
+            'style': '{',
+            'datefmt': '%Y-%m-%d %H:%M:%S'
+        },
+        'json': {
+            '()': 'pythonjsonlogger.jsonlogger.JsonFormatter',
+            'format': '%(asctime)s %(name)s %(levelname)s %(message)s %(pathname)s %(lineno)d'
+        },
+        'simple': {
+            'format': '[{levelname}] {name}: {message}',
+            'style': '{',
+        },
+    },
+    'filters': {
+        'require_debug_false': {
+            '()': 'django.utils.log.RequireDebugFalse',
+        },
+        'require_debug_true': {
+            '()': 'django.utils.log.RequireDebugTrue',
+        },
+        'skip_suspicious_operations': {
+            '()': 'django.utils.log.CallbackFilter',
+            'callback': lambda record: not record.getMessage().startswith('Suspicious'),
+        },
+    },
+    'handlers': {
+        # Console output for development
+        'console': {
+            'level': 'INFO',
+            'filters': ['require_debug_true'],
+            'class': 'logging.StreamHandler',
+            'formatter': 'standard',
+        },
+        # Console output for production (errors only)
+        'console_prod': {
+            'level': 'ERROR',
+            'filters': ['require_debug_false'],
+            'class': 'logging.StreamHandler',
+            'formatter': 'standard',
+        },
+        # General application logs
+        'file_app': {
+            'level': 'INFO',
+            'class': 'logging.handlers.RotatingFileHandler',
+            'filename': BASE_DIR / 'logs' / 'application.log',
+            'maxBytes': 10 * 1024 * 1024,  # 10MB
+            'backupCount': 10,
+            'formatter': 'verbose',
+            'encoding': 'utf-8',
+        },
+        # Error logs
+        'file_error': {
+            'level': 'ERROR',
+            'class': 'logging.handlers.RotatingFileHandler',
+            'filename': BASE_DIR / 'logs' / 'errors.log',
+            'maxBytes': 10 * 1024 * 1024,  # 10MB
+            'backupCount': 5,
+            'formatter': 'verbose',
+            'encoding': 'utf-8',
+        },
+        # Security logs
+        'file_security': {
+            'level': 'WARNING',
+            'class': 'logging.handlers.RotatingFileHandler',
+            'filename': BASE_DIR / 'logs' / 'security.log',
+            'maxBytes': 10 * 1024 * 1024,  # 10MB
+            'backupCount': 10,
+            'formatter': 'security',
+            'encoding': 'utf-8',
+        },
+        # Authentication logs
+        'file_auth': {
+            'level': 'INFO',
+            'class': 'logging.handlers.RotatingFileHandler',
+            'filename': BASE_DIR / 'logs' / 'authentication.log',
+            'maxBytes': 5 * 1024 * 1024,  # 5MB
+            'backupCount': 10,
+            'formatter': 'verbose',
+            'encoding': 'utf-8',
+        },
+        # Database logs
+        'file_db': {
+            'level': 'WARNING',
+            'class': 'logging.handlers.RotatingFileHandler',
+            'filename': BASE_DIR / 'logs' / 'database.log',
+            'maxBytes': 5 * 1024 * 1024,  # 5MB
+            'backupCount': 5,
+            'formatter': 'verbose',
+            'encoding': 'utf-8',
+        },
+        # Email notifications to admins for critical issues
+        'mail_admins': {
+            'level': 'ERROR',
+            'filters': ['require_debug_false', 'skip_suspicious_operations'],
+            'class': 'django.utils.log.AdminEmailHandler',
+            'formatter': 'verbose',
+            'include_html': True,
+        },
+        # Ticket system specific logs
+        'file_tickets': {
+            'level': 'INFO',
+            'class': 'logging.handlers.RotatingFileHandler',
+            'filename': BASE_DIR / 'logs' / 'tickets.log',
+            'maxBytes': 10 * 1024 * 1024,  # 10MB
+            'backupCount': 15,
+            'formatter': 'verbose',
+            'encoding': 'utf-8',
+        },
+        # Performance monitoring logs
+        'file_performance': {
+            'level': 'INFO',
+            'class': 'logging.handlers.RotatingFileHandler',
+            'filename': BASE_DIR / 'logs' / 'performance.log',
+            'maxBytes': 5 * 1024 * 1024,  # 5MB
+            'backupCount': 5,
+            'formatter': 'json',
+            'encoding': 'utf-8',
+        },
+    },
+    'loggers': {
+        # Root logger
+        '': {
+            'handlers': ['console', 'console_prod', 'file_app'],
+            'level': 'INFO',
+            'propagate': False,
+        },
+        # Django framework logs
+        'django': {
+            'handlers': ['console', 'console_prod', 'file_app', 'mail_admins'],
+            'level': 'INFO',
+            'propagate': False,
+        },
+        # Django security logs
+        'django.security': {
+            'handlers': ['file_security', 'mail_admins'],
+            'level': 'WARNING',
+            'propagate': False,
+        },
+        # Django request logs (errors and performance issues)
+        'django.request': {
+            'handlers': ['file_error', 'mail_admins'],
+            'level': 'ERROR',
+            'propagate': False,
+        },
+        # Database query logs
+        'django.db.backends': {
+            'handlers': ['file_db'],
+            'level': 'WARNING',
+            'propagate': False,
+        },
+        # Authentication and authorization
+        'django.contrib.auth': {
+            'handlers': ['file_auth', 'file_security'],
+            'level': 'INFO',
+            'propagate': False,
+        },
+        # Our tickets application
+        'tickets': {
+            'handlers': ['console', 'console_prod', 'file_tickets', 'file_app'],
+            'level': 'INFO',
+            'propagate': False,
+        },
+        # Tickets security events
+        'tickets.security': {
+            'handlers': ['file_security', 'file_auth', 'mail_admins'],
+            'level': 'WARNING',
+            'propagate': False,
+        },
+        # Tickets authentication events
+        'tickets.auth': {
+            'handlers': ['file_auth', 'file_security'],
+            'level': 'INFO',
+            'propagate': False,
+        },
+        # Email system logs
+        'tickets.email': {
+            'handlers': ['file_tickets', 'file_app'],
+            'level': 'INFO',
+            'propagate': False,
+        },
+        # Performance monitoring
+        'tickets.performance': {
+            'handlers': ['file_performance'],
+            'level': 'INFO',
+            'propagate': False,
+        },
+        # Third-party libraries (reduce noise)
+        'urllib3': {
+            'handlers': ['file_app'],
+            'level': 'WARNING',
+            'propagate': False,
+        },
+        'requests': {
+            'handlers': ['file_app'],
+            'level': 'WARNING',
+            'propagate': False,
+        },
+    },
+}
+
+# Create logs directory and subdirectories if they don't exist
+import os
+from pathlib import Path
+
+log_dir = BASE_DIR / 'logs'
+log_dir.mkdir(exist_ok=True)
+
+# Create archive directory for old logs
+archive_dir = log_dir / 'archive'
+archive_dir.mkdir(exist_ok=True)
+
+# Ensure log files exist with proper permissions
+log_files = [
+    'application.log', 'errors.log', 'security.log', 'authentication.log',
+    'database.log', 'tickets.log', 'performance.log'
+]
+
+for log_file in log_files:
+    log_path = log_dir / log_file
+    if not log_path.exists():
+        log_path.touch()
+        if os.name != 'nt':  # Unix-like systems
+            os.chmod(log_path, 0o644)
+
 # Email configuration for testing
 if 'test' in sys.argv:
     EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+    # Reduce logging noise during tests
+    LOGGING['loggers']['tickets']['level'] = 'ERROR'
+    LOGGING['loggers']['django']['level'] = 'ERROR'
+    LOGGING['handlers']['console']['level'] = 'ERROR'
 
 # Authentication settings
 LOGIN_URL = 'tickets:login'
