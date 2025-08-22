@@ -1,7 +1,12 @@
 from django.contrib import admin
 from django.contrib.auth.models import User
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
+from django.utils.html import format_html
+from django.urls import reverse
+from django.utils.safestring import mark_safe
+from django.utils import timezone
 from .models import Ticket, UserProfile, Comment, Category
+from .audit_models import SecurityEvent, LoginAttempt, UserSession, AuditLog
 
 # Register your models here.
 
@@ -209,3 +214,231 @@ class CategoryAdmin(admin.ModelAdmin):
             'classes': ['collapse'],
         }),
     )
+
+
+# =============================================================================
+# SECURITY AUDIT ADMIN INTERFACES
+# =============================================================================
+
+@admin.register(SecurityEvent)
+class SecurityEventAdmin(admin.ModelAdmin):
+    """Admin interface for security events with comprehensive filtering and search"""
+    
+    list_display = [
+        'timestamp', 'event_type', 'severity', 'get_user_display', 
+        'ip_address', 'success', 'resolved', 'get_description_preview'
+    ]
+    list_filter = [
+        'event_type', 'severity', 'success', 'resolved', 'timestamp',
+        ('user', admin.RelatedOnlyFieldListFilter)
+    ]
+    search_fields = [
+        'description', 'username_attempted', 'ip_address', 
+        'user__username', 'user__email', 'reason'
+    ]
+    readonly_fields = [
+        'timestamp', 'event_type', 'user', 'username_attempted',
+        'ip_address', 'user_agent', 'session_key', 'description',
+        'success', 'reason', 'metadata'
+    ]
+    ordering = ['-timestamp']
+    
+    fieldsets = (
+        ('Event Information', {
+            'fields': ('timestamp', 'event_type', 'severity', 'success')
+        }),
+        ('User Information', {
+            'fields': ('user', 'username_attempted')
+        }),
+        ('Request Details', {
+            'fields': ('ip_address', 'user_agent', 'session_key')
+        }),
+        ('Event Details', {
+            'fields': ('description', 'reason', 'metadata')
+        }),
+        ('Resolution', {
+            'fields': ('resolved', 'resolved_by', 'resolved_at', 'notes'),
+            'classes': ['collapse']
+        })
+    )
+    
+    actions = ['mark_resolved', 'mark_unresolved']
+    
+    def get_user_display(self, obj):
+        if obj.user:
+            return obj.user.username
+        return obj.username_attempted or 'Anonymous'
+    get_user_display.short_description = 'User'
+    
+    def get_description_preview(self, obj):
+        return obj.description[:50] + '...' if len(obj.description) > 50 else obj.description
+    get_description_preview.short_description = 'Description'
+    
+    def mark_resolved(self, request, queryset):
+        queryset.update(resolved=True, resolved_by=request.user, resolved_at=timezone.now())
+        self.message_user(request, f"Marked {queryset.count()} events as resolved.")
+    mark_resolved.short_description = "Mark selected events as resolved"
+    
+    def mark_unresolved(self, request, queryset):
+        queryset.update(resolved=False, resolved_by=None, resolved_at=None)
+        self.message_user(request, f"Marked {queryset.count()} events as unresolved.")
+    mark_unresolved.short_description = "Mark selected events as unresolved"
+
+
+@admin.register(LoginAttempt)
+class LoginAttemptAdmin(admin.ModelAdmin):
+    """Admin interface for login attempts with security focus"""
+    
+    list_display = [
+        'timestamp', 'username', 'status', 'ip_address', 
+        'is_suspicious', 'attempt_count', 'get_user_display'
+    ]
+    list_filter = [
+        'status', 'is_suspicious', 'lockout_triggered', 'timestamp',
+        ('user', admin.RelatedOnlyFieldListFilter)
+    ]
+    search_fields = [
+        'username', 'ip_address', 'user_agent', 'failure_reason',
+        'user__username', 'country', 'region'
+    ]
+    readonly_fields = [
+        'timestamp', 'username', 'status', 'ip_address', 'user_agent',
+        'failure_reason', 'is_suspicious', 'lockout_triggered',
+        'attempt_count', 'user', 'country', 'region', 'isp'
+    ]
+    ordering = ['-timestamp']
+    
+    fieldsets = (
+        ('Attempt Information', {
+            'fields': ('timestamp', 'username', 'status', 'user')
+        }),
+        ('Technical Details', {
+            'fields': ('ip_address', 'user_agent', 'failure_reason')
+        }),
+        ('Security Analysis', {
+            'fields': ('is_suspicious', 'lockout_triggered', 'attempt_count')
+        }),
+        ('Geographic Information', {
+            'fields': ('country', 'region', 'isp'),
+            'classes': ['collapse']
+        })
+    )
+    
+    def get_user_display(self, obj):
+        return obj.user.username if obj.user else 'No Account'
+    get_user_display.short_description = 'Account'
+
+
+@admin.register(UserSession)
+class UserSessionAdmin(admin.ModelAdmin):
+    """Admin interface for user sessions"""
+    
+    list_display = [
+        'user', 'created_at', 'last_activity', 'is_active',
+        'get_duration', 'ip_address', 'is_suspicious'
+    ]
+    list_filter = [
+        'is_active', 'is_suspicious', 'forced_logout', 'login_method',
+        'created_at', 'last_activity'
+    ]
+    search_fields = [
+        'user__username', 'ip_address', 'user_agent', 
+        'session_key', 'country', 'region', 'city'
+    ]
+    readonly_fields = [
+        'user', 'session_key', 'created_at', 'last_activity', 'ended_at',
+        'ip_address', 'user_agent', 'login_method', 'country', 'region', 'city'
+    ]
+    ordering = ['-last_activity']
+    
+    fieldsets = (
+        ('Session Information', {
+            'fields': ('user', 'session_key', 'login_method')
+        }),
+        ('Timeline', {
+            'fields': ('created_at', 'last_activity', 'ended_at', 'is_active')
+        }),
+        ('Technical Details', {
+            'fields': ('ip_address', 'user_agent')
+        }),
+        ('Security Flags', {
+            'fields': ('is_suspicious', 'forced_logout')
+        }),
+        ('Geographic Information', {
+            'fields': ('country', 'region', 'city'),
+            'classes': ['collapse']
+        })
+    )
+    
+    actions = ['force_logout_sessions']
+    
+    def get_duration(self, obj):
+        duration = obj.duration
+        hours = int(duration.total_seconds() // 3600)
+        minutes = int((duration.total_seconds() % 3600) // 60)
+        return f"{hours}h {minutes}m"
+    get_duration.short_description = 'Duration'
+    
+    def force_logout_sessions(self, request, queryset):
+        active_sessions = queryset.filter(is_active=True)
+        count = active_sessions.update(
+            is_active=False,
+            ended_at=timezone.now(),
+            forced_logout=True
+        )
+        self.message_user(request, f"Forced logout of {count} active sessions.")
+    force_logout_sessions.short_description = "Force logout selected sessions"
+
+
+@admin.register(AuditLog)
+class AuditLogAdmin(admin.ModelAdmin):
+    """Admin interface for audit logs"""
+    
+    list_display = [
+        'timestamp', 'action', 'user', 'get_object_display',
+        'risk_level', 'ip_address', 'get_description_preview'
+    ]
+    list_filter = [
+        'action', 'risk_level', 'timestamp', 'object_type',
+        ('user', admin.RelatedOnlyFieldListFilter),
+        ('target_user', admin.RelatedOnlyFieldListFilter)
+    ]
+    search_fields = [
+        'description', 'object_repr', 'user__username', 
+        'target_user__username', 'ip_address', 'request_path'
+    ]
+    readonly_fields = [
+        'timestamp', 'action', 'user', 'target_user', 'object_type',
+        'object_id', 'object_repr', 'changes', 'description',
+        'ip_address', 'user_agent', 'request_path', 'risk_level'
+    ]
+    ordering = ['-timestamp']
+    
+    fieldsets = (
+        ('Action Information', {
+            'fields': ('timestamp', 'action', 'risk_level')
+        }),
+        ('User Information', {
+            'fields': ('user', 'target_user')
+        }),
+        ('Object Information', {
+            'fields': ('object_type', 'object_id', 'object_repr')
+        }),
+        ('Details', {
+            'fields': ('description', 'changes')
+        }),
+        ('Request Context', {
+            'fields': ('ip_address', 'user_agent', 'request_path'),
+            'classes': ['collapse']
+        })
+    )
+    
+    def get_object_display(self, obj):
+        if obj.object_type and obj.object_repr:
+            return f"{obj.object_type}: {obj.object_repr[:30]}"
+        return "-"
+    get_object_display.short_description = 'Object'
+    
+    def get_description_preview(self, obj):
+        return obj.description[:40] + '...' if len(obj.description) > 40 else obj.description
+    get_description_preview.short_description = 'Description'

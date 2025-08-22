@@ -3,6 +3,9 @@ from django.contrib.auth.models import User
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 
+# Import audit models for comprehensive security tracking
+from .audit_models import SecurityEvent, LoginAttempt, UserSession, AuditLog
+
 # SIMPLIFIED APPROACH: Use Django User model + minimal profile extension
 
 class UserProfile(models.Model):

@@ -6,6 +6,7 @@ from django.contrib import messages
 from django.db.models import Q
 from .models import Ticket, UserProfile, Comment, Category
 from .security import SecurityManager, domain_required, staff_required
+from .audit_security import audit_security_manager
 from .logging_utils import log_auth_event, log_security_event
 
 # Create your views here.
@@ -88,6 +89,18 @@ def ticket_detail(request, ticket_id):
         messages.error(request, "You don't have permission to view this ticket.")
         return redirect('tickets:ticket_list')
     
+    # Log the ticket view for audit trail
+    audit_security_manager.log_audit_event(
+        request=request,
+        action='READ',
+        user=request.user,
+        object_type='Ticket',
+        object_id=str(ticket.id),
+        object_repr=str(ticket),
+        description=f'Viewed Ticket #{ticket.id}: {ticket.title}',
+        risk_level='LOW'
+    )
+    
     # Handle POST requests
     if request.method == 'POST':
         action = request.POST.get('action', 'edit_ticket')
@@ -100,6 +113,17 @@ def ticket_detail(request, ticket_id):
             status = request.POST.get('status')
             
             if title and priority and status:
+                # Capture changes for audit trail
+                changes = {}
+                if ticket.title != title:
+                    changes['title'] = {'old': ticket.title, 'new': title}
+                if ticket.description != description:
+                    changes['description'] = {'old': ticket.description, 'new': description}
+                if ticket.priority != priority:
+                    changes['priority'] = {'old': ticket.priority, 'new': priority}
+                if ticket.status != status:
+                    changes['status'] = {'old': ticket.status, 'new': status}
+                
                 ticket.title = title
                 ticket.description = description
                 ticket.priority = priority
@@ -107,6 +131,20 @@ def ticket_detail(request, ticket_id):
                 # Set the user who made the changes for email notifications
                 ticket._updated_by = request.user
                 ticket.save()
+                
+                # Log the ticket update for audit trail
+                audit_security_manager.log_audit_event(
+                    request=request,
+                    action='UPDATE',
+                    user=request.user,
+                    object_type='Ticket',
+                    object_id=str(ticket.id),
+                    object_repr=str(ticket),
+                    changes=changes,
+                    description=f'Updated Ticket #{ticket.id}: {ticket.title}',
+                    risk_level='LOW'
+                )
+                
                 messages.success(request, 'Ticket updated successfully!')
                 return redirect('tickets:ticket_detail', ticket_id=ticket.id)
             else:
@@ -118,12 +156,26 @@ def ticket_detail(request, ticket_id):
             is_internal = request.POST.get('is_internal') == 'on'
             
             if comment_content:
-                Comment.objects.create(
+                comment = Comment.objects.create(
                     ticket=ticket,
                     author=request.user,
                     content=comment_content,
                     is_internal=is_internal and request.user.is_staff  # Only staff can create internal comments
                 )
+                
+                # Log the comment creation for audit trail
+                audit_security_manager.log_audit_event(
+                    request=request,
+                    action='CREATE',
+                    user=request.user,
+                    object_type='Comment',
+                    object_id=str(comment.id),
+                    object_repr=f'Comment on Ticket #{ticket.id}',
+                    description=f'Added comment to Ticket #{ticket.id}: {ticket.title}',
+                    risk_level='LOW',
+                    changes={'ticket_id': ticket.id, 'is_internal': is_internal}
+                )
+                
                 messages.success(request, 'Comment added successfully!')
                 return redirect('tickets:ticket_detail', ticket_id=ticket.id)
             else:
@@ -257,7 +309,7 @@ def home(request):
     return render(request, 'tickets/home.html', context)
 
 def user_login(request):
-    """Enhanced user login view with security features"""
+    """Enhanced user login view with comprehensive audit trail"""
     if request.user.is_authenticated:
         return redirect('tickets:home')
     
@@ -269,86 +321,93 @@ def user_login(request):
             messages.error(request, 'Please provide both username and password.')
             return render(request, 'tickets/login.html')
         
-        # Security validation
-        security_check = SecurityManager.validate_login_attempt(username, request)
+        # Enhanced security validation with audit trail
+        validation_result = audit_security_manager.validate_login_with_audit(
+            request, username, password
+        )
         
-        if not security_check['allowed']:
-            messages.error(request, security_check['reason'])
+        if validation_result['success']:
+            # Get the user and log them in
+            user = authenticate(request, username=username, password=password)
             
-            # Log the blocked attempt
-            log_auth_event(
-                'LOGIN_BLOCKED',
-                username,
-                request,
-                False,
-                security_check['reason']
-            )
+            if user is not None and user.is_active:
+                # Final security checks
+                if '@' in username and not audit_security_manager.is_domain_allowed(username):
+                    audit_security_manager.log_security_event(
+                        event_type='UNAUTHORIZED_DOMAIN',
+                        request=request,
+                        user=user,
+                        description=f'Login blocked: unauthorized domain {username}',
+                        severity='HIGH',
+                        success=False,
+                        reason='Domain not authorized'
+                    )
+                    messages.error(request, 'Domain not authorized for access.')
+                    return render(request, 'tickets/login.html')
+                
+                # Successful login
+                login(request, user)
+                
+                # Log successful session creation
+                audit_security_manager.log_audit_event(
+                    request=request,
+                    action='LOGIN',
+                    user=user,
+                    description=f'User {username} logged in successfully',
+                    risk_level='LOW'
+                )
+                
+                messages.success(request, f'Welcome back, {user.first_name or user.username}!')
+                
+                # Security notification for suspicious login
+                if validation_result.get('is_suspicious'):
+                    messages.warning(request, 'This login has been flagged for security review.')
+                
+                next_url = request.GET.get('next', 'tickets:home')
+                return redirect(next_url)
             
-            return render(request, 'tickets/login.html')
-        
-        # Show remaining attempts if getting close to lockout
-        if security_check['attempts_remaining'] <= 2:
-            messages.warning(
-                request,
-                f'Warning: {security_check["attempts_remaining"]} login attempts remaining before account lockout.'
-            )
-        
-        # Attempt authentication
-        user = authenticate(request, username=username, password=password)
-        
-        if user is not None:
-            # Additional security checks for authenticated user
-            if not user.is_active:
-                log_security_event(
-                    'INACTIVE_USER_LOGIN',
-                    f'Login attempt by inactive user: {username}',
-                    request,
-                    'WARNING',
-                    user
+            elif user and not user.is_active:
+                audit_security_manager.log_security_event(
+                    event_type='LOGIN_BLOCKED',
+                    request=request,
+                    user=user,
+                    description=f'Login blocked: inactive user {username}',
+                    severity='MEDIUM',
+                    success=False,
+                    reason='Account is disabled'
                 )
                 messages.error(request, 'Account is disabled. Contact administrator.')
-                return render(request, 'tickets/login.html')
-            
-            # Domain restriction check (if using email as username)
-            if '@' in username and not SecurityManager.is_domain_allowed(username):
-                log_security_event(
-                    'UNAUTHORIZED_DOMAIN_SUCCESS',
-                    f'Successful authentication from unauthorized domain: {username}',
-                    request,
-                    'ERROR',
-                    user
-                )
-                messages.error(request, 'Domain not authorized for access.')
-                return render(request, 'tickets/login.html')
-            
-            # Successful login
-            login(request, user)
-            
-            # Log successful login (handled by signal)
-            messages.success(request, f'Welcome back, {user.first_name or user.username}!')
-            
-            # Security notification for new login
-            if request.session.get('_auth_user_id') != str(user.id):
-                client_ip = request.META.get('REMOTE_ADDR', 'unknown')
-                user_agent = request.META.get('HTTP_USER_AGENT', 'unknown')
-                log_security_event(
-                    'NEW_LOGIN_SESSION',
-                    f'New login session created - IP: {client_ip}, User-Agent: {user_agent[:100]}',
-                    request,
-                    'INFO',
-                    user
-                )
-            
-            next_url = request.GET.get('next', 'tickets:home')
-            return redirect(next_url)
+        
         else:
-            # Failed authentication - handled by signal, but show user-friendly message
-            messages.error(request, 'Invalid username or password.')
+            # Handle failed login
+            error_message = validation_result.get('message', 'Invalid username or password.')
+            
+            # Add additional context for user
+            if validation_result.get('locked'):
+                error_message += f" Account locked for {validation_result.get('lockout_duration', 30)} minutes."
+            elif validation_result.get('attempts_remaining', 0) > 0:
+                attempts_left = validation_result.get('attempts_remaining', 0)
+                if attempts_left <= 2:
+                    error_message += f" {attempts_left} attempts remaining."
+            
+            messages.error(request, error_message)
     
     return render(request, 'tickets/login.html')
 
 def user_logout(request):
-    """User logout view"""
-    logout(request)
-    messages.success(request, 'You have been logged out successfully.')
+    """Enhanced user logout view with audit trail"""
+    if request.user.is_authenticated:
+        # Log the logout
+        audit_security_manager.end_user_session(request, request.user)
+        audit_security_manager.log_audit_event(
+            request=request,
+            action='LOGOUT',
+            user=request.user,
+            description=f'User {request.user.username} logged out',
+            risk_level='LOW'
+        )
+        
+        logout(request)
+        messages.success(request, 'You have been logged out successfully.')
+    
     return redirect('tickets:login')

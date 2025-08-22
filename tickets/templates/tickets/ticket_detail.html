@@ -397,7 +397,7 @@
                                 </select>
                             </div>
                         </div>
-                        {% if ticket.created_by == user and user.is_staff %}
+                        {% if user.is_staff %}
                         <div class="col-md-6">
                             <div class="form-group">
                                 <label for="status">Status</label>

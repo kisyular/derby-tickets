@@ -121,7 +121,7 @@ class SecurityManager:
             if not SecurityManager.is_domain_allowed(username):
                 result['allowed'] = False
                 result['domain_valid'] = False
-                result['reason'] = f'Domain not authorized. Allowed domains: {", ".join(ALLOWED_DOMAINS)}'
+                result['reason'] = 'Domain not authorized. Use your company email'
                 
                 # Log unauthorized domain attempt
                 log_security_event(
