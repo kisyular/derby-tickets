@@ -77,7 +77,7 @@ class Command(BaseCommand):
         
         for email, expected in test_emails:
             result = SecurityManager.is_domain_allowed(email)
-            status = "✅ PASS" if result == expected else "❌ FAIL"
+            status = "PASS" if result == expected else "FAIL"
             self.stdout.write(f'  {status} - {email}: {"Allowed" if result else "Blocked"}')
             
             # Log domain check for testing
@@ -108,13 +108,13 @@ class Command(BaseCommand):
             )
             
             if result['locked_out']:
-                self.stdout.write('  ⚠️  Account locked!')
+                self.stdout.write('  Account locked!')
                 break
         
         # Test lockout check
         is_locked = SecurityManager.is_locked_out(test_user)
-        self.stdout.write(f'  Final lockout status: {"LOCKED" if is_locked else "🔓 UNLOCKED"}')
-        
+        self.stdout.write(f'  Final lockout status: {"LOCKED" if is_locked else "UNLOCKED"}')
+
         # Clear for next test
         SecurityManager.clear_attempts(test_user)
 
@@ -162,7 +162,7 @@ class Command(BaseCommand):
             
             suspicious = SecurityManager.detect_suspicious_patterns(request)
             if suspicious:
-                self.stdout.write(f'  🚨 Suspicious: {user_agent[:50]}... -> {suspicious[0]}')
+                self.stdout.write(f'  Suspicious: {user_agent[:50]}... -> {suspicious[0]}')
                 log_security_event(
                     'SUSPICIOUS_TEST',
                     f'Test detected suspicious pattern: {suspicious[0]}',
@@ -180,7 +180,7 @@ class Command(BaseCommand):
         for i in range(35):  # Exceed the 30 requests/minute threshold
             suspicious = SecurityManager.detect_suspicious_patterns(normal_request)
             if suspicious and 'High request rate' in str(suspicious):
-                self.stdout.write(f'  🚨 Rate limit triggered at request {i+1}')
+                self.stdout.write(f'  Rate limit triggered at request {i+1}')
                 break
 
     def create_test_user(self):

@@ -25,7 +25,7 @@ class Command(BaseCommand):
         limit = options['limit']
         model = options['model']
 
-        self.stdout.write("🗄️  DATABASE CONTENTS SCAN")
+        self.stdout.write(" DATABASE CONTENTS SCAN")
         self.stdout.write("=" * 80)
         
         if model in ['users', 'all']:
@@ -45,7 +45,7 @@ class Command(BaseCommand):
 
     def scan_users(self, limit):
         """Scan and display users."""
-        self.stdout.write(f"\n👥 USERS (First {limit}):")
+        self.stdout.write(f"\nUSERS (First {limit}):")
         self.stdout.write("-" * 80)
         users = User.objects.all().order_by('id')
         self.stdout.write(f"Total Users: {users.count()}")
@@ -61,7 +61,7 @@ class Command(BaseCommand):
 
     def scan_profiles(self, limit):
         """Scan and display user profiles."""
-        self.stdout.write(f"\n📋 USER PROFILES (First {limit}):")
+        self.stdout.write(f"\nUSER PROFILES (First {limit}):")
         self.stdout.write("-" * 80)
         profiles = UserProfile.objects.all().order_by('user__id')
         self.stdout.write(f"Total Profiles: {profiles.count()}")
@@ -78,7 +78,7 @@ class Command(BaseCommand):
 
     def scan_categories(self, limit):
         """Scan and display categories."""
-        self.stdout.write(f"\n📂 CATEGORIES (First {limit}):")
+        self.stdout.write(f"\nCATEGORIES (First {limit}):")
         self.stdout.write("-" * 80)
         categories = Category.objects.all().order_by('id')
         self.stdout.write(f"Total Categories: {categories.count()}")
@@ -94,7 +94,7 @@ class Command(BaseCommand):
 
     def scan_tickets(self, limit):
         """Scan and display tickets."""
-        self.stdout.write(f"\n🎫 TICKETS (First {limit}):")
+        self.stdout.write(f"\nTICKETS (First {limit}):")
         self.stdout.write("-" * 80)
         tickets = Ticket.objects.all().order_by('-created_at')
         self.stdout.write(f"Total Tickets: {tickets.count()}")
@@ -112,7 +112,7 @@ class Command(BaseCommand):
 
     def scan_comments(self, limit):
         """Scan and display comments."""
-        self.stdout.write(f"\n💬 COMMENTS (First {limit}):")
+        self.stdout.write(f"\nCOMMENTS (First {limit}):")
         self.stdout.write("-" * 80)
         comments = Comment.objects.all().order_by('-created_at')
         self.stdout.write(f"Total Comments: {comments.count()}")

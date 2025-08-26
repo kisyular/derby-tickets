@@ -41,7 +41,7 @@ class Command(BaseCommand):
         create_if_missing = options['create']
         
         self.stdout.write(
-            self.style.SUCCESS("🔐 Admin Password Reset Tool")
+            self.style.SUCCESS("Admin Password Reset Tool")
         )
         self.stdout.write("=" * 40)
         
@@ -59,7 +59,7 @@ class Command(BaseCommand):
                 admin.save()
                 
                 self.stdout.write(
-                    self.style.SUCCESS(f"\n✅ Password reset successful!")
+                    self.style.SUCCESS(f"\nPassword reset successful!")
                 )
                 
             except User.DoesNotExist:
@@ -71,11 +71,11 @@ class Command(BaseCommand):
                         password=password
                     )
                     self.stdout.write(
-                        self.style.SUCCESS(f"\n✅ New admin user created!")
+                        self.style.SUCCESS(f"\nNew admin user created!")
                     )
                 else:
                     self.stdout.write(
-                        self.style.ERROR(f"❌ User '{username}' not found!")
+                        self.style.ERROR(f"User '{username}' not found!")
                     )
                     self.stdout.write("Use --create to create a new admin user")
                     return
@@ -85,12 +85,12 @@ class Command(BaseCommand):
             self.stdout.write(f"   Password: {password}")
             self.stdout.write(f"   Email: {email}")
             self.stdout.write("")
-            self.stdout.write("🚀 Login URLs:")
+            self.stdout.write("Login URLs:")
             self.stdout.write("   Admin: http://127.0.0.1:8000/admin/")
             self.stdout.write("   App: http://127.0.0.1:8000/login/")
             self.stdout.write("=" * 40)
             
         except Exception as e:
             self.stdout.write(
-                self.style.ERROR(f"❌ Error: {str(e)}")
+                self.style.ERROR(f"Error: {str(e)}")
             )

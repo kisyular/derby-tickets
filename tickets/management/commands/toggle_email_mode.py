@@ -72,9 +72,9 @@ class Command(BaseCommand):
         
         if target_mode == 'production':
             self.stdout.write(
-                self.style.WARNING('⚠️  PRODUCTION MODE: Emails will be sent to actual recipients!')
+                self.style.WARNING('PRODUCTION MODE: Emails will be sent to actual recipients!')
             )
         else:
             self.stdout.write(
-                self.style.SUCCESS(f'📧 TEST MODE: All emails will be sent to {os.environ.get("DJANGO_TEST_EMAIL", "test email")}')
+                self.style.SUCCESS(f'TEST MODE: All emails will be sent to {os.environ.get("DJANGO_TEST_EMAIL", "test email")}')
             )

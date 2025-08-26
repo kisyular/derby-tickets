@@ -68,7 +68,7 @@ class Command(BaseCommand):
             self.print_help()
     
     def print_help(self):
-        self.stdout.write(self.style.SUCCESS("🔐 Derby Tickets Security Management"))
+        self.stdout.write(self.style.SUCCESS("Derby Tickets Security Management"))
         self.stdout.write("=" * 50)
         self.stdout.write("")
         self.stdout.write("Available commands:")
@@ -88,7 +88,7 @@ class Command(BaseCommand):
     
     def list_locked_accounts(self):
         """List all currently locked accounts and IPs"""
-        self.stdout.write(self.style.SUCCESS("🔍 Checking for locked accounts..."))
+        self.stdout.write(self.style.SUCCESS("Checking for locked accounts..."))
         self.stdout.write("")
         
         # Check cache for locked accounts
@@ -118,26 +118,26 @@ class Command(BaseCommand):
         
         # Display results
         if locked_users:
-            self.stdout.write(self.style.ERROR("🚫 LOCKED USERS:"))
+            self.stdout.write(self.style.ERROR("LOCKED USERS:"))
             self.stdout.write("-" * 40)
             for username, attempts, ip in locked_users:
-                self.stdout.write(f"  👤 {username}")
+                self.stdout.write(f"  {username}")
                 self.stdout.write(f"     Attempts: {attempts}")
                 self.stdout.write(f"     Last IP: {ip}")
                 self.stdout.write("")
         else:
-            self.stdout.write(self.style.SUCCESS("✅ No locked users found"))
+            self.stdout.write(self.style.SUCCESS("No locked users found"))
         
         if locked_ips:
-            self.stdout.write(self.style.ERROR("🚫 LOCKED IP ADDRESSES:"))
+            self.stdout.write(self.style.ERROR("LOCKED IP ADDRESSES:"))
             self.stdout.write("-" * 40)
             for ip, attempts, last_user in locked_ips:
-                self.stdout.write(f"  🌐 {ip}")
+                self.stdout.write(f"  {ip}")
                 self.stdout.write(f"     Attempts: {attempts}")
                 self.stdout.write(f"     Last User: {last_user}")
                 self.stdout.write("")
         else:
-            self.stdout.write(self.style.SUCCESS("✅ No locked IPs found"))
+            self.stdout.write(self.style.SUCCESS("No locked IPs found"))
         
         # Show recent security events
         recent_locks = SecurityEvent.objects.filter(
@@ -146,7 +146,7 @@ class Command(BaseCommand):
         ).order_by('-timestamp')[:10]
         
         if recent_locks:
-            self.stdout.write(self.style.WARNING("📊 RECENT LOCKOUTS (Last 24 hours):"))
+            self.stdout.write(self.style.WARNING("RECENT LOCKOUTS (Last 24 hours):"))
             self.stdout.write("-" * 40)
             for event in recent_locks:
                 user_str = event.user.username if event.user else event.username_attempted
@@ -178,7 +178,7 @@ class Command(BaseCommand):
         )
         
         self.stdout.write(
-            self.style.SUCCESS(f"✅ User '{username}' has been unlocked")
+            self.style.SUCCESS(f"User '{username}' has been unlocked")
         )
     
     def unlock_ip(self, ip_address, force=False):
@@ -203,7 +203,7 @@ class Command(BaseCommand):
         )
         
         self.stdout.write(
-            self.style.SUCCESS(f"✅ IP '{ip_address}' has been unlocked")
+            self.style.SUCCESS(f"IP '{ip_address}' has been unlocked")
         )
     
     def unlock_all(self, force=False):
@@ -228,7 +228,7 @@ class Command(BaseCommand):
         )
         
         self.stdout.write(
-            self.style.SUCCESS("✅ All locked accounts and IPs have been unlocked")
+            self.style.SUCCESS("All locked accounts and IPs have been unlocked")
         )
     
     def reset_attempts(self, identifier, force=False):
@@ -247,15 +247,15 @@ class Command(BaseCommand):
         
         SecurityManager.clear_attempts(identifier)
         self.stdout.write(
-            self.style.SUCCESS(f"✅ Reset {attempts} attempts for '{identifier}'")
+            self.style.SUCCESS(f"Reset {attempts} attempts for '{identifier}'")
         )
     
     def show_attempts(self, identifier):
         """Show current attempt count for user or IP"""
         attempts = SecurityManager.get_attempt_count(identifier)
         is_locked = SecurityManager.is_locked_out(identifier)
-        
-        self.stdout.write(f"📊 Status for '{identifier}':")
+
+        self.stdout.write(f"Status for '{identifier}':")
         self.stdout.write(f"   Attempts: {attempts}")
         self.stdout.write(f"   Locked: {'Yes' if is_locked else 'No'}")
         

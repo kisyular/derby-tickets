@@ -63,7 +63,7 @@ class Command(BaseCommand):
         self.stdout.write(self.style.SUCCESS("=" * 80))
         
         # Security Events Summary
-        self.stdout.write(self.style.WARNING("\n📊 SECURITY EVENTS SUMMARY"))
+        self.stdout.write(self.style.WARNING("\nSECURITY EVENTS SUMMARY"))
         self.stdout.write("-" * 40)
         events = summary['security_events']
         self.stdout.write(f"Total Events: {events['total']}")
@@ -82,7 +82,7 @@ class Command(BaseCommand):
                 self.stdout.write(f"  • {event_type}: {count}")
         
         # Login Attempts Summary
-        self.stdout.write(self.style.WARNING("\n🔐 LOGIN ATTEMPTS SUMMARY"))
+        self.stdout.write(self.style.WARNING("\nLOGIN ATTEMPTS SUMMARY"))
         self.stdout.write("-" * 40)
         logins = summary['login_attempts']
         success_rate = ((logins['total'] - logins['failed']) / logins['total'] * 100) if logins['total'] > 0 else 100
@@ -95,7 +95,7 @@ class Command(BaseCommand):
         self.stdout.write(f"Unique Usernames: {logins['unique_usernames']}")
         
         # Sessions Summary
-        self.stdout.write(self.style.WARNING("\n🔄 SESSIONS SUMMARY"))
+        self.stdout.write(self.style.WARNING("\nSESSIONS SUMMARY"))
         self.stdout.write("-" * 40)
         sessions = summary['sessions']
         self.stdout.write(f"Active Sessions: {sessions['active']}")
@@ -105,16 +105,16 @@ class Command(BaseCommand):
         # Threat Intelligence
         threats = summary['top_threats']
         if threats['ips']:
-            self.stdout.write(self.style.ERROR("\n⚠️  TOP THREAT IPs"))
+            self.stdout.write(self.style.ERROR("\nTOP THREAT IPs"))
             self.stdout.write("-" * 40)
             for threat in threats['ips'][:5]:
-                self.stdout.write(f"  🚨 {threat['ip_address']}: {threat['count']} failed attempts")
+                self.stdout.write(f"  {threat['ip_address']}: {threat['count']} failed attempts")
         
         if threats['usernames']:
-            self.stdout.write(self.style.ERROR("\n👤 TOP TARGETED USERNAMES"))
+            self.stdout.write(self.style.ERROR("\nTOP TARGETED USERNAMES"))
             self.stdout.write("-" * 40)
             for threat in threats['usernames'][:5]:
-                self.stdout.write(f"  🎯 {threat['username']}: {threat['count']} attempts")
+                self.stdout.write(f"  {threat['username']}: {threat['count']} attempts")
         
         # Detailed views if requested
         if options['show_events']:
@@ -131,7 +131,7 @@ class Command(BaseCommand):
     
     def show_recent_events(self, hours):
         """Show recent security events"""
-        self.stdout.write(self.style.WARNING(f"\n📋 RECENT SECURITY EVENTS (Last {hours}h)"))
+        self.stdout.write(self.style.WARNING(f"\nRECENT SECURITY EVENTS (Last {hours}h)"))
         self.stdout.write("-" * 80)
         
         cutoff = timezone.now() - timezone.timedelta(hours=hours)
@@ -151,7 +151,7 @@ class Command(BaseCommand):
     
     def show_recent_attempts(self, hours):
         """Show recent login attempts"""
-        self.stdout.write(self.style.WARNING(f"\n🔑 RECENT LOGIN ATTEMPTS (Last {hours}h)"))
+        self.stdout.write(self.style.WARNING(f"\nRECENT LOGIN ATTEMPTS (Last {hours}h)"))
         self.stdout.write("-" * 80)
         
         cutoff = timezone.now() - timezone.timedelta(hours=hours)
@@ -160,7 +160,7 @@ class Command(BaseCommand):
         for attempt in attempts:
             timestamp = attempt.timestamp.strftime('%m/%d %H:%M')
             status_icon = self.get_status_icon(attempt.status)
-            suspicious = " 🚨" if attempt.is_suspicious else ""
+            suspicious = " " if attempt.is_suspicious else ""
             
             self.stdout.write(f"{timestamp} {status_icon} {attempt.username}")
             self.stdout.write(f"         Status: {attempt.get_status_display()}{suspicious}")
@@ -171,7 +171,7 @@ class Command(BaseCommand):
     
     def show_active_sessions(self):
         """Show active sessions"""
-        self.stdout.write(self.style.WARNING("\n💻 ACTIVE SESSIONS"))
+        self.stdout.write(self.style.WARNING("\nACTIVE SESSIONS"))
         self.stdout.write("-" * 80)
         
         sessions = UserSession.objects.filter(is_active=True).order_by('-last_activity')[:20]
@@ -182,8 +182,8 @@ class Command(BaseCommand):
             hours = int(duration.total_seconds() // 3600)
             minutes = int((duration.total_seconds() % 3600) // 60)
             
-            suspicious = " 🚨" if session.is_suspicious else ""
-            long_running = " ⏰" if session.is_long_running else ""
+            suspicious = " " if session.is_suspicious else ""
+            long_running = " " if session.is_long_running else ""
             
             self.stdout.write(f"{session.user.username}{suspicious}{long_running}")
             self.stdout.write(f"         Last Activity: {last_activity}")
@@ -195,14 +195,14 @@ class Command(BaseCommand):
     
     def show_recommendations(self, summary):
         """Show security recommendations based on current state"""
-        self.stdout.write(self.style.WARNING("\n💡 SECURITY RECOMMENDATIONS"))
+        self.stdout.write(self.style.WARNING("\nSECURITY RECOMMENDATIONS"))
         self.stdout.write("-" * 80)
         
         recommendations = []
         
         # Check for critical issues
         if summary['security_events']['critical_unresolved'] > 0:
-            recommendations.append("🔴 URGENT: Investigate unresolved critical security events")
+            recommendations.append(" URGENT: Investigate unresolved critical security events")
         
         # Check for high failure rates
         login_total = summary['login_attempts']['total']
@@ -210,25 +210,25 @@ class Command(BaseCommand):
         if login_total > 0:
             failure_rate = (login_failed / login_total) * 100
             if failure_rate > 50:
-                recommendations.append(f"🔴 HIGH: Login failure rate is {failure_rate:.1f}% - possible attack")
+                recommendations.append(f" HIGH: Login failure rate is {failure_rate:.1f}% - possible attack")
             elif failure_rate > 25:
-                recommendations.append(f"🟡 MEDIUM: Login failure rate is {failure_rate:.1f}% - monitor closely")
-        
+                recommendations.append(f" MEDIUM: Login failure rate is {failure_rate:.1f}% - monitor closely")
+
         # Check for suspicious activity
         if summary['login_attempts']['suspicious'] > 5:
-            recommendations.append("🟡 MEDIUM: High number of suspicious login attempts detected")
-        
+            recommendations.append(" MEDIUM: High number of suspicious login attempts detected")
+
         # Check for long-running sessions
         if summary['sessions']['long_running'] > 0:
-            recommendations.append("🟡 MEDIUM: Long-running sessions detected - review for security")
-        
+            recommendations.append(" MEDIUM: Long-running sessions detected - review for security")
+
         # Check for multiple IPs
         if summary['login_attempts']['unique_ips'] > 10:
-            recommendations.append("🟡 MEDIUM: High number of unique IPs - possible distributed attack")
-        
+            recommendations.append(" MEDIUM: High number of unique IPs - possible distributed attack")
+
         if not recommendations:
-            recommendations.append("✅ GREEN: No immediate security concerns detected")
-        
+            recommendations.append(" GREEN: No immediate security concerns detected")
+
         for rec in recommendations:
             self.stdout.write(f"  {rec}")
         

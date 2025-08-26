@@ -110,7 +110,7 @@ class Command(BaseCommand):
             self.stdout.write(f'Expires: {expires_at}')
         
         self.stdout.write(
-            self.style.WARNING('\n⚠️  IMPORTANT: Save this token securely. It will not be shown again!')
+            self.style.WARNING('\nIMPORTANT: Save this token securely. It will not be shown again!')
         )
 
     def list_tokens(self):
@@ -125,10 +125,10 @@ class Command(BaseCommand):
         self.stdout.write('=' * 80)
         
         for token in tokens:
-            status = "🟢 Active" if token.is_active else "🔴 Inactive"
+            status = "Active" if token.is_active else "Inactive"
             if token.expires_at and token.expires_at < timezone.now():
-                status = "⏰ Expired"
-            
+                status = "Expired"
+
             self.stdout.write(f'ID: {token.id}')
             self.stdout.write(f'Name: {token.name}')
             self.stdout.write(f'Created by: {token.created_by.username}')
