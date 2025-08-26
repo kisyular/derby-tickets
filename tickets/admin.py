@@ -5,7 +5,7 @@ from django.utils.html import format_html
 from django.urls import reverse
 from django.utils.safestring import mark_safe
 from django.utils import timezone
-from .models import Ticket, UserProfile, Comment, Category
+from .models import Ticket, UserProfile, Comment, Category, APIToken
 from .audit_models import SecurityEvent, LoginAttempt, UserSession, AuditLog
 
 # Register your models here.
@@ -442,3 +442,74 @@ class AuditLogAdmin(admin.ModelAdmin):
     def get_description_preview(self, obj):
         return obj.description[:40] + '...' if len(obj.description) > 40 else obj.description
     get_description_preview.short_description = 'Description'
+
+
+@admin.register(APIToken)
+class APITokenAdmin(admin.ModelAdmin):
+    list_display = ['name', 'created_by', 'is_active', 'last_used', 'created_at', 'get_token_preview']
+    list_filter = ['is_active', 'created_at', 'last_used']
+    search_fields = ['name', 'created_by__username']
+    readonly_fields = ['token', 'created_at', 'last_used']
+    ordering = ['-created_at']
+    
+    fieldsets = (
+        ('Token Information', {
+            'fields': ('name', 'is_active'),
+            'description': 'Token will be automatically generated upon saving.'
+        }),
+        ('Generated Token', {
+            'fields': ('token',),
+            'classes': ['collapse'],
+            'description': 'This token is automatically generated and cannot be changed.'
+        }),
+        ('Ownership & Usage', {
+            'fields': ('created_by', 'created_at', 'last_used')
+        }),
+        ('Security Settings', {
+            'fields': ('expires_at', 'allowed_endpoints'),
+            'classes': ['collapse']
+        })
+    )
+    
+    def get_fieldsets(self, request, obj=None):
+        """Customize fieldsets based on whether we're adding or changing"""
+        if not obj:  # Adding new token
+            return (
+                ('Token Information', {
+                    'fields': ('name', 'created_by', 'is_active'),
+                    'description': 'Token will be automatically generated upon saving.'
+                }),
+                ('Security Settings', {
+                    'fields': ('expires_at', 'allowed_endpoints'),
+                    'classes': ['collapse']
+                })
+            )
+        else:  # Editing existing token
+            return self.fieldsets
+    
+    def get_readonly_fields(self, request, obj=None):
+        """Make token readonly after creation"""
+        if obj:  # Editing existing object
+            return ['token', 'created_at', 'last_used']
+        else:  # Adding new object
+            return ['created_at', 'last_used']
+    
+    def get_token_preview(self, obj):
+        return f"{obj.token[:16]}..." if obj.token else "Will be generated"
+    get_token_preview.short_description = 'Token Preview'
+    
+    def save_model(self, request, obj, form, change):
+        """Set created_by to current user if not set"""
+        if not change and not obj.created_by:  # New object and no created_by set
+            obj.created_by = request.user
+        super().save_model(request, obj, form, change)
+    
+    def has_change_permission(self, request, obj=None):
+        # Only allow staff to manage API tokens
+        return request.user.is_staff
+    
+    def has_add_permission(self, request):
+        return request.user.is_staff
+    
+    def has_delete_permission(self, request, obj=None):
+        return request.user.is_staff

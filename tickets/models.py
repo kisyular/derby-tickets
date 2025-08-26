@@ -2,6 +2,7 @@ from django.db import models
 from django.contrib.auth.models import User
 from django.db.models.signals import post_save
 from django.dispatch import receiver
+from django.utils import timezone
 
 # Import audit models for comprehensive security tracking
 from .audit_models import SecurityEvent, LoginAttempt, UserSession, AuditLog
@@ -243,6 +244,59 @@ def save_user_profile(sender, instance, **kwargs):
         instance.userprofile.save()
     else:
         UserProfile.objects.create(user=instance)
+
+
+class APIToken(models.Model):
+    """
+    API tokens for external integrations and API access.
+    """
+    token = models.CharField(max_length=64, unique=True, db_index=True)
+    name = models.CharField(max_length=100, help_text="Descriptive name for this token")
+    created_by = models.ForeignKey(User, on_delete=models.CASCADE, related_name='api_tokens')
+    created_at = models.DateTimeField(auto_now_add=True)
+    last_used = models.DateTimeField(null=True, blank=True)
+    is_active = models.BooleanField(default=True)
+    
+    # Optional: Add permissions or restrictions
+    allowed_endpoints = models.TextField(
+        blank=True, 
+        help_text="Comma-separated list of allowed endpoints. Leave blank for all endpoints."
+    )
+    expires_at = models.DateTimeField(null=True, blank=True, help_text="Optional expiration date")
+    
+    class Meta:
+        ordering = ['-created_at']
+        verbose_name = 'API Token'
+        verbose_name_plural = 'API Tokens'
+    
+    def __str__(self):
+        return f"{self.name} ({self.token[:8]}...)"
+    
+    def is_valid(self):
+        """Check if token is valid and not expired"""
+        if not self.is_active:
+            return False
+        
+        if self.expires_at and self.expires_at < timezone.now():
+            return False
+            
+        return True
+    
+    def update_last_used(self):
+        """Update the last used timestamp"""
+        from django.utils import timezone
+        self.last_used = timezone.now()
+        self.save(update_fields=['last_used'])
+
+
+# Signal to auto-generate token when creating APIToken through Django admin
+@receiver(post_save, sender=APIToken)
+def generate_api_token_on_create(sender, instance, created, **kwargs):
+    """Auto-generate token when APIToken is created without one"""
+    if created and not instance.token:
+        from .api_auth import generate_api_token
+        instance.token = generate_api_token()
+        instance.save(update_fields=['token'])
 
 
 

@@ -1,5 +1,5 @@
 from django.urls import path
-from . import views, security_views
+from . import views, security_views, api_views
 
 app_name = 'tickets'
 
@@ -19,4 +19,8 @@ urlpatterns = [
     path('security/audit-logs/', security_views.audit_logs, name='audit_logs'),
     path('security/actions/', security_views.security_actions, name='security_actions'),
     path('security/api/', security_views.security_api, name='security_api'),
+    
+    # API URLs
+    path('api/tickets/', api_views.api_tickets_list, name='api_tickets_list'),
+    path('api/tickets/<int:ticket_id>/', api_views.api_ticket_detail, name='api_ticket_detail'),
 ]
