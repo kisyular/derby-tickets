@@ -1,94 +1,99 @@
-{% extends 'tickets/base.html' %}
-
-{% block title %}Dashboard - Ticket Management System{% endblock %}
-
-{% block content %}
+{% extends 'tickets/base.html' %} {% block title %}Dashboard - Ticket Management
+System{% endblock %} {% block content %}
 <!-- Content Header (Page header) -->
 <div class="content-header">
-    <div class="container-fluid">
-        <div class="row mb-2">
-            <div class="col-sm-6">
-                <h1 class="m-0">Dashboard</h1>
-            </div>
-            <div class="col-sm-6">
-                <ol class="breadcrumb float-sm-right">
-                    <li class="breadcrumb-item active">Dashboard</li>
-                </ol>
-            </div>
-        </div>
+  <div class="container-fluid">
+    <div class="row mb-2">
+      <div class="col-sm-6">
+        <h1 class="m-0">Dashboard</h1>
+      </div>
+      <div class="col-sm-6">
+        <ol class="breadcrumb float-sm-right">
+          <li class="breadcrumb-item active">Dashboard</li>
+        </ol>
+      </div>
     </div>
+  </div>
 </div>
 
 <!-- Main content -->
 <section class="content">
-    <div class="container-fluid">
-
-        <!-- Info boxes (Stat boxes) -->
-        <div class="row">
-            <div class="col-lg-3 col-6">
-                <!-- Total Tickets -->
-                <div class="small-box bg-info">
-                    <div class="inner">
-                        <h3>{{ total_tickets }}</h3>
-                        <p>Total Tickets</p>
-                    </div>
-                    <div class="icon">
-                        <i class="fas fa-ticket-alt"></i>
-                    </div>
-                    <a href="{% url 'tickets:ticket_list' %}" class="small-box-footer">
-                        More info <i class="fas fa-arrow-circle-right"></i>
-                    </a>
-                </div>
-            </div>
-
-            <div class="col-lg-3 col-6">
-                <!-- Open Tickets -->
-                <div class="small-box bg-success">
-                    <div class="inner">
-                        <h3>{{ open_tickets }}</h3>
-                        <p>Open Tickets</p>
-                    </div>
-                    <div class="icon">
-                        <i class="fas fa-folder-open"></i>
-                    </div>
-                    <a href="{% url 'tickets:ticket_list' %}?status=Open" class="small-box-footer">
-                        More info <i class="fas fa-arrow-circle-right"></i>
-                    </a>
-                </div>
-            </div>
-
-            <div class="col-lg-3 col-6">
-                <!-- In Progress Tickets -->
-                <div class="small-box bg-warning">
-                    <div class="inner">
-                        <h3>{{ in_progress_tickets }}</h3>
-                        <p>In Progress</p>
-                    </div>
-                    <div class="icon">
-                        <i class="fas fa-clock"></i>
-                    </div>
-                    <a href="{% url 'tickets:ticket_list' %}?status=In%20Progress" class="small-box-footer">
-                        More info <i class="fas fa-arrow-circle-right"></i>
-                    </a>
-                </div>
-            </div>
-
-            <div class="col-lg-3 col-6">
-                <!-- Closed Tickets -->
-                <div class="small-box bg-danger">
-                    <div class="inner">
-                        <h3>{{ closed_tickets }}</h3>
-                        <p>Closed Tickets</p>
-                    </div>
-                    <div class="icon">
-                        <i class="fas fa-check-circle"></i>
-                    </div>
-                    <a href="{% url 'tickets:ticket_list' %}?status=Closed" class="small-box-footer">
-                        More info <i class="fas fa-arrow-circle-right"></i>
-                    </a>
-                </div>
-            </div>
+  <div class="container-fluid">
+    <!-- Info boxes (Stat boxes) -->
+    <div class="row">
+      <div class="col-lg-3 col-6">
+        <!-- Total Tickets -->
+        <div class="small-box bg-info">
+          <div class="inner">
+            <h3>{{ total_tickets }}</h3>
+            <p>Total Tickets</p>
+          </div>
+          <div class="icon">
+            <i class="fas fa-ticket-alt"></i>
+          </div>
+          <a href="{% url 'tickets:ticket_list' %}" class="small-box-footer">
+            More info <i class="fas fa-arrow-circle-right"></i>
+          </a>
         </div>
+      </div>
+
+      <div class="col-lg-3 col-6">
+        <!-- Open Tickets -->
+        <div class="small-box bg-success">
+          <div class="inner">
+            <h3>{{ open_tickets }}</h3>
+            <p>Open Tickets</p>
+          </div>
+          <div class="icon">
+            <i class="fas fa-folder-open"></i>
+          </div>
+          <a
+            href="{% url 'tickets:ticket_list' %}?status=Open"
+            class="small-box-footer"
+          >
+            More info <i class="fas fa-arrow-circle-right"></i>
+          </a>
+        </div>
+      </div>
+
+      <div class="col-lg-3 col-6">
+        <!-- In Progress Tickets -->
+        <div class="small-box bg-warning">
+          <div class="inner">
+            <h3>{{ in_progress_tickets }}</h3>
+            <p>In Progress</p>
+          </div>
+          <div class="icon">
+            <i class="fas fa-clock"></i>
+          </div>
+          <a
+            href="{% url 'tickets:ticket_list' %}?status=In%20Progress"
+            class="small-box-footer"
+          >
+            More info <i class="fas fa-arrow-circle-right"></i>
+          </a>
+        </div>
+      </div>
+
+      <div class="col-lg-3 col-6">
+        <!-- Closed Tickets -->
+        <div class="small-box bg-danger">
+          <div class="inner">
+            <h3>{{ closed_tickets }}</h3>
+            <p>Closed Tickets</p>
+          </div>
+          <div class="icon">
+            <i class="fas fa-check-circle"></i>
+          </div>
+          <a
+            href="{% url 'tickets:ticket_list' %}?status=Closed"
+            class="small-box-footer"
+          >
+            More info <i class="fas fa-arrow-circle-right"></i>
+          </a>
+        </div>
+      </div>
+    </div>
 
         <!-- Quick Actions Row -->
         <div class="row">
@@ -218,51 +223,65 @@
             </div>
         </div>
 
-        <!-- Priority Distribution Chart (if you want to add charts later) -->
-        {% comment %}
-        <div class="row">
-            <div class="col-md-6">
-                <div class="card">
-                    <div class="card-header">
-                        <h3 class="card-title">
-                            <i class="fas fa-chart-pie"></i> Priority Distribution
-                        </h3>
-                    </div>
-                    <div class="card-body">
-                        <!-- Chart will go here -->
-                        <canvas id="priorityChart" style="min-height: 250px; height: 250px; max-height: 250px; max-width: 100%;"></canvas>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-6">
-                <div class="card">
-                    <div class="card-header">
-                        <h3 class="card-title">
-                            <i class="fas fa-chart-bar"></i> Status Overview
-                        </h3>
-                    </div>
-                    <div class="card-body">
-                        <!-- Chart will go here -->
-                        <canvas id="statusChart" style="min-height: 250px; height: 250px; max-height: 250px; max-width: 100%;"></canvas>
-                    </div>
-                </div>
-            </div>
+    <!-- Priority Distribution Chart (if you want to add charts later) -->
+    {% comment %}
+    <div class="row">
+      <div class="col-md-6">
+        <div class="card">
+          <div class="card-header">
+            <h3 class="card-title">
+              <i class="fas fa-chart-pie"></i> Priority Distribution
+            </h3>
+          </div>
+          <div class="card-body">
+            <!-- Chart will go here -->
+            <canvas
+              id="priorityChart"
+              style="
+                min-height: 250px;
+                height: 250px;
+                max-height: 250px;
+                max-width: 100%;
+              "
+            ></canvas>
+          </div>
         </div>
-        {% endcomment %}
+      </div>
+      <div class="col-md-6">
+        <div class="card">
+          <div class="card-header">
+            <h3 class="card-title">
+              <i class="fas fa-chart-bar"></i> Status Overview
+            </h3>
+          </div>
+          <div class="card-body">
+            <!-- Chart will go here -->
+            <canvas
+              id="statusChart"
+              style="
+                min-height: 250px;
+                height: 250px;
+                max-height: 250px;
+                max-width: 100%;
+              "
+            ></canvas>
+          </div>
+        </div>
+      </div>
     </div>
+    {% endcomment %}
+  </div>
 </section>
-{% endblock %}
-
-{% block extra_js %}
+{% endblock %} {% block extra_js %}
 <script>
-    $(document).ready(function() {
-        // Add any dashboard-specific JavaScript here
-        console.log('Dashboard loaded successfully!');
-        
-        // Example: Auto-refresh ticket counts every 5 minutes
-        // setInterval(function() {
-        //     location.reload();
-        // }, 300000);
-    });
+  $(document).ready(function () {
+    // Add any dashboard-specific JavaScript here
+    console.log("Dashboard loaded successfully!");
+
+    // Example: Auto-refresh ticket counts every 5 minutes
+    // setInterval(function() {
+    //     location.reload();
+    // }, 300000);
+  });
 </script>
 {% endblock %}
