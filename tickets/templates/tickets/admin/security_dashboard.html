@@ -35,7 +35,7 @@
               {% for range in time_ranges %}
               <a
                 href="?hours={{ range }}"
-                class="btn {% if hours == range %}btn-primary{% else %}btn-outline-primary{% endif %}"
+                class="btn {% if hours == range %}btn-info{% else %}btn-outline-info{% endif %}"
               >
                 {% if range == 1 %}1 Hour
                 {% elif range == 6 %}6 Hours

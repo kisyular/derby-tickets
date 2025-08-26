@@ -258,7 +258,6 @@
       <!-- /.login-logo -->
       <div class="login-logo">
         <a href="{% url 'tickets:home' %}" class="brand-text">
-          <i class="fas fa-ticket-alt"></i>
           <span class="brand-bold">Ticket</span>System
         </a>
       </div>
@@ -266,10 +265,10 @@
       <!-- /.login-box-body -->
       <div class="card card-outline card-primary">
         <div class="card-header text-center">
-          <h1 class="h4 mb-0">
+          <h3 class="mb-0 text-muted">
             <i class="fas fa-sign-in-alt"></i>
             Sign In
-          </h1>
+          </h3>
         </div>
         <div class="card-body">
           <p class="login-box-msg">Sign in to start your session</p>
@@ -358,6 +357,7 @@
             <p class="mb-1">
               <a href="#" class="text-muted">
                 <i class="fas fa-question-circle"></i> Forgot your password?
+                  contact your administrator
               </a>
             </p>
             <p class="mb-0">
@@ -385,7 +385,9 @@
           result in temporary account lockout.
         </div>
         <div class="text-sm">
-          &copy; 2025 Ticket Management System. All rights reserved.
+          &copy; 
+            <span id="login-footer-span">2023</span> 
+            Ticket Management System. All rights reserved.
         </div>
       </div>
     </div>
@@ -448,6 +450,14 @@
           btn.prop("disabled", true);
         });
       });
+      
+      // get current year for footer
+      document.addEventListener("DOMContentLoaded", function() {
+          const yearSpan = document.querySelector(".login-footer #login-footer-span");
+          if (yearSpan) {
+              yearSpan.textContent = new Date().getFullYear();
+            }
+        });
     </script>
   </body>
 </html>

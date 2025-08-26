@@ -427,6 +427,16 @@
               <li class="nav-header">ADMINISTRATION</li>
 
               <li class="nav-item">
+                <a
+                  href="{% url 'tickets:security_dashboard' %}"
+                  class="nav-link {% if request.resolver_match.url_name == 'security_dashboard' %}active{% endif %}"
+                >
+                  <i class="nav-icon fas fa-shield-alt"></i>
+                  <p>Security Dashboard</p>
+                </a>
+              </li>
+
+              <li class="nav-item">
                 <a href="/admin/" target="_blank" class="nav-link">
                   <i class="nav-icon fas fa-cogs"></i>
                   <p>

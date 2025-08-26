@@ -1,5 +1,5 @@
 from django.urls import path
-from . import views
+from . import views, security_views
 
 app_name = 'tickets'
 
@@ -10,4 +10,13 @@ urlpatterns = [
     path('tickets/', views.ticket_list, name='ticket_list'),
     path('tickets/<int:ticket_id>/', views.ticket_detail, name='ticket_detail'),
     path('tickets/create/', views.create_ticket, name='create_ticket'),
+    
+    # Security Dashboard URLs
+    path('security/', security_views.security_dashboard, name='security_dashboard'),
+    path('security/events/', security_views.security_events, name='security_events'),
+    path('security/login-attempts/', security_views.login_attempts, name='login_attempts'),
+    path('security/active-sessions/', security_views.active_sessions, name='active_sessions'),
+    path('security/audit-logs/', security_views.audit_logs, name='audit_logs'),
+    path('security/actions/', security_views.security_actions, name='security_actions'),
+    path('security/api/', security_views.security_api, name='security_api'),
 ]
