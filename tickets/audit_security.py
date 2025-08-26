@@ -3,6 +3,7 @@ Enhanced Security Service with Database Audit Trail Integration.
 Combines file-based logging with comprehensive database tracking.
 """
 import logging
+from datetime import timedelta
 from django.contrib.auth.models import User
 from django.core.cache import cache
 from django.utils import timezone
@@ -194,6 +195,11 @@ class AuditSecurityManager(SecurityManager):
         ip_address = self.get_client_ip(request)
         user_agent = request.META.get('HTTP_USER_AGENT', '')
         session_key = request.session.session_key
+        
+        # Ensure session key exists
+        if not session_key:
+            request.session.cycle_key()
+            session_key = request.session.session_key
         
         # End any existing active sessions for this user
         UserSession.objects.filter(
@@ -521,6 +527,32 @@ class AuditSecurityManager(SecurityManager):
         
         user_agent_lower = user_agent.lower()
         return any(pattern in user_agent_lower for pattern in suspicious_patterns)
+    
+    def cleanup_inactive_sessions(self, hours: int = 24) -> int:
+        """
+        Clean up sessions that have been inactive for specified hours.
+        
+        Args:
+            hours: Number of hours of inactivity after which to mark sessions as ended
+            
+        Returns:
+            int: Number of sessions that were cleaned up
+        """
+        cutoff_time = timezone.now() - timedelta(hours=hours)
+        
+        # Mark sessions as inactive if they haven't been active recently
+        updated_count = UserSession.objects.filter(
+            is_active=True,
+            last_activity__lt=cutoff_time
+        ).update(
+            is_active=False,
+            ended_at=timezone.now()
+        )
+        
+        if updated_count > 0:
+            self.auth_logger.info(f"Cleaned up {updated_count} inactive sessions older than {hours} hours")
+        
+        return updated_count
 
 
 # Global instance

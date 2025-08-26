@@ -380,3 +380,4 @@ def security_api(request):
         })
     
     return JsonResponse({'error': 'Invalid endpoint'}, status=400)
+

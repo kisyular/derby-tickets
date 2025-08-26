@@ -1,4 +1,5 @@
 from django.db.models.signals import post_save, pre_save
+from django.contrib.auth.signals import user_logged_in, user_logged_out
 from django.dispatch import receiver
 from django.contrib.auth.models import User
 from .models import Ticket, Comment
@@ -97,3 +98,46 @@ def comment_saved(sender, instance, created, **kwargs):
             send_comment_notification(instance, instance.ticket)
         except Exception as e:
             logger.error(f"Error in comment_saved signal: {e}")
+
+
+@receiver(user_logged_in)
+def handle_user_login_signal(sender, request, user, **kwargs):
+    """Handle Django's built-in login signal for session tracking."""
+    try:
+        # Import here to avoid circular imports
+        from .audit_security import audit_security_manager
+        
+        # Only create session if it doesn't exist (avoid duplicate creation from our views)
+        from .audit_models import UserSession
+        session_key = request.session.session_key
+        
+        if session_key:
+            existing_session = UserSession.objects.filter(
+                user=user,
+                session_key=session_key,
+                is_active=True
+            ).exists()
+            
+            if not existing_session:
+                audit_security_manager.create_user_session(
+                    request=request,
+                    user=user,
+                    login_method='django_admin' if '/admin/' in request.path else 'password'
+                )
+                logger.info(f"Session created via signal for user: {user.username}")
+    except Exception as e:
+        logger.error(f"Error in handle_user_login_signal: {e}")
+
+
+@receiver(user_logged_out)
+def handle_user_logout_signal(sender, request, user, **kwargs):
+    """Handle Django's built-in logout signal for session tracking."""
+    try:
+        # Import here to avoid circular imports
+        from .audit_security import audit_security_manager
+        
+        if user:
+            audit_security_manager.end_user_session(request, user)
+            logger.info(f"Session ended via signal for user: {user.username}")
+    except Exception as e:
+        logger.error(f"Error in handle_user_logout_signal: {e}")

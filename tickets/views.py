@@ -348,7 +348,7 @@ def user_login(request):
                 # Successful login
                 login(request, user)
                 
-                # Log successful session creation
+                # Log successful session creation (session created by signal)
                 audit_security_manager.log_audit_event(
                     request=request,
                     action='LOGIN',
