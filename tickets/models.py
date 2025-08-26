@@ -291,8 +291,8 @@ class APIToken(models.Model):
 
 def ticket_attachment_upload_path(instance, filename):
     """
-    Generate upload path for ticket attachments.
-    Structure: attachments/tickets/<ticket_id>/<filename>
+    Generate upload path for ticket attachments - stored in protected directory.
+    Structure: protected/attachments/tickets/<ticket_id>/<filename>
     """
     import os
     from django.utils.text import get_valid_filename
@@ -300,9 +300,9 @@ def ticket_attachment_upload_path(instance, filename):
     # Sanitize filename
     filename = get_valid_filename(filename)
     
-    # Create path based on ticket ID
+    # Create path based on ticket ID - now in protected folder
     ticket_id = instance.ticket.id if instance.ticket.id else 'tmp'
-    return f"attachments/tickets/{ticket_id}/{filename}"
+    return f"protected/attachments/tickets/{ticket_id}/{filename}"
 
 
 class TicketAttachment(models.Model):
@@ -377,6 +377,16 @@ class TicketAttachment(models.Model):
     def file_size_mb(self):
         """Get file size in MB"""
         return round(self.file_size / (1024 * 1024), 2)
+
+    def get_secure_url(self):
+        """Get the secure URL for this attachment"""
+        from django.urls import reverse
+        import os
+        filename = os.path.basename(self.file.name)
+        return reverse('tickets:secure_file', kwargs={
+            'ticket_id': self.ticket.id,
+            'filename': filename
+        })
 
     def save(self, *args, **kwargs):
         """Override save to set file metadata"""

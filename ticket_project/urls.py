@@ -26,5 +26,17 @@ urlpatterns = [
 
 # Serve static files in development
 if settings.DEBUG:
+    from django.views.static import serve
+    from django.urls import re_path
+    import os
+    
     urlpatterns += static(settings.STATIC_URL, document_root=settings.STATICFILES_DIRS[0])
-    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+    
+    # Serve media files but exclude protected directory
+    urlpatterns += [
+        re_path(
+            r'^media/(?!protected/)(?P<path>.*)$', 
+            serve, 
+            {'document_root': settings.MEDIA_ROOT}
+        ),
+    ]

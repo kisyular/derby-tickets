@@ -20,6 +20,9 @@ urlpatterns = [
     path('security/actions/', security_views.security_actions, name='security_actions'),
     path('security/api/', security_views.security_api, name='security_api'),
     
+    # Secure file serving - protected attachments
+    path('secure/tickets/<int:ticket_id>/<str:filename>/', views.serve_protected_file, name='secure_file'),
+    
     # API URLs
     path('api/tickets/', api_views.api_tickets_list, name='api_tickets_list'),
     path('api/tickets/<int:ticket_id>/', api_views.api_ticket_detail, name='api_ticket_detail'),

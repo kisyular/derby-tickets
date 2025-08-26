@@ -412,3 +412,102 @@ def user_logout(request):
         messages.success(request, 'You have been logged out successfully.')
     
     return redirect('tickets:login')
+
+
+# ==================== SECURE FILE SERVING ====================
+
+import os
+from django.conf import settings
+from django.http import FileResponse, Http404, HttpResponseForbidden
+from django.contrib.auth.decorators import login_required
+from .models import TicketAttachment
+
+@login_required
+def serve_protected_file(request, ticket_id, filename):
+    """
+    Serve protected ticket attachments with authentication and authorization checks.
+    Only logged-in users who have access to the ticket can download its attachments.
+    """
+    try:
+        # Get the ticket first to check permissions
+        ticket = get_object_or_404(Ticket, id=ticket_id)
+        
+        # Check if user has permission to access this ticket
+        if not (ticket.created_by == request.user or 
+                request.user.is_staff or 
+                request.user.is_superuser):
+            # Log security event
+            audit_security_manager.log_security_event(
+                request=request,
+                event_type='UNAUTHORIZED_FILE_ACCESS_ATTEMPT',
+                user=request.user,
+                description=f'User {request.user.username} attempted to access file {filename} from ticket {ticket_id} without permission',
+                risk_level='MEDIUM'
+            )
+            return HttpResponseForbidden("You don't have permission to access this file.")
+        
+        # Get the attachment record
+        try:
+            attachment = TicketAttachment.objects.get(
+                ticket=ticket,
+                file__icontains=filename  # Use icontains to handle path variations
+            )
+        except TicketAttachment.DoesNotExist:
+            raise Http404("File not found")
+        
+        # Construct the file path
+        file_path = os.path.join(settings.MEDIA_ROOT, attachment.file.name)
+        
+        # Check if file actually exists
+        if not os.path.exists(file_path):
+            raise Http404("File not found on disk")
+        
+        # Log the file access
+        audit_security_manager.log_audit_event(
+            request=request,
+            action='FILE_ACCESS',
+            user=request.user,
+            description=f'User {request.user.username} accessed file {filename} from ticket {ticket_id}',
+            risk_level='LOW'
+        )
+        
+        # Determine content type based on file extension
+        if attachment.file_type == 'PDF':
+            content_type = 'application/pdf'
+        elif attachment.file_type == 'IMAGE':
+            # Determine image type
+            ext = os.path.splitext(filename)[1].lower()
+            if ext == '.png':
+                content_type = 'image/png'
+            elif ext == '.jpg' or ext == '.jpeg':
+                content_type = 'image/jpeg'
+            elif ext == '.webp':
+                content_type = 'image/webp'
+            else:
+                content_type = 'application/octet-stream'
+        else:
+            content_type = 'application/octet-stream'
+        
+        # Return the file
+        response = FileResponse(
+            open(file_path, 'rb'), 
+            content_type=content_type,
+            filename=attachment.original_filename
+        )
+        
+        # Add headers for better security
+        response['X-Content-Type-Options'] = 'nosniff'
+        response['Content-Disposition'] = f'inline; filename="{attachment.original_filename}"'
+        
+        return response
+        
+    except Exception as e:
+        # Log the error
+        audit_security_manager.log_security_event(
+            request=request,
+            event_type='FILE_ACCESS_ERROR',
+            user=request.user if request.user.is_authenticated else None,
+            description=f'Error accessing file {filename} from ticket {ticket_id}: {str(e)}',
+            risk_level='HIGH'
+        )
+        raise Http404("File not found")
