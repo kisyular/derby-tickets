@@ -381,7 +381,7 @@
           href="{% url 'tickets:home' %}"
           class="brand-link d-flex align-items-center"
         >
-          <span class="brand-text font-weight-light ml-2">Ticket System</span>
+          <span class="brand-text font-weight-light ml-2">DFS Ticket System</span>
         </a>
 
         <!-- Sidebar -->
@@ -472,8 +472,8 @@
       <!-- Main Footer -->
       <footer class="main-footer">
         <strong
-          >Copyright &copy; 2025
-          <a href="#">Ticket Management System</a>.</strong
+          >Copyright &copy; <span id="copyright-year">2020 </span>
+          <a href="#">Derby Fabricating Solution</a>.</strong
         >
         All rights reserved.
         <div class="float-right d-none d-sm-inline-block">
@@ -534,6 +534,14 @@
         setTimeout(function () {
           $(".alert").fadeOut("slow");
         }, 5000);
+      });
+
+      // change the year in the footer automatically
+      document.addEventListener("DOMContentLoaded", function() {
+          const yearSpan = document.querySelector("footer #copyright-year");
+          if (yearSpan) {
+              yearSpan.textContent = new Date().getFullYear();
+          }
       });
     </script>
 
