@@ -508,3 +508,221 @@ class ModelValidationTestCase(TestCase):
         # Duplicate should fail
         with self.assertRaises(IntegrityError):
             Category.objects.create(name="Unique Category")
+
+
+class TicketAPITestCase(TestCase):
+    """Test cases for the ticket API endpoints."""
+    
+    def setUp(self):
+        """Set up test data for API tests."""
+        from .models import APIToken
+        
+        self.client = Client()
+        
+        # Create test users
+        self.user1 = User.objects.create_user(
+            username='creator',
+            email='creator@test.com',
+            password='testpass123',
+            first_name='John',
+            last_name='Creator'
+        )
+        self.user2 = User.objects.create_user(
+            username='assignee',
+            email='assignee@test.com',
+            password='testpass123',
+            first_name='Jane',
+            last_name='Assignee'
+        )
+        
+        # Create test API token
+        self.api_token = APIToken.objects.create(
+            name='Test Token',
+            created_by=self.user1
+        )
+        
+        # Create test category
+        self.category = Category.objects.create(
+            name='Test Category'
+        )
+        
+        # Create test tickets
+        self.ticket1 = Ticket.objects.create(
+            title='Test Ticket 1',
+            description='Description for test ticket 1',
+            category=self.category,
+            created_by=self.user1,
+            assigned_to=self.user2,
+            status='OPEN',
+            priority='MEDIUM',
+            location='Office A',
+            department='IT'
+        )
+        
+        self.ticket2 = Ticket.objects.create(
+            title='Test Ticket 2',
+            description='Description for test ticket 2',
+            category=self.category,
+            created_by=self.user2,
+            status='CLOSED',
+            priority='HIGH',
+            location='Office B',
+            department='HR'
+        )
+    
+    def _get_auth_headers(self):
+        """Helper method to get authentication headers for API requests."""
+        return {'HTTP_AUTHORIZATION': f'Bearer {self.api_token.token}'}
+    
+    def test_api_tickets_list(self):
+        """Test the tickets list API endpoint."""
+        url = reverse('tickets:api_tickets_list')
+        response = self.client.get(url, **self._get_auth_headers())
+        
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response['Content-Type'], 'application/json')
+        
+        data = response.json()
+        
+        # Check response structure
+        self.assertTrue(data['success'])
+        self.assertEqual(data['count'], 2)
+        self.assertIn('tickets', data)
+        self.assertIn('timestamp', data)
+        
+        # Check that both tickets are present
+        titles = [ticket['title'] for ticket in data['tickets']]
+        self.assertIn('Test Ticket 1', titles)
+        self.assertIn('Test Ticket 2', titles)
+        
+        # Check first ticket data (could be either order)
+        ticket_data = data['tickets'][0]
+        self.assertIn(ticket_data['title'], ['Test Ticket 1', 'Test Ticket 2'])
+        self.assertIn(ticket_data['status'], ['OPEN', 'CLOSED'])
+        self.assertIn(ticket_data['priority'], ['MEDIUM', 'HIGH'])
+        self.assertIn(ticket_data['location'], ['Office A', 'Office B'])
+        self.assertIn(ticket_data['department'], ['IT', 'HR'])
+        self.assertEqual(ticket_data['category'], 'Test Category')
+        
+        # Check user data structure
+        self.assertIn('created_by', ticket_data)
+        self.assertIsNotNone(ticket_data['created_by'])
+        
+    def test_api_ticket_detail(self):
+        """Test the single ticket detail API endpoint."""
+        url = reverse('tickets:api_ticket_detail', kwargs={'ticket_id': self.ticket1.id})
+        response = self.client.get(url, **self._get_auth_headers())
+        
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response['Content-Type'], 'application/json')
+        
+        data = response.json()
+        
+        # Check response structure
+        self.assertTrue(data['success'])
+        self.assertIn('ticket', data)
+        self.assertIn('timestamp', data)
+        
+        # Check ticket data
+        ticket_data = data['ticket']
+        self.assertEqual(ticket_data['title'], 'Test Ticket 1')
+        self.assertEqual(ticket_data['status'], 'OPEN')
+        self.assertEqual(ticket_data['priority'], 'MEDIUM')
+        self.assertEqual(ticket_data['location'], 'Office A')
+        self.assertEqual(ticket_data['department'], 'IT')
+        
+        # Check assigned user
+        self.assertIn('assigned_to', ticket_data)
+        self.assertEqual(ticket_data['assigned_to'], f"{self.user2.first_name} {self.user2.last_name}".strip())
+        
+    def test_api_ticket_detail_not_found(self):
+        """Test the ticket detail API with non-existent ticket."""
+        url = reverse('tickets:api_ticket_detail', kwargs={'ticket_id': 99999})
+        response = self.client.get(url, **self._get_auth_headers())
+        
+        self.assertEqual(response.status_code, 404)
+        
+        data = response.json()
+        self.assertFalse(data['success'])
+        self.assertIn('error', data)
+        self.assertIn('not found', data['error'])
+    
+    def test_api_authentication_required(self):
+        """Test that API endpoints require authentication."""
+        url = reverse('tickets:api_tickets_list')
+        response = self.client.get(url)  # No authentication
+        
+        self.assertEqual(response.status_code, 401)
+        
+        data = response.json()
+        self.assertFalse(data['success'])
+        self.assertIn('error', data)
+        self.assertIn('token required', data['error'])
+    
+    def test_api_post_method_not_allowed(self):
+        """Test that POST method is not allowed on the API endpoints."""
+        url = reverse('tickets:api_tickets_list')
+        response = self.client.post(url, **self._get_auth_headers())
+        
+        self.assertEqual(response.status_code, 405)  # Method not allowed
+
+
+class SessionTrackingTestCase(TestCase):
+    """Test cases for session tracking functionality."""
+    
+    def setUp(self):
+        """Set up test data for session tests."""
+        from tickets.audit_models import UserSession
+        self.UserSession = UserSession
+        
+        self.client = Client()
+        self.user = User.objects.create_user(
+            username='testuser',
+            password='testpass123',
+            email='test@example.com'
+        )
+    
+    def test_session_creation_on_login(self):
+        """Test that sessions are created when user logs in."""
+        # Initially no sessions
+        self.assertEqual(self.UserSession.objects.count(), 0)
+        
+        # Login
+        response = self.client.post(reverse('tickets:login'), {
+            'username': 'testuser',
+            'password': 'testpass123'
+        })
+        
+        # Should redirect on successful login
+        self.assertEqual(response.status_code, 302)
+        
+        # Should have created a session
+        self.assertEqual(self.UserSession.objects.filter(user=self.user, is_active=True).count(), 1)
+        
+        session = self.UserSession.objects.get(user=self.user, is_active=True)
+        self.assertIsNotNone(session.session_key)
+        self.assertIsNotNone(session.ip_address)
+    
+    def test_session_cleanup_on_logout(self):
+        """Test that sessions are ended when user logs out."""
+        # Login first
+        self.client.post(reverse('tickets:login'), {
+            'username': 'testuser',
+            'password': 'testpass123'
+        })
+        
+        # Verify session exists
+        self.assertEqual(self.UserSession.objects.filter(user=self.user, is_active=True).count(), 1)
+        
+        # Logout
+        response = self.client.post(reverse('tickets:logout'))
+        
+        # Should redirect
+        self.assertEqual(response.status_code, 302)
+        
+        # Session should be marked inactive
+        self.assertEqual(self.UserSession.objects.filter(user=self.user, is_active=True).count(), 0)
+        self.assertEqual(self.UserSession.objects.filter(user=self.user, is_active=False).count(), 1)
+        
+        session = self.UserSession.objects.get(user=self.user)
+        self.assertIsNotNone(session.ended_at)

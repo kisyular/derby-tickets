@@ -1,6 +1,6 @@
 """
-Management command to test security features.
-Usage: python manage.py test_security
+Management command to demonstrate security features.
+Usage: python manage.py demo_security
 """
 from django.core.management.base import BaseCommand
 from django.contrib.auth import get_user_model
@@ -14,7 +14,7 @@ User = get_user_model()
 
 
 class Command(BaseCommand):
-    help = 'Test security features and monitoring'
+    help = 'Demonstrate security features and monitoring'
 
     def add_arguments(self, parser):
         parser.add_argument(
