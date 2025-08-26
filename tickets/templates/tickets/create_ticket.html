@@ -47,7 +47,7 @@
                         </div>
                     {% endif %}
 
-                    <form method="post">
+                    <form method="post" enctype="multipart/form-data">
                         {% csrf_token %}
                         <div class="card-body">
                             <!-- Title Field -->
@@ -205,6 +205,34 @@
                                 <small class="form-text text-muted">
                                     This ticket will be created under your account. Contact information is automatically included.
                                 </small>
+                            </div>
+
+                            <!-- Attachments Section -->
+                            <div class="form-group">
+                                <label for="id_attachments">
+                                    <i class="fas fa-paperclip"></i> Attachments <span class="text-muted">(Optional)</span>
+                                </label>
+                                <input type="file" 
+                                       class="form-control-file" 
+                                       id="id_attachments" 
+                                       name="attachments" 
+                                       multiple
+                                       accept=".jpg,.jpeg,.png,.webp,.pdf">
+                                <small class="form-text text-muted">
+                                    <i class="fas fa-info-circle text-info"></i>
+                                    You can upload multiple files to help explain your issue:
+                                    <br>• <strong>Images:</strong> Screenshots, photos (JPG, PNG, WebP - max 3MB each)
+                                    <br>• <strong>Documents:</strong> Error logs, manuals (PDF - max 5MB each)
+                                    <br>• <strong>Maximum:</strong> 5MB per file
+                                </small>
+                                
+                                <!-- File Preview Area -->
+                                <div id="file-preview" class="mt-3" style="display: none;">
+                                    <h6 class="text-muted">Selected Files:</h6>
+                                    <div id="file-list" class="border rounded p-2 bg-light">
+                                        <!-- Files will be listed here -->
+                                    </div>
+                                </div>
                             </div>
                         </div>
 
@@ -394,7 +422,85 @@
                                    .addClass(colors[priority]);
             }
         });
+
+        // File upload handling
+        $('#id_attachments').on('change', function() {
+            const files = this.files;
+            const fileList = $('#file-list');
+            const filePreview = $('#file-preview');
+            
+            if (files.length > 0) {
+                fileList.empty();
+                filePreview.show();
+                
+                for (let i = 0; i < files.length; i++) {
+                    const file = files[i];
+                    const fileSize = (file.size / (1024 * 1024)).toFixed(2);
+                    const isValid = validateFile(file);
+                    
+                    const fileItem = $(`
+                        <div class="file-item d-flex justify-content-between align-items-center p-2 mb-2 border rounded ${isValid.valid ? 'border-success bg-light' : 'border-danger bg-danger-light'}">
+                            <div class="file-info">
+                                <i class="fas ${getFileIcon(file.type)} mr-2"></i>
+                                <strong>${file.name}</strong>
+                                <span class="text-muted ml-2">(${fileSize} MB)</span>
+                                ${!isValid.valid ? `<br><small class="text-danger">${isValid.error}</small>` : ''}
+                            </div>
+                            <div class="file-actions">
+                                ${isValid.valid ? 
+                                    '<i class="fas fa-check-circle text-success"></i>' : 
+                                    '<i class="fas fa-times-circle text-danger"></i>'
+                                }
+                            </div>
+                        </div>
+                    `);
+                    
+                    fileList.append(fileItem);
+                }
+            } else {
+                filePreview.hide();
+            }
+        });
     });
+
+    // File validation function
+    function validateFile(file) {
+        const allowedTypes = {
+            'image/jpeg': { maxSize: 3, name: 'JPEG Image' },
+            'image/jpg': { maxSize: 3, name: 'JPG Image' },
+            'image/png': { maxSize: 3, name: 'PNG Image' },
+            'image/webp': { maxSize: 3, name: 'WebP Image' },
+            'application/pdf': { maxSize: 5, name: 'PDF Document' }
+        };
+        
+        const fileSizeMB = file.size / (1024 * 1024);
+        
+        if (!allowedTypes[file.type]) {
+            return {
+                valid: false,
+                error: 'File type not allowed. Only JPG, PNG, WebP images and PDF documents are supported.'
+            };
+        }
+        
+        if (fileSizeMB > allowedTypes[file.type].maxSize) {
+            return {
+                valid: false,
+                error: `File too large. Maximum size for ${allowedTypes[file.type].name} is ${allowedTypes[file.type].maxSize}MB.`
+            };
+        }
+        
+        return { valid: true };
+    }
+
+    // Get file icon based on type
+    function getFileIcon(type) {
+        if (type.startsWith('image/')) {
+            return 'fa-image';
+        } else if (type === 'application/pdf') {
+            return 'fa-file-pdf';
+        }
+        return 'fa-file';
+    }
 
     // Reset form function
     function resetForm() {
@@ -402,6 +508,8 @@
             document.querySelector('form').reset();
             $('.is-invalid').removeClass('is-invalid');
             $('#char-counter, #priority-help').remove();
+            $('#file-preview').hide();
+            $('#file-list').empty();
         }
     }
 </script>

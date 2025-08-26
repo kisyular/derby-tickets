@@ -3,446 +3,590 @@
 {% block title %}Ticket #{{ ticket.id }} - {{ ticket.title }}{% endblock %}
 
 {% block content %}
-<!-- Content Header (Page header) -->
-<div class="content-header">
-    <div class="container-fluid">
-        <div class="row mb-2">
-            <div class="col-sm-6">
-                <h1 class="m-0">Ticket #{{ ticket.id }}</h1>
-            </div>
-            <div class="col-sm-6">
-                <ol class="breadcrumb float-sm-right">
-                    <li class="breadcrumb-item"><a href="{% url 'tickets:home' %}">Home</a></li>
-                    <li class="breadcrumb-item"><a href="{% url 'tickets:ticket_list' %}">Tickets</a></li>
-                    <li class="breadcrumb-item active">Ticket #{{ ticket.id }}</li>
-                </ol>
+    <!-- Content Header (Page header) -->
+    <div class="content-header">
+        <div class="container-fluid">
+            <div class="row mb-2">
+                <div class="col-sm-6">
+                    <h1 class="m-0">Ticket #{{ ticket.id }}</h1>
+                </div>
+                <div class="col-sm-6">
+                    <ol class="breadcrumb float-sm-right">
+                        <li class="breadcrumb-item"><a href="{% url 'tickets:home' %}">Home</a></li>
+                        <li class="breadcrumb-item"><a href="{% url 'tickets:ticket_list' %}">Tickets</a></li>
+                        <li class="breadcrumb-item active">Ticket #{{ ticket.id }}</li>
+                    </ol>
+                </div>
             </div>
         </div>
     </div>
-</div>
 
-<!-- Main content -->
-<section class="content">
-    <div class="container-fluid">
-        <div class="row">
-            <!-- Ticket Details Column -->
-            <div class="col-md-8">
-                <!-- Ticket Information Card -->
-                <div class="card">
-                    <div class="card-header">
-                        <h3 class="card-title">
-                            <i class="fas fa-ticket-alt"></i> 
-                            {{ ticket.title }}
-                        </h3>
-                        <div class="card-tools">
-                            {% if ticket.created_by == user or user.is_staff %}
-                                <button type="button" class="btn btn-tool" data-toggle="modal" data-target="#editTicketModal">
-                                    <i class="fas fa-edit"></i> Edit
-                                </button>
-                            {% endif %}
+    <!-- Main content -->
+    <section class="content">
+        <div class="container-fluid">
+            <div class="row">
+                <!-- Ticket Details Column -->
+                <div class="col-md-8">
+                    <!-- Ticket Information Card -->
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title">
+                                <i class="fas fa-ticket-alt"></i>
+                                {{ ticket.title }}
+                            </h3>
+                            <div class="card-tools">
+                                {% if ticket.created_by == user or user.is_staff %}
+                                    <button type="button" class="btn btn-tool" data-toggle="modal"
+                                            data-target="#editTicketModal">
+                                        <i class="fas fa-edit"></i> Edit
+                                    </button>
+                                {% endif %}
+                            </div>
                         </div>
-                    </div>
-                    <div class="card-body">
-                        <!-- Priority & Status Badges -->
-                        <div class="mb-3">
-                            {% if ticket.priority == 'Urgent' %}
-                                <span class="badge badge-danger badge-lg">
+                        <div class="card-body">
+                            <!-- Priority & Status Badges -->
+                            <div class="mb-3">
+                                {% if ticket.priority == 'Urgent' %}
+                                    <span class="badge badge-danger badge-lg">
                                     <i class="fas fa-exclamation-triangle"></i> {{ ticket.priority }} Priority
                                 </span>
-                            {% elif ticket.priority == 'High' %}
-                                <span class="badge badge-warning badge-lg">
+                                {% elif ticket.priority == 'High' %}
+                                    <span class="badge badge-warning badge-lg">
                                     <i class="fas fa-exclamation-circle"></i> {{ ticket.priority }} Priority
                                 </span>
-                            {% elif ticket.priority == 'Medium' %}
-                                <span class="badge badge-info badge-lg">
+                                {% elif ticket.priority == 'Medium' %}
+                                    <span class="badge badge-info badge-lg">
                                     <i class="fas fa-info-circle"></i> {{ ticket.priority }} Priority
                                 </span>
-                            {% else %}
-                                <span class="badge badge-secondary badge-lg">
+                                {% else %}
+                                    <span class="badge badge-secondary badge-lg">
                                     <i class="fas fa-minus-circle"></i> {{ ticket.priority }} Priority
                                 </span>
-                            {% endif %}
+                                {% endif %}
 
-                            {% if ticket.status == 'Open' %}
-                                <span class="badge badge-success badge-lg ml-2">
+                                {% if ticket.status == 'Open' %}
+                                    <span class="badge badge-success badge-lg ml-2">
                                     <i class="fas fa-folder-open"></i> {{ ticket.status }}
                                 </span>
-                            {% elif ticket.status == 'In Progress' %}
-                                <span class="badge badge-warning badge-lg ml-2">
+                                {% elif ticket.status == 'In Progress' %}
+                                    <span class="badge badge-warning badge-lg ml-2">
                                     <i class="fas fa-clock"></i> {{ ticket.status }}
                                 </span>
-                            {% else %}
-                                <span class="badge badge-secondary badge-lg ml-2">
+                                {% else %}
+                                    <span class="badge badge-secondary badge-lg ml-2">
                                     <i class="fas fa-check-circle"></i> {{ ticket.status }}
                                 </span>
-                            {% endif %}
-                        </div>
-
-                        <!-- Description -->
-                        <div class="mb-4">
-                            <h5><i class="fas fa-file-alt"></i> Description</h5>
-                            <div class="bg-light p-3 rounded">
-                                {{ ticket.description|linebreaks|default:"<em class='text-muted'>No description provided.</em>" }}
+                                {% endif %}
                             </div>
-                        </div>
 
-                        <!-- Timestamps -->
-                        <div class="row">
-                            <div class="col-md-6">
-                                <div class="info-box bg-light">
-                                    <span class="info-box-icon bg-primary"><i class="fas fa-calendar-plus"></i></span>
-                                    <div class="info-box-content">
-                                        <span class="info-box-text">Created</span>
-                                        <span class="info-box-number">{{ ticket.created_at|date:"M d, Y" }}</span>
-                                        <div class="progress">
-                                            <div class="progress-bar bg-primary" style="width: 100%"></div>
-                                        </div>
-                                        <span class="progress-description">
+                            <!-- Description -->
+                            <div class="mb-4">
+                                <h5><i class="fas fa-file-alt"></i> Description</h5>
+                                <div class="bg-light p-3 rounded">
+                                    {{ ticket.description|linebreaks|default:"<em class='text-muted'>No description provided.</em>" }}
+                                </div>
+                            </div>
+
+                            <!-- Timestamps -->
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="info-box bg-light">
+                                        <span class="info-box-icon bg-primary"><i
+                                                class="fas fa-calendar-plus"></i></span>
+                                        <div class="info-box-content">
+                                            <span class="info-box-text">Created</span>
+                                            <span class="info-box-number">{{ ticket.created_at|date:"M d, Y" }}</span>
+                                            <div class="progress">
+                                                <div class="progress-bar bg-primary" style="width: 100%"></div>
+                                            </div>
+                                            <span class="progress-description">
                                             {{ ticket.created_at|time:"H:i" }}
                                         </span>
+                                        </div>
                                     </div>
                                 </div>
-                            </div>
-                            <div class="col-md-6">
-                                <div class="info-box bg-light">
-                                    <span class="info-box-icon bg-warning"><i class="fas fa-calendar-edit"></i></span>
-                                    <div class="info-box-content">
-                                        <span class="info-box-text">Last Updated</span>
-                                        <span class="info-box-number">{{ ticket.updated_at|date:"M d, Y" }}</span>
-                                        <div class="progress">
-                                            <div class="progress-bar bg-warning" style="width: 100%"></div>
-                                        </div>
-                                        <span class="progress-description">
+                                <div class="col-md-6">
+                                    <div class="info-box bg-light">
+                                        <span class="info-box-icon bg-warning"><i
+                                                class="fas fa-calendar-edit"></i></span>
+                                        <div class="info-box-content">
+                                            <span class="info-box-text">Last Updated</span>
+                                            <span class="info-box-number">{{ ticket.updated_at|date:"M d, Y" }}</span>
+                                            <div class="progress">
+                                                <div class="progress-bar bg-warning" style="width: 100%"></div>
+                                            </div>
+                                            <span class="progress-description">
                                             {{ ticket.updated_at|time:"H:i" }}
                                         </span>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
+                        </div>
+                    </div>
+
+                    <!-- Comments Section -->
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title">
+                                <i class="fas fa-comments"></i> Comments & Updates
+                            </h3>
+                            <div class="card-tools">
+                                <span class="badge badge-info">{{ comments.count }} comment{{ comments.count|pluralize }}</span>
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            <!-- Add Comment Form -->
+                            <form method="post" class="mb-4">
+                                {% csrf_token %}
+                                <input type="hidden" name="action" value="add_comment">
+
+                                <div class="form-group">
+                                    <label for="comment_content">Add a comment:</label>
+                                    <textarea class="form-control" id="comment_content" name="comment_content"
+                                              rows="3"
+                                              placeholder="Share an update, ask a question, or provide additional information..."
+                                              required></textarea>
+                                </div>
+
+                                {% if can_add_internal_comments %}
+                                    <div class="form-check mb-3">
+                                        <input class="form-check-input" type="checkbox" id="is_internal"
+                                               name="is_internal">
+                                        <label class="form-check-label" for="is_internal">
+                                            <i class="fas fa-lock text-warning"></i> Internal comment (visible only to
+                                            staff)
+                                        </label>
+                                    </div>
+                                {% endif %}
+
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-paper-plane"></i> Add Comment
+                                </button>
+                            </form>
+
+                            <!-- Comments List -->
+                            {% if comments %}
+                                <div class="timeline">
+                                    {% for comment in comments %}
+                                        <div class="time-label">
+                                            <span class="bg-primary">{{ comment.created_at|date:"M d, Y" }}</span>
+                                        </div>
+
+                                        <div>
+                                            {% if comment.is_internal %}
+                                                <i class="fas fa-lock bg-warning"></i>
+                                            {% else %}
+                                                <i class="fas fa-comment bg-primary"></i>
+                                            {% endif %}
+
+                                            <div class="timeline-item">
+                                            <span class="time">
+                                                <i class="fas fa-clock"></i> {{ comment.created_at|time:"H:i" }}
+                                            </span>
+                                                <h3 class="timeline-header">
+                                                    <strong>{{ comment.author.get_full_name|default:comment.author.username }}</strong>
+                                                    {% if comment.is_internal %}
+                                                        <span class="badge badge-warning ml-2">
+                                                        <i class="fas fa-lock"></i> Internal
+                                                    </span>
+                                                    {% endif %}
+                                                    {% if comment.author.is_staff %}
+                                                        <span class="badge badge-info ml-2">
+                                                        <i class="fas fa-user-shield"></i> administrator
+                                                    </span>
+                                                    {% endif %}
+                                                </h3>
+                                                <div class="timeline-body">
+                                                    {{ comment.content|linebreaks }}
+                                                </div>
+                                                {% if comment.created_at != comment.updated_at %}
+                                                    <div class="timeline-footer">
+                                                        <small class="text-muted">
+                                                            <i class="fas fa-edit"></i>
+                                                            Edited {{ comment.updated_at|date:"M d, Y H:i" }}
+                                                        </small>
+                                                    </div>
+                                                {% endif %}
+                                            </div>
+                                        </div>
+                                    {% endfor %}
+
+                                    <div>
+                                        <i class="fas fa-clock bg-gray"></i>
+                                        <div class="timeline-item">
+                                        <span class="time">
+                                            <i class="fas fa-clock"></i> {{ ticket.created_at|time:"H:i" }}
+                                        </span>
+                                            <h3 class="timeline-header">
+                                                <strong>{{ ticket.created_by.get_full_name|default:ticket.created_by.username }}</strong>
+                                                created this ticket
+                                            </h3>
+                                            <div class="timeline-body">
+                                                <strong>{{ ticket.title }}</strong><br>
+                                                {{ ticket.description|linebreaks|truncatewords:20 }}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            {% else %}
+                                <div class="text-center p-3">
+                                    <i class="fas fa-comment fa-3x text-muted mb-3"></i>
+                                    <p class="text-muted">No comments yet. Be the first to add one!</p>
+                                </div>
+                            {% endif %}
                         </div>
                     </div>
                 </div>
 
-                <!-- Comments Section -->
-                <div class="card">
-                    <div class="card-header">
-                        <h3 class="card-title">
-                            <i class="fas fa-comments"></i> Comments & Updates
-                        </h3>
-                        <div class="card-tools">
-                            <span class="badge badge-info">{{ comments.count }} comment{{ comments.count|pluralize }}</span>
+                <!-- Sidebar Column -->
+                <div class="col-md-4">
+                    <!-- Ticket Meta Information -->
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title">
+                                <i class="fas fa-info-circle"></i> Ticket Information: <strong>#{{ ticket.id }}</strong>
+                            </h3>
+                        </div>
+                        <div class="card-body">
+                            <dl class="row">
+                                <dt class="col-sm-4">Created by:</dt>
+                                <dd class="col-sm-8">
+                                    <i class="fas fa-user"></i>
+                                    {{ ticket.created_by.get_full_name|default:ticket.created_by.username }}
+                                </dd>
+
+                                <dt class="col-sm-4">Assigned to:</dt>
+                                <dd class="col-sm-8">
+                                    {% if ticket.assigned_to %}
+                                        <i class="fas fa-user"></i>
+                                        {{ ticket.assigned_to.get_full_name|default:ticket.assigned_to.username }}
+                                    {% else %}
+                                        <span class="text-muted">Unassigned</span>
+                                    {% endif %}
+                                </dd>
+                            </dl>
                         </div>
                     </div>
-                    <div class="card-body">
-                        <!-- Add Comment Form -->
-                        <form method="post" class="mb-4">
-                            {% csrf_token %}
-                            <input type="hidden" name="action" value="add_comment">
-                            
-                            <div class="form-group">
-                                <label for="comment_content">Add a comment:</label>
-                                <textarea class="form-control" id="comment_content" name="comment_content" 
-                                          rows="3" placeholder="Share an update, ask a question, or provide additional information..." required></textarea>
+
+                    <!-- Move image here -->
+                    <!-- Attachments Section -->
+                    {% if ticket.attachments.all %}
+                        <div class="mb-4">
+                            <h5><i class="fas fa-paperclip"></i> Attachments ({{ ticket.attachments.count }})</h5>
+                            {% for attachment in ticket.attachments.all %}
+                                <div class="card h-100">
+                                    {% if attachment.is_image %}
+                                        <!-- Image Attachment -->
+                                        <div class="card-img-top position-relative"
+                                             style="height: 200px; overflow: hidden;">
+                                            <img src="{{ attachment.file.url }}"
+                                                 alt="{{ attachment.original_filename }}"
+                                                 class="img-fluid w-100 h-100"
+                                                 style="object-fit: cover; cursor: pointer;"
+                                                 onclick="openImageModal('{{ attachment.file.url }}', '{{ attachment.original_filename }}')"
+                                                 title="Click to view full size">
+                                            <div class="position-absolute" style="top: 5px; right: 5px;">
+                                                    <span class="badge badge-success">
+                                                        <i class="fas fa-image"></i>
+                                                    </span>
+                                            </div>
+                                        </div>
+                                    {% elif attachment.is_pdf %}
+                                        <!-- PDF Attachment -->
+                                        <div class="card-img-top d-flex align-items-center justify-content-center bg-light"
+                                             style="height: 200px;">
+                                            <div class="text-center">
+                                                <i class="fas fa-file-pdf fa-4x text-danger mb-2"></i>
+                                                <br>
+                                                <span class="badge badge-danger">PDF</span>
+                                            </div>
+                                        </div>
+                                    {% endif %}
+
+                                    <div class="card-body p-2">
+                                        <h6 class="card-title text-truncate" title="{{ attachment.original_filename }}">
+                                            {{ attachment.original_filename }}
+                                        </h6>
+                                        <p class="card-text small text-muted mb-1">
+                                            <i class="fas fa-weight-hanging"></i> {{ attachment.file_size_mb }} MB
+                                            <br>
+                                            <i class="fas fa-clock"></i> {{ attachment.uploaded_at|date:"M d, Y H:i" }}
+                                            <br>
+                                            <i class="fas fa-user"></i> {{ attachment.uploaded_by.get_full_name|default:attachment.uploaded_by.username }}
+                                        </p>
+                                        {% if attachment.description %}
+                                            <p class="card-text small">
+                                                <em>"{{ attachment.description }}"</em>
+                                            </p>
+                                        {% endif %}
+                                    </div>
+
+                                    <div class="card-footer p-2">
+                                        {% if attachment.is_image %}
+                                            <button class="btn btn-primary btn-sm btn-block"
+                                                    onclick="openImageModal('{{ attachment.file.url }}', '{{ attachment.original_filename }}')">
+                                                <i class="fas fa-eye"></i> View Image
+                                            </button>
+                                        {% elif attachment.is_pdf %}
+                                            <a href="{{ attachment.file.url }}"
+                                               target="_blank"
+                                               class="btn btn-danger btn-sm btn-block">
+                                                <i class="fas fa-external-link-alt"></i> Open PDF
+                                            </a>
+                                        {% endif %}
+                                        <a href="{{ attachment.file.url }}"
+                                           download="{{ attachment.original_filename }}"
+                                           class="btn btn-success btn-sm btn-block mt-1">
+                                            <i class="fas fa-download"></i> Download
+                                        </a>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+
+                    <!-- Quick Actions -->
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title">
+                                <i class="fas fa-bolt"></i> Quick Actions
+                            </h3>
+                        </div>
+                        <div class="card-body">
+                            <div class="btn-group-vertical btn-block">
+                                {% if ticket.created_by == user or user.is_staff %}
+                                    <button type="button" class="btn btn-warning" data-toggle="modal"
+                                            data-target="#editTicketModal">
+                                        <i class="fas fa-edit"></i> Edit Ticket
+                                    </button>
+                                {% endif %}
+
+                                <a href="{% url 'tickets:ticket_list' %}" class="btn btn-info">
+                                    <i class="fas fa-list"></i> Back to Tickets
+                                </a>
+
+                                <a href="{% url 'tickets:create_ticket' %}" class="btn btn-success">
+                                    <i class="fas fa-plus-circle"></i> Create New Ticket
+                                </a>
+
+                                {% if user.is_staff %}
+                                    <a href="/admin/tickets/ticket/{{ ticket.id }}/change/" target="_blank"
+                                       class="btn btn-secondary">
+                                        <i class="fas fa-cogs"></i> Admin Edit
+                                    </a>
+                                {% endif %}
                             </div>
-                            
-                            {% if can_add_internal_comments %}
-                                <div class="form-check mb-3">
-                                    <input class="form-check-input" type="checkbox" id="is_internal" name="is_internal">
-                                    <label class="form-check-label" for="is_internal">
-                                        <i class="fas fa-lock text-warning"></i> Internal comment (visible only to staff)
-                                    </label>
+                        </div>
+                    </div>
+
+                    <!-- Related Tickets -->
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title">
+                                <i class="fas fa-link"></i> Related Tickets
+                            </h3>
+                            {% if related_tickets %}
+                                <div class="card-tools">
+                                    <span class="badge badge-primary">{{ related_tickets|length }}</span>
                                 </div>
                             {% endif %}
-                            
-                            <button type="submit" class="btn btn-primary">
-                                <i class="fas fa-paper-plane"></i> Add Comment
-                            </button>
-                        </form>
-
-                        <!-- Comments List -->
-                        {% if comments %}
-                            <div class="timeline">
-                                {% for comment in comments %}
-                                    <div class="time-label">
-                                        <span class="bg-primary">{{ comment.created_at|date:"M d, Y" }}</span>
-                                    </div>
-                                    
-                                    <div>
-                                        {% if comment.is_internal %}
-                                            <i class="fas fa-lock bg-warning"></i>
-                                        {% else %}
-                                            <i class="fas fa-comment bg-primary"></i>
-                                        {% endif %}
-                                        
-                                        <div class="timeline-item">
-                                            <span class="time">
-                                                <i class="fas fa-clock"></i> {{ comment.created_at|time:"H:i" }}
-                                            </span>
-                                            <h3 class="timeline-header">
-                                                <strong>{{ comment.author.get_full_name|default:comment.author.username }}</strong>
-                                                {% if comment.is_internal %}
-                                                    <span class="badge badge-warning ml-2">
-                                                        <i class="fas fa-lock"></i> Internal
-                                                    </span>
+                        </div>
+                        <div class="card-body">
+                            {% if related_tickets %}
+                                {% for related in related_tickets %}
+                                    <div class="d-flex justify-content-between align-items-start mb-3 p-2 border rounded">
+                                        <div class="flex-grow-1">
+                                            <h6 class="mb-1">
+                                                <a href="{% url 'tickets:ticket_detail' related.ticket.pk %}"
+                                                   class="text-primary">
+                                                    #{{ related.ticket.id }}
+                                                    - {{ related.ticket.title|truncatechars:40 }}
+                                                </a>
+                                            </h6>
+                                            <small class="text-muted">
+                                                <i class="fas fa-info-circle"></i> {{ related.reason }}
+                                            </small>
+                                            <br>
+                                            <small class="text-muted">
+                                                <i class="fas fa-calendar"></i> {{ related.ticket.created_at|date:"M d, Y" }}
+                                                {% if related.ticket.status == 'Open' %}
+                                                    <span class="badge badge-success badge-sm ml-1">{{ related.ticket.status }}</span>
+                                                {% elif related.ticket.status == 'In Progress' %}
+                                                    <span class="badge badge-warning badge-sm ml-1">{{ related.ticket.status }}</span>
+                                                {% else %}
+                                                    <span class="badge badge-secondary badge-sm ml-1">{{ related.ticket.status }}</span>
                                                 {% endif %}
-                                                {% if comment.author.is_staff %}
-                                                    <span class="badge badge-info ml-2">
-                                                        <i class="fas fa-user-shield"></i> administrator
-                                                    </span>
-                                                {% endif %}
-                                            </h3>
-                                            <div class="timeline-body">
-                                                {{ comment.content|linebreaks }}
-                                            </div>
-                                            {% if comment.created_at != comment.updated_at %}
-                                                <div class="timeline-footer">
-                                                    <small class="text-muted">
-                                                        <i class="fas fa-edit"></i> Edited {{ comment.updated_at|date:"M d, Y H:i" }}
-                                                    </small>
-                                                </div>
+                                            </small>
+                                        </div>
+                                        <div class="text-right">
+                                            {% if related.ticket.priority == 'Urgent' %}
+                                                <span class="badge badge-danger badge-sm">{{ related.ticket.priority }}</span>
+                                            {% elif related.ticket.priority == 'High' %}
+                                                <span class="badge badge-warning badge-sm">{{ related.ticket.priority }}</span>
+                                            {% elif related.ticket.priority == 'Medium' %}
+                                                <span class="badge badge-info badge-sm">{{ related.ticket.priority }}</span>
+                                            {% else %}
+                                                <span class="badge badge-secondary badge-sm">{{ related.ticket.priority }}</span>
                                             {% endif %}
                                         </div>
                                     </div>
                                 {% endfor %}
-                                
-                                <div>
-                                    <i class="fas fa-clock bg-gray"></i>
-                                    <div class="timeline-item">
-                                        <span class="time">
-                                            <i class="fas fa-clock"></i> {{ ticket.created_at|time:"H:i" }}
-                                        </span>
-                                        <h3 class="timeline-header">
-                                            <strong>{{ ticket.created_by.get_full_name|default:ticket.created_by.username }}</strong>
-                                            created this ticket
-                                        </h3>
-                                        <div class="timeline-body">
-                                            <strong>{{ ticket.title }}</strong><br>
-                                            {{ ticket.description|linebreaks|truncatewords:20 }}
+                            {% else %}
+                                <div class="text-center p-3">
+                                    <i class="fas fa-search fa-2x text-muted mb-2"></i>
+                                    <p class="text-muted">No related tickets found.</p>
+                                    <small class="text-muted">
+                                        Related tickets are found based on category, keywords, and references.
+                                    </small>
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Edit Ticket Modal -->
+    {% if ticket.created_by == user or user.is_staff %}
+        <div class="modal fade" id="editTicketModal" tabindex="-1" role="dialog" aria-labelledby="editTicketModalLabel"
+             aria-hidden="true">
+            <div class="modal-dialog modal-lg" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="editTicketModalLabel">
+                            <i class="fas fa-edit"></i> Edit Ticket #{{ ticket.id }}
+                        </h5>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                    <form method="post">
+                        {% csrf_token %}
+                        <div class="modal-body">
+                            <div class="form-group">
+                                <label for="title">Title</label>
+                                <input type="text" class="form-control" id="title" name="title"
+                                       value="{{ ticket.title }}" required>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="description">Description</label>
+                                <textarea class="form-control" id="description" name="description"
+                                          rows="4">{{ ticket.description }}</textarea>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="priority">Priority</label>
+                                        <select class="form-control" id="priority" name="priority">
+                                            <option value="Low" {% if ticket.priority == 'Low' %}selected{% endif %}>
+                                                Low
+                                            </option>
+                                            <option value="Medium"
+                                                    {% if ticket.priority == 'Medium' %}selected{% endif %}>Medium
+                                            </option>
+                                            <option value="High" {% if ticket.priority == 'High' %}selected{% endif %}>
+                                                High
+                                            </option>
+                                            <option value="Urgent"
+                                                    {% if ticket.priority == 'Urgent' %}selected{% endif %}>Urgent
+                                            </option>
+                                        </select>
+                                    </div>
+                                </div>
+                                {% if user.is_staff %}
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label for="status">Status</label>
+                                            <select class="form-control" id="status" name="status">
+                                                <option value="Open"
+                                                        {% if ticket.status == 'Open' %}selected{% endif %}>Open
+                                                </option>
+                                                <option value="In Progress"
+                                                        {% if ticket.status == 'In Progress' %}selected{% endif %}>In
+                                                    Progress
+                                                </option>
+                                                <option value="Closed"
+                                                        {% if ticket.status == 'Closed' %}selected{% endif %}>Closed
+                                                </option>
+                                            </select>
                                         </div>
                                     </div>
-                                </div>
-                            </div>
-                        {% else %}
-                            <div class="text-center p-3">
-                                <i class="fas fa-comment fa-3x text-muted mb-3"></i>
-                                <p class="text-muted">No comments yet. Be the first to add one!</p>
-                            </div>
-                        {% endif %}
-                    </div>
-                </div>
-            </div>
-
-            <!-- Sidebar Column -->
-            <div class="col-md-4">
-                <!-- Ticket Meta Information -->
-                <div class="card">
-                    <div class="card-header">
-                        <h3 class="card-title">
-                            <i class="fas fa-info-circle"></i> Ticket Information: <strong>#{{ ticket.id }}</strong>
-                        </h3>
-                    </div>
-                    <div class="card-body">
-                        <dl class="row">
-                            <dt class="col-sm-4">Created by:</dt>
-                            <dd class="col-sm-8">
-                                <i class="fas fa-user"></i> 
-                                {{ ticket.created_by.get_full_name|default:ticket.created_by.username }}
-                            </dd>
-
-                            <dt class="col-sm-4">Assigned to:</dt>
-                            <dd class="col-sm-8">
-                                {% if ticket.assigned_to %}
-                                    <i class="fas fa-user"></i> 
-                                    {{ ticket.assigned_to.get_full_name|default:ticket.assigned_to.username }}
-                                {% else %}
-                                    <span class="text-muted">Unassigned</span>
                                 {% endif %}
-                            </dd>
-                        </dl>
-                    </div>
-                </div>
-
-                <!-- Quick Actions -->
-                <div class="card">
-                    <div class="card-header">
-                        <h3 class="card-title">
-                            <i class="fas fa-bolt"></i> Quick Actions
-                        </h3>
-                    </div>
-                    <div class="card-body">
-                        <div class="btn-group-vertical btn-block">
-                            {% if ticket.created_by == user or user.is_staff %}
-                                <button type="button" class="btn btn-warning" data-toggle="modal" data-target="#editTicketModal">
-                                    <i class="fas fa-edit"></i> Edit Ticket
-                                </button>
-                            {% endif %}
-                            
-                            <a href="{% url 'tickets:ticket_list' %}" class="btn btn-info">
-                                <i class="fas fa-list"></i> Back to Tickets
-                            </a>
-                            
-                            <a href="{% url 'tickets:create_ticket' %}" class="btn btn-success">
-                                <i class="fas fa-plus-circle"></i> Create New Ticket
-                            </a>
-                            
-                            {% if user.is_staff %}
-                                <a href="/admin/tickets/ticket/{{ ticket.id }}/change/" target="_blank" class="btn btn-secondary">
-                                    <i class="fas fa-cogs"></i> Admin Edit
-                                </a>
-                            {% endif %}
+                            </div>
                         </div>
-                    </div>
-                </div>
-
-                <!-- Related Tickets -->
-                <div class="card">
-                    <div class="card-header">
-                        <h3 class="card-title">
-                            <i class="fas fa-link"></i> Related Tickets
-                        </h3>
-                        {% if related_tickets %}
-                            <div class="card-tools">
-                                <span class="badge badge-primary">{{ related_tickets|length }}</span>
-                            </div>
-                        {% endif %}
-                    </div>
-                    <div class="card-body">
-                        {% if related_tickets %}
-                            {% for related in related_tickets %}
-                                <div class="d-flex justify-content-between align-items-start mb-3 p-2 border rounded">
-                                    <div class="flex-grow-1">
-                                        <h6 class="mb-1">
-                                            <a href="{% url 'tickets:ticket_detail' related.ticket.pk %}" class="text-primary">
-                                                #{{ related.ticket.id }} - {{ related.ticket.title|truncatechars:40 }}
-                                            </a>
-                                        </h6>
-                                        <small class="text-muted">
-                                            <i class="fas fa-info-circle"></i> {{ related.reason }}
-                                        </small>
-                                        <br>
-                                        <small class="text-muted">
-                                            <i class="fas fa-calendar"></i> {{ related.ticket.created_at|date:"M d, Y" }}
-                                            {% if related.ticket.status == 'Open' %}
-                                                <span class="badge badge-success badge-sm ml-1">{{ related.ticket.status }}</span>
-                                            {% elif related.ticket.status == 'In Progress' %}
-                                                <span class="badge badge-warning badge-sm ml-1">{{ related.ticket.status }}</span>
-                                            {% else %}
-                                                <span class="badge badge-secondary badge-sm ml-1">{{ related.ticket.status }}</span>
-                                            {% endif %}
-                                        </small>
-                                    </div>
-                                    <div class="text-right">
-                                        {% if related.ticket.priority == 'Urgent' %}
-                                            <span class="badge badge-danger badge-sm">{{ related.ticket.priority }}</span>
-                                        {% elif related.ticket.priority == 'High' %}
-                                            <span class="badge badge-warning badge-sm">{{ related.ticket.priority }}</span>
-                                        {% elif related.ticket.priority == 'Medium' %}
-                                            <span class="badge badge-info badge-sm">{{ related.ticket.priority }}</span>
-                                        {% else %}
-                                            <span class="badge badge-secondary badge-sm">{{ related.ticket.priority }}</span>
-                                        {% endif %}
-                                    </div>
-                                </div>
-                            {% endfor %}
-                        {% else %}
-                            <div class="text-center p-3">
-                                <i class="fas fa-search fa-2x text-muted mb-2"></i>
-                                <p class="text-muted">No related tickets found.</p>
-                                <small class="text-muted">
-                                    Related tickets are found based on category, keywords, and references.
-                                </small>
-                            </div>
-                        {% endif %}
-                    </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-dismiss="modal">
+                                <i class="fas fa-times"></i> Cancel
+                            </button>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save"></i> Save Changes
+                            </button>
+                        </div>
+                    </form>
                 </div>
             </div>
         </div>
-    </div>
-</section>
+    {% endif %}
 
-<!-- Edit Ticket Modal -->
-{% if ticket.created_by == user or user.is_staff %}
-<div class="modal fade" id="editTicketModal" tabindex="-1" role="dialog" aria-labelledby="editTicketModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-lg" role="document">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="editTicketModalLabel">
-                    <i class="fas fa-edit"></i> Edit Ticket #{{ ticket.id }}
-                </h5>
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                    <span aria-hidden="true">&times;</span>
-                </button>
-            </div>
-            <form method="post">
-                {% csrf_token %}
-                <div class="modal-body">
-                    <div class="form-group">
-                        <label for="title">Title</label>
-                        <input type="text" class="form-control" id="title" name="title" value="{{ ticket.title }}" required>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label for="description">Description</label>
-                        <textarea class="form-control" id="description" name="description" rows="4">{{ ticket.description }}</textarea>
-                    </div>
-                    
-                    <div class="row">
-                        <div class="col-md-6">
-                            <div class="form-group">
-                                <label for="priority">Priority</label>
-                                <select class="form-control" id="priority" name="priority">
-                                    <option value="Low" {% if ticket.priority == 'Low' %}selected{% endif %}>Low</option>
-                                    <option value="Medium" {% if ticket.priority == 'Medium' %}selected{% endif %}>Medium</option>
-                                    <option value="High" {% if ticket.priority == 'High' %}selected{% endif %}>High</option>
-                                    <option value="Urgent" {% if ticket.priority == 'Urgent' %}selected{% endif %}>Urgent</option>
-                                </select>
-                            </div>
-                        </div>
-                        {% if user.is_staff %}
-                        <div class="col-md-6">
-                            <div class="form-group">
-                                <label for="status">Status</label>
-                                <select class="form-control" id="status" name="status">
-                                    <option value="Open" {% if ticket.status == 'Open' %}selected{% endif %}>Open</option>
-                                    <option value="In Progress" {% if ticket.status == 'In Progress' %}selected{% endif %}>In Progress</option>
-                                    <option value="Closed" {% if ticket.status == 'Closed' %}selected{% endif %}>Closed</option>
-                                </select>
-                            </div>
-                        </div>
-                        {% endif %}
-                    </div>
+    <!-- Image Viewer Modal -->
+    <div class="modal fade" id="imageModal" tabindex="-1" role="dialog" aria-labelledby="imageModalLabel"
+         aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-centered" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="imageModalLabel">
+                        <i class="fas fa-image"></i> <span id="imageModalTitle">Image Preview</span>
+                    </h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body text-center p-0">
+                    <img id="imageModalImg" src="" alt="" class="img-fluid w-100" style="max-height: 70vh;">
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-dismiss="modal">
-                        <i class="fas fa-times"></i> Cancel
-                    </button>
-                    <button type="submit" class="btn btn-primary">
-                        <i class="fas fa-save"></i> Save Changes
-                    </button>
+                    <a id="imageDownloadBtn" href="" download="" class="btn btn-success">
+                        <i class="fas fa-download"></i> Download
+                    </a>
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
                 </div>
-            </form>
+            </div>
         </div>
     </div>
-</div>
-{% endif %}
+
 {% endblock %}
 
 {% block extra_js %}
-<script>
-    $(document).ready(function() {
-        // Initialize tooltips
-        $('[data-toggle="tooltip"]').tooltip();
-        
-        // Handle form submission with loading state
-        $('#editTicketModal form').submit(function() {
-            const submitBtn = $(this).find('button[type="submit"]');
-            submitBtn.html('<i class="fas fa-spinner fa-spin"></i> Saving...')
-                     .prop('disabled', true);
+    <script>
+        $(document).ready(function () {
+            // Initialize tooltips
+            $('[data-toggle="tooltip"]').tooltip();
+
+            // Handle form submission with loading state
+            $('#editTicketModal form').submit(function () {
+                const submitBtn = $(this).find('button[type="submit"]');
+                submitBtn.html('<i class="fas fa-spinner fa-spin"></i> Saving...')
+                    .prop('disabled', true);
+            });
+
+            // Auto-hide the edit modal if there are form errors
+            {% if form.errors %}
+                $('#editTicketModal').modal('show');
+            {% endif %}
         });
-        
-        // Auto-hide the edit modal if there are form errors
-        {% if form.errors %}
-            $('#editTicketModal').modal('show');
-        {% endif %}
-    });
-</script>
+
+        // Function to open image modal
+        function openImageModal(imageUrl, filename) {
+            $('#imageModalImg').attr('src', imageUrl);
+            $('#imageModalImg').attr('alt', filename);
+            $('#imageModalTitle').text(filename);
+            $('#imageDownloadBtn').attr('href', imageUrl);
+            $('#imageDownloadBtn').attr('download', filename);
+            $('#imageModal').modal('show');
+        }
+    </script>
 {% endblock %}

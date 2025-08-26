@@ -205,57 +205,58 @@ def ticket_detail(request, ticket_id):
 
 @login_required
 def create_ticket(request):
-    """Create a new ticket"""
-    if request.method == 'POST':
-        title = request.POST.get('title')
-        description = request.POST.get('description')
-        category_id = request.POST.get('category', '')
-        priority = request.POST.get('priority', 'Medium')
-        assigned_to_id = request.POST.get('assigned_to')
-        
-        # Validate required fields
-        if not title or not priority:
-            messages.error(request, 'Title and priority are required.')
-            # Get categories and staff users for dropdowns
-            categories = Category.objects.all().order_by('name')
-            assignable_users = User.objects.filter(is_staff=True) if (request.user.is_staff or request.user.is_superuser) else []
-            context = {'admin_users': assignable_users, 'categories': categories}
-            return render(request, 'tickets/create_ticket.html', context)
-        
-        # Get category if provided
-        category = None
-        if category_id:
-            try:
-                category = Category.objects.get(id=category_id)
-            except Category.DoesNotExist:
-                messages.error(request, 'Invalid category selected.')
-        
-        # Get assigned_to user if provided (only allow if current user is staff/admin)
-        assigned_to = None
-        if assigned_to_id and (request.user.is_staff or request.user.is_superuser):
-            try:
-                # Only allow assignment to staff users
-                assigned_to = User.objects.get(id=assigned_to_id, is_staff=True)
-            except User.DoesNotExist:
-                messages.error(request, 'Invalid user assignment. Can only assign to staff users.')
-        
-        # Create ticket with current user as creator
-        ticket = Ticket.objects.create(
-            title=title,
-            description=description,
-            category=category,  # Now it's a ForeignKey object
-            priority=priority,
-            created_by=request.user,  # Automatically use logged-in user
-            assigned_to=assigned_to
-        )
-        messages.success(request, f'Ticket #{ticket.id} created successfully!')
-        return redirect('tickets:ticket_detail', ticket_id=ticket.id)
+    """Create a new ticket with optional file attachments"""
+    from .forms import TicketWithAttachmentsForm
+    from .models import TicketAttachment
     
-    # Get categories and staff users for dropdowns
+    if request.method == 'POST':
+        form = TicketWithAttachmentsForm(request.POST, request.FILES)
+        
+        if form.is_valid():
+            # Create the ticket
+            ticket = Ticket.objects.create(
+                title=form.cleaned_data['title'],
+                description=form.cleaned_data['description'],
+                category=form.cleaned_data['category'],
+                priority=form.cleaned_data['priority'],
+                location=form.cleaned_data['location'],
+                department=form.cleaned_data['department'],
+                created_by=request.user
+            )
+            
+            # Handle file attachments
+            attachments = request.FILES.getlist('attachments')
+            for attachment in attachments:
+                if attachment:
+                    TicketAttachment.objects.create(
+                        ticket=ticket,
+                        file=attachment,
+                        original_filename=attachment.name,
+                        uploaded_by=request.user
+                    )
+            
+            attachment_count = len([f for f in attachments if f])
+            success_msg = f'Ticket #{ticket.id} created successfully!'
+            if attachment_count > 0:
+                success_msg += f' ({attachment_count} file{"s" if attachment_count > 1 else ""} attached)'
+            
+            messages.success(request, success_msg)
+            return redirect('tickets:ticket_detail', ticket_id=ticket.id)
+        else:
+            # Form has errors
+            messages.error(request, 'Please correct the errors below.')
+    else:
+        form = TicketWithAttachmentsForm()
+    
+    # Get categories for the form
     categories = Category.objects.all().order_by('name')
     assignable_users = User.objects.filter(is_staff=True) if (request.user.is_staff or request.user.is_superuser) else []
     
-    context = {'admin_users': assignable_users, 'categories': categories}
+    context = {
+        'form': form,
+        'admin_users': assignable_users, 
+        'categories': categories
+    }
     return render(request, 'tickets/create_ticket.html', context)
 
 def home(request):

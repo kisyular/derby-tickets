@@ -5,7 +5,7 @@ from django.utils.html import format_html
 from django.urls import reverse
 from django.utils.safestring import mark_safe
 from django.utils import timezone
-from .models import Ticket, UserProfile, Comment, Category, APIToken
+from .models import Ticket, UserProfile, Comment, Category, APIToken, TicketAttachment
 from .audit_models import SecurityEvent, LoginAttempt, UserSession, AuditLog
 
 # Register your models here.
@@ -506,6 +506,37 @@ class APITokenAdmin(admin.ModelAdmin):
     
     def has_change_permission(self, request, obj=None):
         # Only allow staff to manage API tokens
+        return request.user.is_staff
+    
+    def has_add_permission(self, request):
+        return request.user.is_staff
+    
+    def has_delete_permission(self, request, obj=None):
+        return request.user.is_staff
+
+
+@admin.register(TicketAttachment)
+class TicketAttachmentAdmin(admin.ModelAdmin):
+    list_display = ['original_filename', 'ticket', 'file_type', 'file_size_mb', 'uploaded_by', 'uploaded_at']
+    list_filter = ['file_type', 'uploaded_at', 'uploaded_by']
+    search_fields = ['original_filename', 'ticket__title', 'ticket__id', 'description']
+    readonly_fields = ['file_size', 'uploaded_at']
+    ordering = ['-uploaded_at']
+    
+    fieldsets = (
+        ('Attachment Info', {
+            'fields': ('ticket', 'file', 'original_filename', 'description')
+        }),
+        ('File Details', {
+            'fields': ('file_type', 'file_size', 'uploaded_by', 'uploaded_at')
+        })
+    )
+    
+    def file_size_mb(self, obj):
+        return f"{obj.file_size_mb} MB"
+    file_size_mb.short_description = 'File Size'
+    
+    def has_change_permission(self, request, obj=None):
         return request.user.is_staff
     
     def has_add_permission(self, request):

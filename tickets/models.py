@@ -289,6 +289,117 @@ class APIToken(models.Model):
         self.save(update_fields=['last_used'])
 
 
+def ticket_attachment_upload_path(instance, filename):
+    """
+    Generate upload path for ticket attachments.
+    Structure: attachments/tickets/<ticket_id>/<filename>
+    """
+    import os
+    from django.utils.text import get_valid_filename
+    
+    # Sanitize filename
+    filename = get_valid_filename(filename)
+    
+    # Create path based on ticket ID
+    ticket_id = instance.ticket.id if instance.ticket.id else 'tmp'
+    return f"attachments/tickets/{ticket_id}/{filename}"
+
+
+class TicketAttachment(models.Model):
+    """Model for ticket file attachments (images and PDFs)"""
+    
+    ticket = models.ForeignKey(
+        Ticket, 
+        on_delete=models.CASCADE, 
+        related_name='attachments',
+        help_text="The ticket this attachment belongs to"
+    )
+    
+    file = models.FileField(
+        upload_to=ticket_attachment_upload_path,
+        help_text="Uploaded file (images: JPG, PNG, WebP; documents: PDF)"
+    )
+    
+    original_filename = models.CharField(
+        max_length=255,
+        help_text="Original filename when uploaded"
+    )
+    
+    file_type = models.CharField(
+        max_length=20,
+        choices=[
+            ('IMAGE', 'Image'),
+            ('PDF', 'PDF Document'),
+        ],
+        help_text="Type of uploaded file"
+    )
+    
+    file_size = models.PositiveIntegerField(
+        help_text="File size in bytes"
+    )
+    
+    uploaded_by = models.ForeignKey(
+        User,
+        on_delete=models.PROTECT,
+        help_text="User who uploaded this attachment"
+    )
+    
+    uploaded_at = models.DateTimeField(
+        auto_now_add=True,
+        help_text="When this attachment was uploaded"
+    )
+    
+    description = models.CharField(
+        max_length=200,
+        blank=True,
+        help_text="Optional description of the attachment"
+    )
+
+    class Meta:
+        ordering = ['-uploaded_at']
+        verbose_name = "Ticket Attachment"
+        verbose_name_plural = "Ticket Attachments"
+
+    def __str__(self):
+        return f"{self.original_filename} - {self.ticket.title}"
+
+    @property
+    def is_image(self):
+        """Check if attachment is an image"""
+        return self.file_type == 'IMAGE'
+
+    @property
+    def is_pdf(self):
+        """Check if attachment is a PDF"""
+        return self.file_type == 'PDF'
+
+    @property
+    def file_size_mb(self):
+        """Get file size in MB"""
+        return round(self.file_size / (1024 * 1024), 2)
+
+    def save(self, *args, **kwargs):
+        """Override save to set file metadata"""
+        if self.file:
+            # Set original filename if not set
+            if not self.original_filename:
+                self.original_filename = self.file.name
+            
+            # Set file size
+            if not self.file_size:
+                self.file_size = self.file.size
+            
+            # Determine file type based on content type
+            if not self.file_type:
+                content_type = getattr(self.file.file, 'content_type', '')
+                if content_type.startswith('image/'):
+                    self.file_type = 'IMAGE'
+                elif content_type == 'application/pdf':
+                    self.file_type = 'PDF'
+        
+        super().save(*args, **kwargs)
+
+
 # Signal to auto-generate token when creating APIToken through Django admin
 @receiver(post_save, sender=APIToken)
 def generate_api_token_on_create(sender, instance, created, **kwargs):
