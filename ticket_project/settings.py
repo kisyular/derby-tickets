@@ -83,12 +83,54 @@ WSGI_APPLICATION = "ticket_project.wsgi.application"
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
-DATABASES = {
-    "default": {
-        "ENGINE": "django.db.backends.sqlite3",
-        "NAME": BASE_DIR / "db.sqlite3",
+# Get database configuration from environment
+USE_MSSQL = os.environ.get('USE_MSSQL', 'False').lower() == 'true'
+
+if USE_MSSQL:
+    # Microsoft SQL Server Configuration
+    DATABASES = {
+        'default': {
+            'ENGINE': 'mssql',
+            'NAME': os.environ.get('MSSQL_DB_NAME'),
+            'USER': os.environ.get('MSSQL_DB_USER_WRITE'),  # Use write user as default
+            'PASSWORD': os.environ.get('MSSQL_DB_PASSWORD_WRITE'),
+            'HOST': os.environ.get('MSSQL_DB_HOST'),
+            'PORT': os.environ.get('MSSQL_DB_PORT', '1433'),
+            'OPTIONS': {
+                'driver': 'ODBC Driver 17 for SQL Server',
+                'unicode_results': True,
+                'host_is_server': True,
+                'extra_params': 'TrustServerCertificate=yes',
+            },
+        },
+        # Read-only database for reports/analytics (temporarily disabled due to login issues)
+        # 'readonly': {
+        #     'ENGINE': 'mssql',
+        #     'NAME': os.environ.get('MSSQL_DB_NAME'),
+        #     'USER': os.environ.get('MSSQL_DB_USER_READ'),
+        #     'PASSWORD': os.environ.get('MSSQL_DB_PASSWORD_READ'),
+        #     'HOST': os.environ.get('MSSQL_DB_HOST'),
+        #     'PORT': os.environ.get('MSSQL_DB_PORT', '1433'),
+        #     'OPTIONS': {
+        #         'driver': 'ODBC Driver 17 for SQL Server',
+        #         'unicode_results': True,
+        #         'host_is_server': True,
+        #         'extra_params': 'TrustServerCertificate=yes',
+        #     },
+        # }
     }
-}
+    
+    # Database routing for read/write operations (disabled until read user is fixed)
+    # DATABASE_ROUTERS = ['tickets.db_router.DatabaseRouter']
+    
+else:
+    # SQLite Configuration (Development/Testing)
+    DATABASES = {
+        "default": {
+            "ENGINE": "django.db.backends.sqlite3",
+            "NAME": BASE_DIR / "db.sqlite3",
+        }
+    }
 
 
 # Password validation
