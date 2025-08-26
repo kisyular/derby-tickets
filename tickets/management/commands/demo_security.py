@@ -113,7 +113,7 @@ class Command(BaseCommand):
         
         # Test lockout check
         is_locked = SecurityManager.is_locked_out(test_user)
-        self.stdout.write(f'  Final lockout status: {"🔒 LOCKED" if is_locked else "🔓 UNLOCKED"}')
+        self.stdout.write(f'  Final lockout status: {"LOCKED" if is_locked else "🔓 UNLOCKED"}')
         
         # Clear for next test
         SecurityManager.clear_attempts(test_user)

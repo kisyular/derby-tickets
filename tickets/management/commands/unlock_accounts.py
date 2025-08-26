@@ -150,7 +150,7 @@ class Command(BaseCommand):
             self.stdout.write("-" * 40)
             for event in recent_locks:
                 user_str = event.user.username if event.user else event.username_attempted
-                self.stdout.write(f"  🔒 {user_str} at {event.timestamp}")
+                self.stdout.write(f"  {user_str} at {event.timestamp}")
                 self.stdout.write(f"     IP: {event.ip_address}")
                 self.stdout.write(f"     Reason: {event.description}")
                 self.stdout.write("")

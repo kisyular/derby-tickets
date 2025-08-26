@@ -53,7 +53,7 @@
                             <!-- Title Field -->
                             <div class="form-group">
                                 <label for="id_title">
-                                    <i class="fas fa-heading"></i> Title <span class="text-danger">*</span>
+                                    Title <span class="text-danger">*</span>
                                 </label>
                                 <input type="text" 
                                        class="form-control {% if form.title.errors %}is-invalid{% endif %}" 
@@ -75,7 +75,7 @@
                             <!-- Description Field -->
                             <div class="form-group">
                                 <label for="id_description">
-                                    <i class="fas fa-file-alt"></i> Description
+                                    Description
                                 </label>
                                 <textarea class="form-control {% if form.description.errors %}is-invalid{% endif %}" 
                                           id="id_description" 
@@ -95,7 +95,7 @@
                             <!-- Category Field -->
                             <div class="form-group">
                                 <label for="id_category">
-                                    <i class="fas fa-tag"></i> Category
+                                    Category
                                 </label>
                                 <select class="form-control {% if form.category.errors %}is-invalid{% endif %}" 
                                         id="id_category" 
@@ -120,7 +120,7 @@
                             <!-- Priority Field -->
                             <div class="form-group">
                                 <label for="id_priority">
-                                    <i class="fas fa-exclamation-triangle"></i> Priority <span class="text-danger">*</span>
+                                    Priority <span class="text-danger">*</span>
                                 </label>
                                 <select class="form-control {% if form.priority.errors %}is-invalid{% endif %}" 
                                         id="id_priority" 
@@ -128,16 +128,16 @@
                                         required>
                                     <option value="">Select Priority Level</option>
                                     <option value="Low" {% if form.priority.value == 'Low' %}selected{% endif %}>
-                                        🟢 Low - Minor issue, no urgent timeline
+                                        Low - Minor issue, no urgent timeline
                                     </option>
                                     <option value="Medium" {% if form.priority.value == 'Medium' %}selected{% endif %}>
-                                        🟡 Medium - Standard issue, normal timeline
+                                        Medium - Standard issue, normal timeline
                                     </option>
                                     <option value="High" {% if form.priority.value == 'High' %}selected{% endif %}>
-                                        🟠 High - Important issue, needs prompt attention
+                                        High - Important issue, needs prompt attention
                                     </option>
                                     <option value="Urgent" {% if form.priority.value == 'Urgent' %}selected{% endif %}>
-                                        🔴 Urgent - Critical issue, immediate attention required
+                                        Urgent - Critical issue, immediate attention required
                                     </option>
                                 </select>
                                 <small class="form-text text-muted">
@@ -211,13 +211,12 @@
                         <div class="card-footer">
                             <div class="row">
                                 <div class="col-md-6">
-                                    
-                                    <button type="button" class="btn btn-secondary btn-lg ml-2" onclick="resetForm()">
+                                    <button type="button" class="btn btn-danger btn-lg w-100 mt-2" onclick="resetForm()">
                                         <i class="fas fa-undo"></i> Reset Form
                                     </button>
                                 </div>
                                 <div class="col-md-6 text-right">
-                                    <button type="submit" class="btn btn-success btn-lg">
+                                    <button type="submit" class="btn btn-success btn-lg w-100 mt-2">
                                         <i class="fas fa-save"></i> Create Ticket
                                     </button>
                                 </div>
@@ -233,21 +232,21 @@
                 <div class="card card-info">
                     <div class="card-header">
                         <h3 class="card-title">
-                            <i class="fas fa-lightbulb"></i> Tips for Better Tickets
+                            <i class="fas fa-lightbulb mr-1"></i> Tips for Better Tickets
                         </h3>
                     </div>
                     <div class="card-body">
                         <div class="callout callout-info">
-                            <h5><i class="fas fa-info-circle"></i> Writing Effective Titles</h5>
+                            <h5>Writing Effective Titles</h5>
                             <p>Use clear, specific titles that describe the issue:</p>
                             <ul class="mb-0">
-                                <li>✅ "Login page returns 500 error on Chrome"</li>
-                                <li>❌ "Something is broken"</li>
+                                <li>"Login page returns 500 error on Chrome" <i class="fas fa-check text-success"></i></li>
+                                <li>"Something is broken" <i class="fas fa-times text-danger"></i> </li>
                             </ul>
                         </div>
 
                         <div class="callout callout-warning">
-                            <h5><i class="fas fa-clipboard-list"></i> Include Details</h5>
+                            <h5> Include Details</h5>
                             <p>Help us help you faster by including:</p>
                             <ul class="mb-0">
                                 <li>Steps to reproduce the issue</li>
@@ -258,7 +257,7 @@
                         </div>
 
                         <div class="callout callout-success">
-                            <h5><i class="fas fa-tachometer-alt"></i> Priority Guidelines</h5>
+                            <h5>Priority Guidelines</h5>
                             <ul class="mb-0">
                                 <li><strong>Urgent:</strong> System down, security issues</li>
                                 <li><strong>High:</strong> Major functionality broken</li>
