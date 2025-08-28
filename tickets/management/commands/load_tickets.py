@@ -11,8 +11,19 @@ from django.conf import settings
 from django.core.mail import send_mail
 from django.template.loader import render_to_string
 
+# clean the created by and assigned to columns
+"""
+Jeffrey Land -> Jeff Land
+Jason Carr -> Jason Carrier
+"""
+
 
 class Command(BaseCommand):
+    # Name cleaning map for known corrections
+    NAME_CLEAN_MAP = {
+        "Jeffrey Land": "Jeff Land",
+        "Jason Carr": "Jason Carrier",
+    }
     help = "Load ticket data from CSV file using pandas"
 
     def add_arguments(self, parser):
@@ -255,31 +266,36 @@ class Command(BaseCommand):
             except User.DoesNotExist:
                 pass
 
-        # Try to find by username (name as username)
-        username = name.lower().replace(" ", "_")
+        # Try to find by username (first initial + last name @derbyfab.com)
+        if len(name_parts) >= 2:
+            first_name = name_parts[0]
+            last_name = name_parts[-1]
+            base = (first_name[0] + last_name).lower()
+            username = f"{base}@derbyfab.com"
+            email = username
+        else:
+            # Fallback: use name as base
+            base = name.replace(" ", "").lower()
+            username = f"{base}@derbyfab.com"
+            email = username
         try:
             user = User.objects.get(username=username)
-            # If user exists but needs to be staff and isn't, update them
             if make_staff and not user.is_staff:
                 user.is_staff = True
                 user.save()
             return user
         except User.DoesNotExist:
-            # Create new user
             user = User.objects.create_user(
                 username=username,
-                email=f"{username}@company.com",  # Placeholder email
+                email=email,
                 first_name=name_parts[0] if name_parts else name,
                 last_name=" ".join(name_parts[1:]) if len(name_parts) > 1 else "",
-                is_staff=make_staff,  # Set staff status based on parameter
+                is_staff=make_staff,
             )
-
-            # Create UserProfile using get_or_create to avoid duplicates
             UserProfile.objects.get_or_create(
                 user=user,
                 defaults={"department": department or "", "location": location or ""},
             )
-
             return user
 
     def load_tickets_from_csv(self, csv_file, results, update_existing=False):
@@ -292,6 +308,7 @@ class Command(BaseCommand):
         skipped_count = 0
 
         # Process each row individually with its own transaction
+
         for index, row in df.iterrows():
             try:
                 with transaction.atomic():  # Individual transaction per row
@@ -314,6 +331,11 @@ class Command(BaseCommand):
                     category_name = row.get("Category")
                     created_by_name = row.get("Created By") or row.get("Reporter")
                     assigned_to_name = row.get("Assigned To")
+                    # Clean names if needed
+                    if created_by_name in self.NAME_CLEAN_MAP:
+                        created_by_name = self.NAME_CLEAN_MAP[created_by_name]
+                    if assigned_to_name in self.NAME_CLEAN_MAP:
+                        assigned_to_name = self.NAME_CLEAN_MAP[assigned_to_name]
                     created_at_str = (
                         row.get("Created On")
                         or row.get("Created At")
