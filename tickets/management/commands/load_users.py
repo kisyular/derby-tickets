@@ -1,3 +1,4 @@
+import difflib
 from django.core.management.base import BaseCommand
 import pandas as pd
 from django.db import transaction
@@ -185,6 +186,36 @@ class Command(BaseCommand):
                         if pd.notna(row.get("password"))
                         else ""
                     )
+
+                    # Force email domain to @derbyfab.com if not present
+                    if email and not email.endswith("@derbyfab.com"):
+                        email = email.split("@")[0] + "@derbyfab.com"
+
+                    # Fuzzy match: warn if a similar user exists
+                    if first_name or last_name:
+                        full_name = f"{first_name} {last_name}".strip().lower()
+                        all_users = User.objects.all().values_list(
+                            "first_name", "last_name", "email"
+                        )
+                        possible_matches = []
+                        for fn, ln, em in all_users:
+                            db_name = f"{fn} {ln}".strip().lower()
+                            if db_name and full_name:
+                                ratio = difflib.SequenceMatcher(
+                                    None, full_name, db_name
+                                ).ratio()
+                                if ratio > 0.8 and em != email:
+                                    possible_matches.append((db_name, em, ratio))
+                        if possible_matches:
+                            match_str = "; ".join(
+                                [
+                                    f"{n} <{e}> (score {r:.2f})"
+                                    for n, e, r in possible_matches
+                                ]
+                            )
+                            results["warnings"].append(
+                                f"Row {index + 2}: Possible duplicate(s) for {first_name} {last_name}: {match_str}"
+                            )
 
                     # Skip rows with missing essential data
                     if not email or pd.isna(email):
