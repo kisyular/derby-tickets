@@ -288,9 +288,12 @@ def send_comment_notification(comment, ticket):
 
 def send_ticket_updated_notification(ticket, changed_fields, updated_by):
     """Send notification when ticket priority or status is updated."""
+    # If the only change is assignment, do not send this email (handled by ticket_assigned)
+    if set(changed_fields.keys()) == {"assigned_to"}:
+        return False
+
     # Determine recipients based on who made the change
     recipients = []
-
     if updated_by.is_staff:
         # Admin made the change - notify creator
         if ticket.created_by.email and updated_by != ticket.created_by:
