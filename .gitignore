@@ -14,7 +14,6 @@ migrations/
 # other django files
 *.pyc
 .vscode/
-*.txt
 *sample*
 *test*
 .env
@@ -25,4 +24,5 @@ logs/
 # Security-sensitive documentation
 LOGGING_IMPLEMENTATION.md
 *_IMPLEMENTATION.md
+data/*
 SECURITY_FEATURES.md 

@@ -153,33 +153,22 @@ class Ticket(models.Model):
     
     def _generate_ticket_number(self):
         """Generate a unique ticket number."""
-        # Get the highest existing ticket number
-        last_ticket = Ticket.objects.filter(
-            ticket_number__isnull=False,
-            ticket_number__regex=r'^\d+$'  # Only numeric ticket numbers
-        ).extra(
-            select={'ticket_num_int': 'CAST(ticket_number AS INTEGER)'}
-        ).order_by('-ticket_num_int').first()
+        # Get all existing ticket numbers and find the highest numeric one
+        all_tickets = Ticket.objects.filter(ticket_number__isnull=False).values_list('ticket_number', flat=True)
         
-        if last_ticket and last_ticket.ticket_number.isdigit():
-            next_number = int(last_ticket.ticket_number) + 1
-        else:
-            # If no existing numeric tickets, start from a reasonable number
-            # Check if we have any imported tickets to continue the sequence
-            all_tickets = Ticket.objects.filter(ticket_number__isnull=False)
-            if all_tickets.exists():
-                # Find the highest numeric ticket number
-                max_num = 0
-                for ticket in all_tickets:
-                    try:
-                        num = int(ticket.ticket_number)
-                        if num > max_num:
-                            max_num = num
-                    except ValueError:
-                        continue
-                next_number = max_num + 1 if max_num > 0 else 1
-            else:
-                next_number = 1
+        max_num = 0
+        for ticket_number in all_tickets:
+            try:
+                # Try to convert to integer - only consider numeric ticket numbers
+                num = int(str(ticket_number).strip())
+                if num > max_num:
+                    max_num = num
+            except (ValueError, TypeError):
+                # Skip non-numeric ticket numbers
+                continue
+        
+        # Next number is max + 1, or 1 if no numeric tickets exist
+        next_number = max_num + 1 if max_num > 0 else 1
         
         return str(next_number)
 

@@ -210,10 +210,10 @@
       </div>
 
       <div class="content">
-        <p class="greeting">Hello, {{ recipient_name }}</p>
+        <p class="greeting">Hello, <strong>{{ ticket_creator.greeting_name }}</strong></p>
 
         <p class="message">
-          A new comment has been added to a ticket by
+          A new comment has been added to your ticket by
           <strong>{{ author.name }}</strong>.
         </p>
 
