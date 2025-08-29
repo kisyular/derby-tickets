@@ -12,6 +12,7 @@ from django.conf import settings
 from .logging_utils import log_email_sent, log_system_event, performance_monitor
 
 
+sending_email_in_test = True # Set to True to always send to test email
 def send_email(
     subject: str,
     html_body: str,
@@ -90,7 +91,6 @@ def send_email(
             # Log successful email sending
             for recipient in to_emails:
                 log_email_sent(recipient, subject, success=True)
-
             return True
 
     except Exception as e:
@@ -190,7 +190,7 @@ def send_ticket_created_notification(ticket):
         subject=subject,
         html_body=html_body,
         recipients=admin_emails,
-        in_test=True,  # Change to False in production
+        in_test=sending_email_in_test,
     )
 
 
@@ -217,7 +217,7 @@ def send_ticket_assigned_notification(ticket):
         subject=subject,
         html_body=html_body,
         recipients=[ticket.assigned_to.email],
-        in_test=True,  # Change to False in production
+        in_test=sending_email_in_test,  # Change the sending_email_in_test to False in production
     )
 
 
@@ -282,7 +282,7 @@ def send_comment_notification(comment, ticket):
         subject=subject,
         html_body=html_body,
         recipients=recipients,
-        in_test=True,  # Change to False in production
+        in_test=sending_email_in_test,  # Change the sending_email_in_test to False in production
     )
 
 
@@ -316,6 +316,7 @@ def send_ticket_updated_notification(ticket, changed_fields, updated_by):
         "ticket": prepare_ticket_context(ticket),
         "changed_fields": changed_fields,
         "updated_by": prepare_user_context(updated_by),
+        "ticket_creator": prepare_user_context(ticket.created_by),
         "site_url": os.environ.get("DJANGO_SITE_URL", "http://127.0.0.1:8000"),
     }
 
@@ -327,5 +328,5 @@ def send_ticket_updated_notification(ticket, changed_fields, updated_by):
         subject=subject,
         html_body=html_body,
         recipients=recipients,
-        in_test=True,  # Change to False in production
+        in_test=sending_email_in_test,  # Change the sending_email_in_test to False in production
     )

@@ -464,7 +464,7 @@ class Command(BaseCommand):
             admin_email = getattr(settings, "DJANGO_ADMIN_EMAIL", None)
             if not admin_email:
                 admin_email = getattr(
-                    settings, "DEFAULT_FROM_EMAIL", "admin@example.com"
+                    settings, "DEFAULT_FROM_EMAIL", "derfabit@derbyfab.com"
                 )
 
             total_processed = (
@@ -478,35 +478,32 @@ class Command(BaseCommand):
 
             # Create email content
             message = f"""
-Bulk Ticket Import Summary
-==========================
-
-Total processed: {total_processed} tickets
-- Created: {results['success_count']} tickets
-- Updated: {results.get('updated_count', 0)} tickets  
-- Skipped: {results.get('skipped_count', 0)} tickets
-
-"""
+                        Bulk Ticket Import Summary
+                        ==========================
+                        
+                        Total processed: {total_processed} tickets
+                        - Created: {results['success_count']} tickets
+                        - Updated: {results.get('updated_count', 0)} tickets  
+                        - Skipped: {results.get('skipped_count', 0)} tickets
+                        """
 
             if results["warnings"]:
                 message += f"""
-Warnings ({len(results['warnings'])}):
-{chr(10).join([f"- {warning}" for warning in results['warnings']])}
-
-"""
+                            Warnings ({len(results['warnings'])}):
+                            {chr(10).join([f"- {warning}" for warning in results['warnings']])}
+                            """
 
             if results["errors"]:
                 message += f"""
-Errors ({len(results['errors'])}):
-{chr(10).join([f"- {error}" for error in results['errors']])}
-
-"""
+                            Errors ({len(results['errors'])}):
+                            {chr(10).join([f"- {error}" for error in results['errors']])}
+                            """
 
             message += """
-Import completed successfully.
-
-This is an automated message from the Django Ticket System.
-"""
+                        Import completed successfully.
+                        
+                        This is an automated message from the Django Ticket System.
+                        """
 
             send_mail(
                 subject=subject,
