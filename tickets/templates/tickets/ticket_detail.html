@@ -200,14 +200,6 @@
                                                 <div class="timeline-body">
                                                     {{ comment.content|linebreaks }}
                                                 </div>
-                                                {% if comment.created_at != comment.updated_at %}
-                                                    <div class="timeline-footer">
-                                                        <small class="text-muted">
-                                                            <i class="fas fa-edit"></i>
-                                                            Edited {{ comment.updated_at|date:"M d, Y H:i" }}
-                                                        </small>
-                                                    </div>
-                                                {% endif %}
                                             </div>
                                         </div>
                                     {% endfor %}

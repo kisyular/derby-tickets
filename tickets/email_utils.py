@@ -223,8 +223,8 @@ def send_ticket_assigned_notification(ticket):
 
 def send_comment_notification(comment, ticket):
     """Send notification when a comment is added to a ticket."""
-    # Prepare context with fallback values
-    context = {
+    # Prepare base context with fallback values
+    base_context = {
         "ticket": prepare_ticket_context(ticket),
         "comment": {
             "id": comment.id,
@@ -236,49 +236,51 @@ def send_comment_notification(comment, ticket):
         "ticket_assigned": prepare_user_context(ticket.assigned_to),
         "site_url": os.environ.get("DJANGO_SITE_URL", "http://127.0.0.1:8000"),
     }
-    # Determine who should receive the notification
+    # Determine who should receive the notification and send personalized email
+    recipient_users = []
     if comment.author == ticket.created_by:
         # Creator commented - notify assigned admin if exists
         if ticket.assigned_to and ticket.assigned_to.email:
-            recipients = [ticket.assigned_to.email]
+            recipient_users = [ticket.assigned_to]
         else:
             print("No assigned admin to notify for creator's comment")
             return False
     elif comment.author == ticket.assigned_to:
         # Admin commented - notify creator
         if ticket.created_by.email:
-            recipients = [ticket.created_by.email]
+            recipient_users = [ticket.created_by]
         else:
             print("No creator email to notify for admin's comment")
             return False
     else:
         # Other user commented - notify both creator and assigned admin if different
-        recipients = []
         if ticket.created_by.email and comment.author != ticket.created_by:
-            recipients.append(ticket.created_by.email)
+            recipient_users.append(ticket.created_by)
         if (
             ticket.assigned_to
             and ticket.assigned_to.email
             and comment.author != ticket.assigned_to
         ):
-            recipients.append(ticket.assigned_to.email)
-
-        if not recipients:
+            recipient_users.append(ticket.assigned_to)
+        if not recipient_users:
             print("No recipients for comment notification")
             return False
 
-    # Render HTML email template
-    html_body = render_to_string("emails/comment_added.html", context)
-    subject = (
-        f"New Comment on Ticket #{context['ticket']['ticket_number']} - {ticket.title}"
-    )
-
-    return send_email(
-        subject=subject,
-        html_body=html_body,
-        recipients=recipients,
-        in_test=sending_email_in_test,  # Change the sending_email_in_test to False in production
-    )
+    success = True
+    for recipient in recipient_users:
+        context = dict(base_context)
+        context["recipient"] = prepare_user_context(recipient)
+        html_body = render_to_string("emails/comment_added.html", context)
+        subject = f"New Comment on Ticket #{context['ticket']['ticket_number']} - {ticket.title}"
+        result = send_email(
+            subject=subject,
+            html_body=html_body,
+            recipients=[recipient.email],
+            in_test=sending_email_in_test,  # Change the sending_email_in_test to False in production
+        )
+        if not result:
+            success = False
+    return success
 
 
 def send_ticket_updated_notification(ticket, changed_fields, updated_by):
