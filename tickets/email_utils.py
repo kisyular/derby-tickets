@@ -12,7 +12,7 @@ from django.conf import settings
 from .logging_utils import log_email_sent, log_system_event, performance_monitor
 
 
-sending_email_in_test = False  # Set to True to always send to test email
+sending_email_in_test = True  # Set to True to always send to test email
 
 
 def send_email(
@@ -20,7 +20,7 @@ def send_email(
     html_body: str,
     recipients: List[str] = None,
     in_test: bool = True,
-    attachment_file: str = None,
+    attachment_files: list = None,
 ) -> bool:
     """
     Send an HTML email to recipients.
@@ -67,17 +67,52 @@ def send_email(
         # Attach the email body
         msg.attach(MIMEText(html_body, "html"))
 
-        # Attach a file if provided
-        if attachment_file and os.path.exists(attachment_file):
-            file_name = os.path.basename(attachment_file)
-            with open(attachment_file, "rb") as attachment:
-                part = MIMEBase("application", "octet-stream")
-                part.set_payload(attachment.read())
-                encoders.encode_base64(part)
-                part.add_header(
-                    "Content-Disposition", f"attachment; filename={file_name}"
-                )
-                msg.attach(part)
+        # Attach files if provided
+        import tempfile, shutil
+
+        temp_files = []
+        if attachment_files:
+            print(f"Attaching files: {attachment_files}")
+            for attach in attachment_files:
+                file_name = None
+                file_path = None
+                # attach can be a tuple (file_path, file_name) or just a path
+                if isinstance(attach, tuple):
+                    file_path, file_name = attach
+                else:
+                    file_path = attach
+                    file_name = os.path.basename(file_path)
+                # If file_path exists locally, attach directly
+                if os.path.exists(file_path):
+                    with open(file_path, "rb") as attachment:
+                        part = MIMEBase("application", "octet-stream")
+                        part.set_payload(attachment.read())
+                        encoders.encode_base64(part)
+                        part.add_header(
+                            "Content-Disposition", f"attachment; filename={file_name}"
+                        )
+                        msg.attach(part)
+                else:
+                    # Try to download remote file to temp and attach
+                    try:
+                        from django.core.files.storage import default_storage
+
+                        with default_storage.open(file_path, "rb") as remote_file:
+                            tmp = tempfile.NamedTemporaryFile(delete=False)
+                            shutil.copyfileobj(remote_file, tmp)
+                            tmp.close()
+                            temp_files.append(tmp.name)
+                            with open(tmp.name, "rb") as attachment:
+                                part = MIMEBase("application", "octet-stream")
+                                part.set_payload(attachment.read())
+                                encoders.encode_base64(part)
+                                part.add_header(
+                                    "Content-Disposition",
+                                    f"attachment; filename={file_name}",
+                                )
+                                msg.attach(part)
+                    except Exception as e:
+                        print(f"Failed to attach remote file: {file_path} ({e})")
 
         # Send the email
         with smtplib.SMTP(smtp_server, smtp_port) as server:
@@ -93,6 +128,12 @@ def send_email(
             # Log successful email sending
             for recipient in to_emails:
                 log_email_sent(recipient, subject, success=True)
+            # Clean up temp files
+            for tmpf in temp_files:
+                try:
+                    os.remove(tmpf)
+                except Exception:
+                    pass
             return True
 
     except Exception as e:
@@ -186,11 +227,30 @@ def send_ticket_created_notification(ticket):
         f"New Ticket Created: #{context['ticket']['ticket_number']} - {ticket.title}"
     )
 
+    # Attach all files if any attachments exist
+    attachment_files = []
+    if hasattr(ticket, "attachments"):
+        all_attachments = list(ticket.attachments.all())
+        print(f"Ticket {ticket.id} attachments found: {len(all_attachments)}")
+        for att in all_attachments:
+            print(
+                f"Attachment id={att.id}, file={att.file}, file.name={getattr(att.file, 'name', None)}, file.path={getattr(att.file, 'path', None)}, original_filename={att.original_filename}"
+            )
+            if att.file:
+                # Use (file_path, original_filename) for correct naming
+                if hasattr(att.file, "path") and os.path.exists(att.file.path):
+                    attachment_files.append((att.file.path, att.original_filename))
+                else:
+                    # For remote storage, use att.file.name (storage path)
+                    attachment_files.append((att.file.name, att.original_filename))
+    print(f"attachment_files to send: {attachment_files}")
+
     return send_email(
         subject=subject,
         html_body=html_body,
         recipients=admin_emails,
         in_test=sending_email_in_test,
+        attachment_files=attachment_files,
     )
 
 
