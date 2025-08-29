@@ -12,7 +12,9 @@ from django.conf import settings
 from .logging_utils import log_email_sent, log_system_event, performance_monitor
 
 
-sending_email_in_test = True # Set to True to always send to test email
+sending_email_in_test = False  # Set to True to always send to test email
+
+
 def send_email(
     subject: str,
     html_body: str,
@@ -135,9 +137,7 @@ def prepare_user_context(user):
         "name": full_name if full_name else user.username,
         "username": user.username,
         "email": user.email or "",
-        "greeting_name": (
-            first_name if first_name else (full_name if full_name else user.username)
-        ),
+        "greeting_name": first_name if first_name else user.username,
     }
 
 
@@ -204,7 +204,7 @@ def send_ticket_assigned_notification(ticket):
     context = {
         "ticket": prepare_ticket_context(ticket),
         "assigned_user": prepare_user_context(ticket.assigned_to),
-        "creator": prepare_user_context(ticket.created_by),
+        "ticket_creator": prepare_user_context(ticket.created_by),
         "site_url": os.environ.get("DJANGO_SITE_URL", "http://127.0.0.1:8000"),
     }
 
@@ -236,11 +236,6 @@ def send_comment_notification(comment, ticket):
         "ticket_assigned": prepare_user_context(ticket.assigned_to),
         "site_url": os.environ.get("DJANGO_SITE_URL", "http://127.0.0.1:8000"),
     }
-
-    print("This ticket was commented on by:", comment.author)
-    print("This ticket was created by:", ticket.created_by)
-    print("This ticket is assigned to:", ticket.assigned_to)
-
     # Determine who should receive the notification
     if comment.author == ticket.created_by:
         # Creator commented - notify assigned admin if exists

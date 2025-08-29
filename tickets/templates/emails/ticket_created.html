@@ -27,9 +27,9 @@
         box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
       }
       .header {
-        background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-        color: white;
         padding: 24px;
+        background-color: #ffda6a;
+        color: #332701;
         text-align: center;
         position: relative;
       }
@@ -43,7 +43,7 @@
         height: 0;
         border-left: 15px solid transparent;
         border-right: 15px solid transparent;
-        border-top: 10px solid #059669;
+        border-top: 10px solid #ffda6a;
       }
       .header h1 {
         font-size: 22px;
@@ -66,7 +66,7 @@
         line-height: 1.6;
       }
       .ticket-info {
-        background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+        background: #f1f5f9;
         border: 1px solid #e2e8f0;
         border-radius: 8px;
         padding: 20px;
@@ -80,7 +80,7 @@
         top: 0;
         bottom: 0;
         width: 4px;
-        background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+        background: #f59e0b;
         border-radius: 0 2px 2px 0;
       }
       .ticket-info h3 {
@@ -113,19 +113,19 @@
         margin-top: 8px;
       }
       .priority-urgent {
-        background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+        background: #b91c1c;
         color: white;
       }
       .priority-high {
-        background: linear-gradient(135deg, #ea580c 0%, #c2410c 100%);
+        background: #c2410c;
         color: white;
       }
       .priority-medium {
-        background: linear-gradient(135deg, #d97706 0%, #b45309 100%);
-        color: white;
+        background: #d97706;
+        color: black;
       }
       .priority-low {
-        background: linear-gradient(135deg, #64748b 0%, #475569 100%);
+        background: #475569;
         color: white;
       }
       .status-badge,
@@ -140,9 +140,9 @@
       }
       .btn {
         display: inline-block;
-        background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
-        color: white;
         text-decoration: none;
+        color: #052c65;
+        background: #cfe2ff;
         padding: 12px 24px;
         border-radius: 8px;
         font-weight: 600;
@@ -186,7 +186,7 @@
       </div>
 
       <div class="content">
-        <p class="greeting">Hello Admin,</p>
+        <p class="greeting">Hello <strong>{{ greeting_name }}</strong>,</p>
 
         <p class="message">
           A new ticket has been created by <strong>{{ creator.name }}</strong>.
