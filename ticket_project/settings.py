@@ -20,19 +20,23 @@ from dotenv import load_dotenv
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 # Load environment variables from .env file
-load_dotenv(BASE_DIR / '.env')
+load_dotenv(BASE_DIR / ".env")
 
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY', 'your-production-secret-key')
+SECRET_KEY = os.environ.get("DJANGO_SECRET_KEY", "your-production-secret-key")
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = os.environ.get('DJANGO_DEBUG', 'False') == 'True'
+DEBUG = os.environ.get("DJANGO_DEBUG", "False") == "True"
 
-ALLOWED_HOSTS = [host.strip() for host in os.environ.get('DJANGO_ALLOWED_HOSTS', '').split(',') if host.strip()]
+ALLOWED_HOSTS = [
+    host.strip()
+    for host in os.environ.get("DJANGO_ALLOWED_HOSTS", "").split(",")
+    if host.strip()
+]
 
 
 # Application definition
@@ -84,23 +88,23 @@ WSGI_APPLICATION = "ticket_project.wsgi.application"
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
 # Get database configuration from environment
-USE_MSSQL = os.environ.get('USE_MSSQL', 'False').lower() == 'true'
+USE_MSSQL = os.environ.get("USE_MSSQL", "False").lower() == "true"
 
 if USE_MSSQL:
     # Microsoft SQL Server Configuration
     DATABASES = {
-        'default': {
-            'ENGINE': 'mssql',
-            'NAME': os.environ.get('MSSQL_DB_NAME'),
-            'USER': os.environ.get('MSSQL_DB_USER_WRITE'),  # Use write user as default
-            'PASSWORD': os.environ.get('MSSQL_DB_PASSWORD_WRITE'),
-            'HOST': os.environ.get('MSSQL_DB_HOST'),
-            'PORT': os.environ.get('MSSQL_DB_PORT', '1433'),
-            'OPTIONS': {
-                'driver': 'ODBC Driver 17 for SQL Server',
-                'unicode_results': True,
-                'host_is_server': True,
-                'extra_params': 'TrustServerCertificate=yes',
+        "default": {
+            "ENGINE": "mssql",
+            "NAME": os.environ.get("MSSQL_DB_NAME"),
+            "USER": os.environ.get("MSSQL_DB_USER_WRITE"),  # Use write user as default
+            "PASSWORD": os.environ.get("MSSQL_DB_PASSWORD_WRITE"),
+            "HOST": os.environ.get("MSSQL_DB_HOST"),
+            "PORT": os.environ.get("MSSQL_DB_PORT", "1433"),
+            "OPTIONS": {
+                "driver": "ODBC Driver 17 for SQL Server",
+                "unicode_results": True,
+                "host_is_server": True,
+                "extra_params": "TrustServerCertificate=yes",
             },
         },
         # Read-only database for reports/analytics (temporarily disabled due to login issues)
@@ -119,10 +123,10 @@ if USE_MSSQL:
         #     },
         # }
     }
-    
+
     # Database routing for read/write operations (disabled until read user is fixed)
     # DATABASE_ROUTERS = ['tickets.db_router.DatabaseRouter']
-    
+
 else:
     # SQLite Configuration (Development/Testing)
     DATABASES = {
@@ -182,8 +186,8 @@ MEDIA_ROOT = BASE_DIR / "media"
 # File upload security settings
 FILE_UPLOAD_PERMISSIONS = 0o640
 FILE_UPLOAD_DIRECTORY_PERMISSIONS = 0o750
-DATA_UPLOAD_MAX_MEMORY_SIZE = 10 * 1024 * 1024   # 10 MB
-FILE_UPLOAD_MAX_MEMORY_SIZE = 10 * 1024 * 1024   # 10 MB
+DATA_UPLOAD_MAX_MEMORY_SIZE = 10 * 1024 * 1024  # 10 MB
+FILE_UPLOAD_MAX_MEMORY_SIZE = 10 * 1024 * 1024  # 10 MB
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
@@ -192,216 +196,216 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 # Production-Grade Logging Configuration
 LOGGING = {
-    'version': 1,
-    'disable_existing_loggers': False,
-    'formatters': {
-        'verbose': {
-            'format': '[{levelname}] {asctime} | {name} | PID:{process} TID:{thread} | {funcName}:{lineno} | {message}',
-            'style': '{',
-            'datefmt': '%Y-%m-%d %H:%M:%S'
+    "version": 1,
+    "disable_existing_loggers": False,
+    "formatters": {
+        "verbose": {
+            "format": "[{levelname}] {asctime} | {name} | PID:{process} TID:{thread} | {funcName}:{lineno} | {message}",
+            "style": "{",
+            "datefmt": "%Y-%m-%d %H:%M:%S",
         },
-        'standard': {
-            'format': '[{levelname}] {asctime} | {name} | {message}',
-            'style': '{',
-            'datefmt': '%Y-%m-%d %H:%M:%S'
+        "standard": {
+            "format": "[{levelname}] {asctime} | {name} | {message}",
+            "style": "{",
+            "datefmt": "%Y-%m-%d %H:%M:%S",
         },
-        'security': {
-            'format': '[SECURITY] {asctime} | {name} | IP:{remote_addr} | User:{user} | {message}',
-            'style': '{',
-            'datefmt': '%Y-%m-%d %H:%M:%S'
+        "security": {
+            "format": "[SECURITY] {asctime} | {name} | IP:{remote_addr} | User:{user} | {message}",
+            "style": "{",
+            "datefmt": "%Y-%m-%d %H:%M:%S",
         },
-        'json': {
-            '()': 'pythonjsonlogger.jsonlogger.JsonFormatter',
-            'format': '%(asctime)s %(name)s %(levelname)s %(message)s %(pathname)s %(lineno)d'
+        "json": {
+            "()": "pythonjsonlogger.jsonlogger.JsonFormatter",
+            "format": "%(asctime)s %(name)s %(levelname)s %(message)s %(pathname)s %(lineno)d",
         },
-        'simple': {
-            'format': '[{levelname}] {name}: {message}',
-            'style': '{',
-        },
-    },
-    'filters': {
-        'require_debug_false': {
-            '()': 'django.utils.log.RequireDebugFalse',
-        },
-        'require_debug_true': {
-            '()': 'django.utils.log.RequireDebugTrue',
-        },
-        'skip_suspicious_operations': {
-            '()': 'django.utils.log.CallbackFilter',
-            'callback': lambda record: not record.getMessage().startswith('Suspicious'),
+        "simple": {
+            "format": "[{levelname}] {name}: {message}",
+            "style": "{",
         },
     },
-    'handlers': {
+    "filters": {
+        "require_debug_false": {
+            "()": "django.utils.log.RequireDebugFalse",
+        },
+        "require_debug_true": {
+            "()": "django.utils.log.RequireDebugTrue",
+        },
+        "skip_suspicious_operations": {
+            "()": "django.utils.log.CallbackFilter",
+            "callback": lambda record: not record.getMessage().startswith("Suspicious"),
+        },
+    },
+    "handlers": {
         # Console output for development
-        'console': {
-            'level': 'INFO',
-            'filters': ['require_debug_true'],
-            'class': 'logging.StreamHandler',
-            'formatter': 'standard',
+        "console": {
+            "level": "INFO",
+            "filters": ["require_debug_true"],
+            "class": "logging.StreamHandler",
+            "formatter": "standard",
         },
         # Console output for production (errors only)
-        'console_prod': {
-            'level': 'ERROR',
-            'filters': ['require_debug_false'],
-            'class': 'logging.StreamHandler',
-            'formatter': 'standard',
+        "console_prod": {
+            "level": "ERROR",
+            "filters": ["require_debug_false"],
+            "class": "logging.StreamHandler",
+            "formatter": "standard",
         },
         # General application logs
-        'file_app': {
-            'level': 'INFO',
-            'class': 'logging.handlers.RotatingFileHandler',
-            'filename': BASE_DIR / 'logs' / 'application.log',
-            'maxBytes': 10 * 1024 * 1024,  # 10MB
-            'backupCount': 10,
-            'formatter': 'verbose',
-            'encoding': 'utf-8',
+        "file_app": {
+            "level": "INFO",
+            "class": "logging.handlers.RotatingFileHandler",
+            "filename": BASE_DIR / "logs" / "application.log",
+            "maxBytes": 10 * 1024 * 1024,  # 10MB
+            "backupCount": 10,
+            "formatter": "verbose",
+            "encoding": "utf-8",
         },
         # Error logs
-        'file_error': {
-            'level': 'ERROR',
-            'class': 'logging.handlers.RotatingFileHandler',
-            'filename': BASE_DIR / 'logs' / 'errors.log',
-            'maxBytes': 10 * 1024 * 1024,  # 10MB
-            'backupCount': 5,
-            'formatter': 'verbose',
-            'encoding': 'utf-8',
+        "file_error": {
+            "level": "ERROR",
+            "class": "logging.handlers.RotatingFileHandler",
+            "filename": BASE_DIR / "logs" / "errors.log",
+            "maxBytes": 10 * 1024 * 1024,  # 10MB
+            "backupCount": 5,
+            "formatter": "verbose",
+            "encoding": "utf-8",
         },
         # Security logs
-        'file_security': {
-            'level': 'WARNING',
-            'class': 'logging.handlers.RotatingFileHandler',
-            'filename': BASE_DIR / 'logs' / 'security.log',
-            'maxBytes': 10 * 1024 * 1024,  # 10MB
-            'backupCount': 10,
-            'formatter': 'security',
-            'encoding': 'utf-8',
+        "file_security": {
+            "level": "WARNING",
+            "class": "logging.handlers.RotatingFileHandler",
+            "filename": BASE_DIR / "logs" / "security.log",
+            "maxBytes": 10 * 1024 * 1024,  # 10MB
+            "backupCount": 10,
+            "formatter": "security",
+            "encoding": "utf-8",
         },
         # Authentication logs
-        'file_auth': {
-            'level': 'INFO',
-            'class': 'logging.handlers.RotatingFileHandler',
-            'filename': BASE_DIR / 'logs' / 'authentication.log',
-            'maxBytes': 5 * 1024 * 1024,  # 5MB
-            'backupCount': 10,
-            'formatter': 'verbose',
-            'encoding': 'utf-8',
+        "file_auth": {
+            "level": "INFO",
+            "class": "logging.handlers.RotatingFileHandler",
+            "filename": BASE_DIR / "logs" / "authentication.log",
+            "maxBytes": 5 * 1024 * 1024,  # 5MB
+            "backupCount": 10,
+            "formatter": "verbose",
+            "encoding": "utf-8",
         },
         # Database logs
-        'file_db': {
-            'level': 'WARNING',
-            'class': 'logging.handlers.RotatingFileHandler',
-            'filename': BASE_DIR / 'logs' / 'database.log',
-            'maxBytes': 5 * 1024 * 1024,  # 5MB
-            'backupCount': 5,
-            'formatter': 'verbose',
-            'encoding': 'utf-8',
+        "file_db": {
+            "level": "WARNING",
+            "class": "logging.handlers.RotatingFileHandler",
+            "filename": BASE_DIR / "logs" / "database.log",
+            "maxBytes": 5 * 1024 * 1024,  # 5MB
+            "backupCount": 5,
+            "formatter": "verbose",
+            "encoding": "utf-8",
         },
         # Email notifications to admins for critical issues
-        'mail_admins': {
-            'level': 'ERROR',
-            'filters': ['require_debug_false', 'skip_suspicious_operations'],
-            'class': 'django.utils.log.AdminEmailHandler',
-            'formatter': 'verbose',
-            'include_html': True,
+        "mail_admins": {
+            "level": "ERROR",
+            "filters": ["require_debug_false", "skip_suspicious_operations"],
+            "class": "django.utils.log.AdminEmailHandler",
+            "formatter": "verbose",
+            "include_html": True,
         },
         # Ticket system specific logs
-        'file_tickets': {
-            'level': 'INFO',
-            'class': 'logging.handlers.RotatingFileHandler',
-            'filename': BASE_DIR / 'logs' / 'tickets.log',
-            'maxBytes': 10 * 1024 * 1024,  # 10MB
-            'backupCount': 15,
-            'formatter': 'verbose',
-            'encoding': 'utf-8',
+        "file_tickets": {
+            "level": "INFO",
+            "class": "logging.handlers.RotatingFileHandler",
+            "filename": BASE_DIR / "logs" / "tickets.log",
+            "maxBytes": 10 * 1024 * 1024,  # 10MB
+            "backupCount": 15,
+            "formatter": "verbose",
+            "encoding": "utf-8",
         },
         # Performance monitoring logs
-        'file_performance': {
-            'level': 'INFO',
-            'class': 'logging.handlers.RotatingFileHandler',
-            'filename': BASE_DIR / 'logs' / 'performance.log',
-            'maxBytes': 5 * 1024 * 1024,  # 5MB
-            'backupCount': 5,
-            'formatter': 'json',
-            'encoding': 'utf-8',
+        "file_performance": {
+            "level": "INFO",
+            "class": "logging.handlers.RotatingFileHandler",
+            "filename": BASE_DIR / "logs" / "performance.log",
+            "maxBytes": 5 * 1024 * 1024,  # 5MB
+            "backupCount": 5,
+            "formatter": "json",
+            "encoding": "utf-8",
         },
     },
-    'loggers': {
+    "loggers": {
         # Root logger
-        '': {
-            'handlers': ['console', 'console_prod', 'file_app'],
-            'level': 'INFO',
-            'propagate': False,
+        "": {
+            "handlers": ["console", "console_prod", "file_app"],
+            "level": "INFO",
+            "propagate": False,
         },
         # Django framework logs
-        'django': {
-            'handlers': ['console', 'console_prod', 'file_app', 'mail_admins'],
-            'level': 'INFO',
-            'propagate': False,
+        "django": {
+            "handlers": ["console", "console_prod", "file_app", "mail_admins"],
+            "level": "INFO",
+            "propagate": False,
         },
         # Django security logs
-        'django.security': {
-            'handlers': ['file_security', 'mail_admins'],
-            'level': 'WARNING',
-            'propagate': False,
+        "django.security": {
+            "handlers": ["file_security", "mail_admins"],
+            "level": "WARNING",
+            "propagate": False,
         },
         # Django request logs (errors and performance issues)
-        'django.request': {
-            'handlers': ['file_error', 'mail_admins'],
-            'level': 'ERROR',
-            'propagate': False,
+        "django.request": {
+            "handlers": ["file_error", "mail_admins"],
+            "level": "ERROR",
+            "propagate": False,
         },
         # Database query logs
-        'django.db.backends': {
-            'handlers': ['file_db'],
-            'level': 'WARNING',
-            'propagate': False,
+        "django.db.backends": {
+            "handlers": ["file_db"],
+            "level": "WARNING",
+            "propagate": False,
         },
         # Authentication and authorization
-        'django.contrib.auth': {
-            'handlers': ['file_auth', 'file_security'],
-            'level': 'INFO',
-            'propagate': False,
+        "django.contrib.auth": {
+            "handlers": ["file_auth", "file_security"],
+            "level": "INFO",
+            "propagate": False,
         },
         # Our tickets application
-        'tickets': {
-            'handlers': ['console', 'console_prod', 'file_tickets', 'file_app'],
-            'level': 'INFO',
-            'propagate': False,
+        "tickets": {
+            "handlers": ["console", "console_prod", "file_tickets", "file_app"],
+            "level": "INFO",
+            "propagate": False,
         },
         # Tickets security events
-        'tickets.security': {
-            'handlers': ['file_security', 'file_auth', 'mail_admins'],
-            'level': 'WARNING',
-            'propagate': False,
+        "tickets.security": {
+            "handlers": ["file_security", "file_auth", "mail_admins"],
+            "level": "WARNING",
+            "propagate": False,
         },
         # Tickets authentication events
-        'tickets.auth': {
-            'handlers': ['file_auth', 'file_security'],
-            'level': 'INFO',
-            'propagate': False,
+        "tickets.auth": {
+            "handlers": ["file_auth", "file_security"],
+            "level": "INFO",
+            "propagate": False,
         },
         # Email system logs
-        'tickets.email': {
-            'handlers': ['file_tickets', 'file_app'],
-            'level': 'INFO',
-            'propagate': False,
+        "tickets.email": {
+            "handlers": ["file_tickets", "file_app"],
+            "level": "INFO",
+            "propagate": False,
         },
         # Performance monitoring
-        'tickets.performance': {
-            'handlers': ['file_performance'],
-            'level': 'INFO',
-            'propagate': False,
+        "tickets.performance": {
+            "handlers": ["file_performance"],
+            "level": "INFO",
+            "propagate": False,
         },
         # Third-party libraries (reduce noise)
-        'urllib3': {
-            'handlers': ['file_app'],
-            'level': 'WARNING',
-            'propagate': False,
+        "urllib3": {
+            "handlers": ["file_app"],
+            "level": "WARNING",
+            "propagate": False,
         },
-        'requests': {
-            'handlers': ['file_app'],
-            'level': 'WARNING',
-            'propagate': False,
+        "requests": {
+            "handlers": ["file_app"],
+            "level": "WARNING",
+            "propagate": False,
         },
     },
 }
@@ -410,41 +414,46 @@ LOGGING = {
 import os
 from pathlib import Path
 
-log_dir = BASE_DIR / 'logs'
+log_dir = BASE_DIR / "logs"
 log_dir.mkdir(exist_ok=True)
 
 # Create archive directory for old logs
-archive_dir = log_dir / 'archive'
+archive_dir = log_dir / "archive"
 archive_dir.mkdir(exist_ok=True)
 
 # Ensure log files exist with proper permissions
 log_files = [
-    'application.log', 'errors.log', 'security.log', 'authentication.log',
-    'database.log', 'tickets.log', 'performance.log'
+    "application.log",
+    "errors.log",
+    "security.log",
+    "authentication.log",
+    "database.log",
+    "tickets.log",
+    "performance.log",
 ]
 
 for log_file in log_files:
     log_path = log_dir / log_file
     if not log_path.exists():
         log_path.touch()
-        if os.name != 'nt':  # Unix-like systems
+        if os.name != "nt":  # Unix-like systems
             os.chmod(log_path, 0o644)
 
 # Email configuration for testing
-if 'test' in sys.argv:
-    EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+if "test" in sys.argv:
+    EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
     # Reduce logging noise during tests
-    LOGGING['loggers']['tickets']['level'] = 'ERROR'
-    LOGGING['loggers']['django']['level'] = 'ERROR'
-    LOGGING['handlers']['console']['level'] = 'ERROR'
+    LOGGING["loggers"]["tickets"]["level"] = "ERROR"
+    LOGGING["loggers"]["django"]["level"] = "ERROR"
+    LOGGING["handlers"]["console"]["level"] = "ERROR"
 
 # Authentication settings
-LOGIN_URL = 'tickets:login'
-LOGIN_REDIRECT_URL = 'tickets:home'
-LOGOUT_REDIRECT_URL = 'tickets:login'
+LOGIN_URL = "tickets:login"
+LOGIN_REDIRECT_URL = "tickets:home"
+LOGOUT_REDIRECT_URL = "tickets:login"
 
 # Security Configuration
-ALLOWED_EMAIL_DOMAINS = ['derbyfab.com']  # Only allow users from these domains
+ALLOWED_EMAIL_DOMAINS = ["derbyfab.com"]  # Only allow users from these domains
 MAX_LOGIN_ATTEMPTS = 5  # Number of failed attempts before lockout
 LOGIN_LOCKOUT_TIME = 300  # Lockout duration in seconds (5 minutes)
 SUSPICIOUS_ACTIVITY_THRESHOLD = 10  # Threshold for suspicious activity alerts
@@ -452,29 +461,36 @@ SUSPICIOUS_ACTIVITY_THRESHOLD = 10  # Threshold for suspicious activity alerts
 # Session Security
 SESSION_COOKIE_SECURE = not DEBUG  # Use secure cookies in production
 SESSION_COOKIE_HTTPONLY = True  # Prevent JS access to session cookies
-SESSION_COOKIE_SAMESITE = 'Lax'  # CSRF protection
+SESSION_COOKIE_SAMESITE = "Lax"  # CSRF protection
 SESSION_EXPIRE_AT_BROWSER_CLOSE = True  # End session when browser closes
 SESSION_COOKIE_AGE = 3600 * 8  # 8 hours session timeout
 
 # CSRF Protection
 CSRF_COOKIE_SECURE = not DEBUG  # Use secure cookies in production
 CSRF_COOKIE_HTTPONLY = True  # Prevent JS access to CSRF cookies
-CSRF_COOKIE_SAMESITE = 'Lax'
+CSRF_COOKIE_SAMESITE = "Lax"
 
 # Additional Security Headers
 SECURE_BROWSER_XSS_FILTER = True  # Enable XSS filtering
 SECURE_CONTENT_TYPE_NOSNIFF = True  # Prevent MIME sniffing
-X_FRAME_OPTIONS = 'DENY'  # Prevent clickjacking
+X_FRAME_OPTIONS = "DENY"  # Prevent clickjacking
+
+# Production security (enable when using HTTPS)
+if not DEBUG:
+    SECURE_SSL_REDIRECT = True  # Redirect all HTTP to HTTPS
+    SECURE_HSTS_SECONDS = 31536000  # 1 year HSTS
+    SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+    SECURE_HSTS_PRELOAD = True
 
 # Cache configuration for security features (using Django's default cache)
 CACHES = {
-    'default': {
-        'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
-        'LOCATION': 'unique-snowflake',
-        'TIMEOUT': 300,  # 5 minutes default timeout
-        'OPTIONS': {
-            'MAX_ENTRIES': 1000,
-        }
+    "default": {
+        "BACKEND": "django.core.cache.backends.locmem.LocMemCache",
+        "LOCATION": "unique-snowflake",
+        "TIMEOUT": 300,  # 5 minutes default timeout
+        "OPTIONS": {
+            "MAX_ENTRIES": 1000,
+        },
     }
 }
 
@@ -486,9 +502,9 @@ CACHES = {
 from django.contrib.messages import constants as messages
 
 MESSAGE_TAGS = {
-    messages.DEBUG: 'secondary',
-    messages.INFO: 'info',
-    messages.SUCCESS: 'success',
-    messages.WARNING: 'warning',
-    messages.ERROR: 'danger',
+    messages.DEBUG: "secondary",
+    messages.INFO: "info",
+    messages.SUCCESS: "success",
+    messages.WARNING: "warning",
+    messages.ERROR: "danger",
 }

@@ -17,6 +17,8 @@ migrations/
 *sample*
 *test*
 .env
+.env.production
+.env.staging
 reset_admin_password.py
 debug_*
 security.md
@@ -27,3 +29,35 @@ LOGGING_IMPLEMENTATION.md
 data/*
 SECURITY_FEATURES.md
 media/*
+
+# Production deployment files
+docker-compose.override.yml
+ssl/
+nginx/
+gunicorn.pid
+celerybeat-schedule
+
+# IDE and OS files
+.DS_Store
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Python virtual environments
+venv/
+env/
+ENV/
+.venv/
+
+# Coverage reports
+htmlcov/
+.coverage
+.coverage.*
+coverage.xml
+*.cover
+
+# Testing
+.pytest_cache/
+.tox/

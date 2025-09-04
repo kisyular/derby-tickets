@@ -303,6 +303,42 @@ class CommentInline(admin.TabularInline):
     readonly_fields = ("created_at",)
     ordering = ["-created_at"]  # Newest first
 
+    def save_formset(self, request, form, formset, change):
+        """Override save_formset to handle automatic status change on first comment"""
+        # Save the formset first to get the instances
+        formset.save()
+
+        # Check each new comment instance for status update logic
+        for comment_form in formset.forms:
+            if (
+                comment_form.instance and comment_form.instance.pk
+            ):  # Only for saved instances
+                obj = comment_form.instance
+                if obj.ticket:
+                    # Check if this ticket was "Open" and now has exactly 1 comment (the one we just added)
+                    if obj.ticket.status == "Open" and obj.ticket.comments.count() == 1:
+                        old_status = obj.ticket.status
+                        obj.ticket.status = "In Progress"
+                        obj.ticket._updated_by = request.user
+                        obj.ticket.save()
+
+                        # Log the automatic status change
+                        from .audit_security import audit_security_manager
+
+                        audit_security_manager.log_audit_event(
+                            request=request,
+                            action="UPDATE",
+                            user=request.user,
+                            object_type="Ticket",
+                            object_id=str(obj.ticket.id),
+                            object_repr=str(obj.ticket),
+                            description=f"Auto-updated ticket status from '{old_status}' to 'In Progress' due to first comment (Admin Inline)",
+                            risk_level="LOW",
+                            changes={
+                                "status": {"old": old_status, "new": "In Progress"}
+                            },
+                        )
+
 
 # Update TicketAdmin to include comments inline
 class TicketAdminWithComments(TicketAdmin):
@@ -331,6 +367,56 @@ class CommentAdmin(admin.ModelAdmin):
         ("Comment Information", {"fields": ("ticket", "author", "content")}),
         ("Settings", {"fields": ("is_internal",)}),
     )
+
+    def save_model(self, request, obj, form, change):
+        """Override save to handle automatic status change on first comment"""
+        # Check if this is a new comment (not an edit)
+        if not change and obj.ticket:
+            # Check if this is the first comment on an open ticket
+            existing_comments_count = obj.ticket.comments.count()
+            should_update_status = (
+                obj.ticket.status == "Open" and existing_comments_count == 0
+            )
+
+            # Save the comment first
+            super().save_model(request, obj, form, change)
+
+            # If this was the first comment on an open ticket, change status to "In Progress"
+            if should_update_status:
+                old_status = obj.ticket.status
+                obj.ticket.status = "In Progress"
+                obj.ticket._updated_by = request.user
+                obj.ticket.save()
+
+                # Log the automatic status change
+                from .audit_security import audit_security_manager
+
+                audit_security_manager.log_audit_event(
+                    request=request,
+                    action="UPDATE",
+                    user=request.user,
+                    object_type="Ticket",
+                    object_id=str(obj.ticket.id),
+                    object_repr=str(obj.ticket),
+                    description=f"Auto-updated ticket status from '{old_status}' to 'In Progress' due to first comment (Admin)",
+                    risk_level="LOW",
+                    changes={"status": {"old": old_status, "new": "In Progress"}},
+                )
+
+                # Add a success message to inform the admin (safely handle test environments)
+                try:
+                    from django.contrib import messages
+
+                    if hasattr(request, "_messages") and messages:
+                        messages.info(
+                            request,
+                            f"Ticket status automatically changed to 'In Progress' since this was the first comment on ticket #{obj.ticket.id}.",
+                        )
+                except (AttributeError, ImportError, Exception):
+                    # Ignore message errors in test environments or when messages middleware is not available
+                    pass
+        else:
+            super().save_model(request, obj, form, change)
 
 
 # Re-register Ticket with comments

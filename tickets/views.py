@@ -168,6 +168,12 @@ def ticket_detail(request, ticket_id):
             is_internal = request.POST.get("is_internal") == "on"
 
             if comment_content:
+                # Check if this is the first comment on an open ticket
+                existing_comments_count = ticket.comments.count()
+                should_update_status = (
+                    ticket.status == "Open" and existing_comments_count == 0
+                )
+
                 comment = Comment.objects.create(
                     ticket=ticket,
                     author=request.user,
@@ -175,6 +181,33 @@ def ticket_detail(request, ticket_id):
                     is_internal=is_internal
                     and request.user.is_staff,  # Only staff can create internal comments
                 )
+
+                # If this was the first comment on an open ticket, change status to "In Progress"
+                if should_update_status:
+                    old_status = ticket.status
+                    ticket.status = "In Progress"
+                    ticket._updated_by = (
+                        request.user
+                    )  # Set the user who made the change
+                    ticket.save()
+
+                    # Log the automatic status change
+                    audit_security_manager.log_audit_event(
+                        request=request,
+                        action="UPDATE",
+                        user=request.user,
+                        object_type="Ticket",
+                        object_id=str(ticket.id),
+                        object_repr=str(ticket),
+                        description=f"Auto-updated ticket status from '{old_status}' to 'In Progress' due to first comment",
+                        risk_level="LOW",
+                        changes={"status": {"old": old_status, "new": "In Progress"}},
+                    )
+
+                    messages.info(
+                        request,
+                        f"Ticket status automatically changed to 'In Progress' since this is the first comment.",
+                    )
 
                 # Log the comment creation for audit trail
                 audit_security_manager.log_audit_event(
