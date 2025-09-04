@@ -177,6 +177,7 @@
                             {% endif %}
 
                             <!-- CC Admins Field -->
+                             {% if user.is_staff or user.is_superuser %}
                             <div class="form-group">
                                 <label for="id_cc_admins">
                                     CC Admins
@@ -191,6 +192,7 @@
                                     </div>
                                 {% endif %}
                             </div>
+                            
 
                             <!-- CC Non-Admins Field -->
                             <div class="form-group">
@@ -207,6 +209,7 @@
                                     </div>
                                 {% endif %}
                             </div>
+                            {% endif %}
 
                             <!-- Attachments Section -->
                             <div class="form-group mb-4">

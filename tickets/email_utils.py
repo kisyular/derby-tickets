@@ -49,6 +49,7 @@ def send_email(
         if in_test:
             # Test mode: always send to test email only
             to_emails = [os.environ.get("DJANGO_TEST_EMAIL")]
+            print(f"If it was not a test email, it would be sent to: {recipients}")
             print(f"[TEST MODE] Sending email to: {to_emails}")
         elif recipients:
             # Use provided recipient list
@@ -255,9 +256,21 @@ def send_ticket_created_notification(ticket):
 
 
 def send_ticket_assigned_notification(ticket):
-    """Send notification when a ticket is assigned to an admin."""
-    if not ticket.assigned_to or not ticket.assigned_to.email:
-        print("No assigned user or email for ticket assignment notification")
+    """Send notification when a ticket is assigned to an admin and CCs."""
+    recipients = []
+    # Assigned user
+    if ticket.assigned_to and ticket.assigned_to.email:
+        recipients.append(ticket.assigned_to.email)
+    # CC Admins
+    cc_admins = ticket.cc_admins.all()
+    recipients += [u.email for u in cc_admins if u.email]
+    # CC Non-Admins
+    cc_non_admins = ticket.cc_non_admins.all()
+    recipients += [u.email for u in cc_non_admins if u.email]
+    # Remove duplicates
+    recipients = list(set(recipients))
+    if not recipients:
+        print("No recipients for ticket assignment notification")
         return False
 
     # Prepare context with fallback values
@@ -271,13 +284,13 @@ def send_ticket_assigned_notification(ticket):
     # Render HTML email template
     html_body = render_to_string("emails/ticket_assigned.html", context)
 
-    subject = f"Ticket Assigned to You: #{context['ticket']['ticket_number']} - {ticket.title}"
+    subject = f"Ticket Assigned: #{context['ticket']['ticket_number']} - {ticket.title}"
 
     return send_email(
         subject=subject,
         html_body=html_body,
-        recipients=[ticket.assigned_to.email],
-        in_test=sending_email_in_test,  # Change the sending_email_in_test to False in production
+        recipients=recipients,
+        in_test=sending_email_in_test,
     )
 
 
@@ -297,34 +310,31 @@ def send_comment_notification(comment, ticket):
         "site_url": os.environ.get("DJANGO_SITE_URL", "http://127.0.0.1:8000"),
     }
     # Determine who should receive the notification and send personalized email
-    recipient_users = []
+    recipient_users = set()
     if comment.author == ticket.created_by:
-        # Creator commented - notify assigned admin if exists
         if ticket.assigned_to and ticket.assigned_to.email:
-            recipient_users = [ticket.assigned_to]
-        else:
-            print("No assigned admin to notify for creator's comment")
-            return False
+            recipient_users.add(ticket.assigned_to)
     elif comment.author == ticket.assigned_to:
-        # Admin commented - notify creator
         if ticket.created_by.email:
-            recipient_users = [ticket.created_by]
-        else:
-            print("No creator email to notify for admin's comment")
-            return False
+            recipient_users.add(ticket.created_by)
     else:
-        # Other user commented - notify both creator and assigned admin if different
         if ticket.created_by.email and comment.author != ticket.created_by:
-            recipient_users.append(ticket.created_by)
+            recipient_users.add(ticket.created_by)
         if (
             ticket.assigned_to
             and ticket.assigned_to.email
             and comment.author != ticket.assigned_to
         ):
-            recipient_users.append(ticket.assigned_to)
-        if not recipient_users:
-            print("No recipients for comment notification")
-            return False
+            recipient_users.add(ticket.assigned_to)
+    # Add all CC Admins and CC Non-Admins
+    recipient_users.update(ticket.cc_admins.all())
+    recipient_users.update(ticket.cc_non_admins.all())
+    # Remove the author if present
+    if comment.author in recipient_users:
+        recipient_users.remove(comment.author)
+    if not recipient_users:
+        print("No recipients for comment notification")
+        return False
 
     success = True
     for recipient in recipient_users:
@@ -336,7 +346,7 @@ def send_comment_notification(comment, ticket):
             subject=subject,
             html_body=html_body,
             recipients=[recipient.email],
-            in_test=sending_email_in_test,  # Change the sending_email_in_test to False in production
+            in_test=sending_email_in_test,
         )
         if not result:
             success = False
@@ -345,30 +355,34 @@ def send_comment_notification(comment, ticket):
 
 def send_ticket_updated_notification(ticket, changed_fields, updated_by):
     """Send notification when ticket priority or status is updated."""
-    # If the only change is assignment, do not send this email (handled by ticket_assigned)
     if set(changed_fields.keys()) == {"assigned_to"}:
         return False
 
-    # Determine recipients based on who made the change
-    recipients = []
+    recipients = set()
     if updated_by.is_staff:
-        # Admin made the change - notify creator
         if ticket.created_by.email and updated_by != ticket.created_by:
-            recipients.append(ticket.created_by.email)
-    else:
-        # Creator made the change - notify assigned admin
+            recipients.add(ticket.created_by.email)
+        # Add assigned_to if updated_by is not assigned_to
         if (
             ticket.assigned_to
             and ticket.assigned_to.email
             and updated_by != ticket.assigned_to
         ):
-            recipients.append(ticket.assigned_to.email)
-
+            recipients.add(ticket.assigned_to.email)
+    else:
+        if (
+            ticket.assigned_to
+            and ticket.assigned_to.email
+            and updated_by != ticket.assigned_to
+        ):
+            recipients.add(ticket.assigned_to.email)
+    # Add all CC Admins and CC Non-Admins
+    recipients.update([u.email for u in ticket.cc_admins.all() if u.email])
+    recipients.update([u.email for u in ticket.cc_non_admins.all() if u.email])
     if not recipients:
         print("No recipients for ticket update notification")
         return False
 
-    # Prepare context with fallback values
     context = {
         "ticket": prepare_ticket_context(ticket),
         "changed_fields": changed_fields,
@@ -377,13 +391,43 @@ def send_ticket_updated_notification(ticket, changed_fields, updated_by):
         "site_url": os.environ.get("DJANGO_SITE_URL", "http://127.0.0.1:8000"),
     }
 
-    # Render HTML email template
     html_body = render_to_string("emails/ticket_updated.html", context)
     subject = f"Ticket Updated: #{context['ticket']['ticket_number']} - {ticket.title}"
 
     return send_email(
         subject=subject,
         html_body=html_body,
-        recipients=recipients,
-        in_test=sending_email_in_test,  # Change the sending_email_in_test to False in production
+        recipients=list(recipients),
+        in_test=sending_email_in_test,
+    )
+
+
+# if the field cc_admins and cc_non_admin changes, we email the new people
+def send_ticket_cc_updated_notification(ticket, new_cc_admins, new_cc_non_admins):
+    """Send notification when ticket CC Admins or CC Non-Admins are updated."""
+    recipients = set()
+    # New CC Admins
+    recipients.update([u.email for u in new_cc_admins if u.email])
+    # New CC Non-Admins
+    recipients.update([u.email for u in new_cc_non_admins if u.email])
+    if not recipients:
+        print("No new CC recipients for ticket CC update notification")
+        return False
+
+    context = {
+        "ticket": prepare_ticket_context(ticket),
+        "new_cc_admins": [prepare_user_context(u) for u in new_cc_admins],
+        "new_cc_non_admins": [prepare_user_context(u) for u in new_cc_non_admins],
+        "ticket_creator": prepare_user_context(ticket.created_by),
+        "site_url": os.environ.get("DJANGO_SITE_URL", "http://127.0.0.1:8000"),
+    }
+
+    html_body = render_to_string("emails/ticket_assigned.html", context)
+    subject = f"Ticket Assigned to You : #{context['ticket']['ticket_number']} - {ticket.title}"
+
+    return send_email(
+        subject=subject,
+        html_body=html_body,
+        recipients=list(recipients),
+        in_test=sending_email_in_test,
     )
