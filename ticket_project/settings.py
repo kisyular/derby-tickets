@@ -107,21 +107,6 @@ if USE_MSSQL:
                 "extra_params": "TrustServerCertificate=yes",
             },
         },
-        # Read-only database for reports/analytics (temporarily disabled due to login issues)
-        # 'readonly': {
-        #     'ENGINE': 'mssql',
-        #     'NAME': os.environ.get('MSSQL_DB_NAME'),
-        #     'USER': os.environ.get('MSSQL_DB_USER_READ'),
-        #     'PASSWORD': os.environ.get('MSSQL_DB_PASSWORD_READ'),
-        #     'HOST': os.environ.get('MSSQL_DB_HOST'),
-        #     'PORT': os.environ.get('MSSQL_DB_PORT', '1433'),
-        #     'OPTIONS': {
-        #         'driver': 'ODBC Driver 17 for SQL Server',
-        #         'unicode_results': True,
-        #         'host_is_server': True,
-        #         'extra_params': 'TrustServerCertificate=yes',
-        #     },
-        # }
     }
 
     # Database routing for read/write operations (disabled until read user is fixed)
