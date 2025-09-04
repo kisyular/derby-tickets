@@ -178,25 +178,24 @@
 
 
                             <!-- Attachments Section -->
-                            <div class="form-group">
+                            <div class="form-group mb-4">
                                 <label for="id_attachments">
                                     <i class="fas fa-paperclip"></i> <strong>Attachments</strong> <span class="text-muted">(Optional)</span>
                                 </label>
+                                <div class="bg-warning text-center py-2 px-3 mb-2 mt-6 ">
+                                    <i class="fas fa-info-circle text-warning"></i>
+                                    <strong>Allowed:</strong> JPG, PNG, WebP (max 3MB each), PDF (max 5MB each).<br>
+                                    <span class="text-small">You can upload multiple files to help explain your issue.</span>
+                                </div>
                                 <div class="custom-file mb-2" style="position:relative;">
-                                    <input type="file" class="custom-file-input" id="id_attachments" name="attachments" multiple accept=".jpg,.jpeg,.png,.webp,.pdf" style="z-index:2;">
-                                    <label class="custom-file-label" for="id_attachments" id="attachments-label">Choose files or drag & drop here...</label>
+                                    <input type="file" class="custom-file-input" id="id_attachments" name="attachments" multiple accept=".jpg,.jpeg,.png,.webp,.pdf" style="display:none;">
                                     <div id="drop-area" class="border rounded bg-light text-center py-3" style="cursor:pointer; border-style:dashed; margin-top:8px;">
                                         <i class="fas fa-cloud-upload-alt fa-2x text-primary mb-2"></i><br>
                                         <span class="text-secondary">Drag & drop files here or click to select</span>
                                     </div>
                                 </div>
-                                <div class="alert alert-warning text-center py-2 px-3 mb-2" style="font-size:0.95em;">
-                                    <i class="fas fa-info-circle text-warning"></i>
-                                    <strong>Allowed:</strong> JPG, PNG, WebP (max 3MB each), PDF (max 5MB each).<br>
-                                    <span class="text-small">You can upload multiple files to help explain your issue.</span>
-                                </div>
                                 <!-- File Preview Area -->
-                                <div id="file-preview" class="mt-2" style="display: none;">
+                                <div id="file-preview" class="mt-4" style="display: none;">
                                     <h6 class="text-muted mb-2"><i class="fas fa-list"></i> Selected Files:</h6>
                                     <div id="file-list" class="border rounded p-2 bg-white">
                                         <!-- Files will be listed here -->
@@ -349,13 +348,10 @@
             const maxLength = 2000; // Adjust as needed
             const currentLength = $(this).val().length;
             const remaining = maxLength - currentLength;
-            
             if (!$('#char-counter').length) {
                 $(this).after('<small id="char-counter" class="form-text text-muted"></small>');
             }
-            
             $('#char-counter').text(`${currentLength} characters`);
-            
             if (remaining < 100) {
                 $('#char-counter').removeClass('text-muted').addClass('text-warning');
             } else {
@@ -366,32 +362,27 @@
         // Form validation
         $('form').on('submit', function() {
             let isValid = true;
-            
             // Check required fields
             const title = $('#id_title').val().trim();
             const priority = $('#id_priority').val();
-            
             if (!title) {
                 isValid = false;
                 $('#id_title').addClass('is-invalid');
             } else {
                 $('#id_title').removeClass('is-invalid');
             }
-            
             if (!priority) {
                 isValid = false;
                 $('#id_priority').addClass('is-invalid');
             } else {
                 $('#id_priority').removeClass('is-invalid');
             }
-            
             if (isValid) {
                 // Show loading state
                 const submitBtn = $(this).find('button[type="submit"]');
                 submitBtn.html('<i class="fas fa-spinner fa-spin"></i> Creating Ticket...')
                          .prop('disabled', true);
             }
-            
             return isValid;
         });
 
@@ -404,13 +395,11 @@
                 'High': 'High priority tickets are typically addressed within 4-8 hours.',
                 'Urgent': 'Urgent tickets receive immediate attention and are prioritized over all other work.'
             };
-            
             if (priority && helpText[priority]) {
                 if (!$('#priority-help').length) {
                     $(this).after('<small id="priority-help" class="form-text"></small>');
                 }
                 $('#priority-help').text(helpText[priority]);
-                
                 // Color coding
                 const colors = {
                     'Low': 'text-success',
@@ -425,26 +414,59 @@
 
         // File upload handling
         $('#id_attachments').on('change', function() {
-            const files = this.files;
+            handleFiles(this.files);
+        });
+
+        // Drag & drop support
+        var dropArea = document.getElementById('drop-area');
+        var fileInput = document.getElementById('id_attachments');
+
+        if (dropArea && fileInput) {
+            dropArea.addEventListener('dragover', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                dropArea.classList.add('bg-info', 'text-white');
+            });
+            dropArea.addEventListener('dragleave', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                dropArea.classList.remove('bg-info', 'text-white');
+            });
+            dropArea.addEventListener('drop', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                dropArea.classList.remove('bg-info', 'text-white');
+                var files = e.dataTransfer.files;
+                if (files.length > 0) {
+                    // Set files to input (triggers change event)
+                    fileInput.files = files;
+                    $(fileInput).trigger('change');
+                }
+            });
+            // Optional: clicking drop area triggers file input
+            dropArea.addEventListener('click', function() {
+                fileInput.click();
+            });
+        }
+
+        // Helper to handle files (for both input and drop)
+        function handleFiles(files) {
             const fileList = $('#file-list');
             const filePreview = $('#file-preview');
-            
             if (files.length > 0) {
                 fileList.empty();
                 filePreview.show();
-                
                 for (let i = 0; i < files.length; i++) {
                     const file = files[i];
                     const fileSize = (file.size / (1024 * 1024)).toFixed(2);
                     const isValid = validateFile(file);
-                    
                     const fileItem = $(`
                         <div class="file-item d-flex justify-content-between align-items-center p-2 mb-2 border rounded ${isValid.valid ? 'border-success bg-light' : 'border-danger bg-danger-light'}">
                             <div class="file-info">
                                 <i class="fas ${getFileIcon(file.type)} mr-2"></i>
                                 <strong>${file.name}</strong>
                                 <span class="text-muted ml-2">(${fileSize} MB)</span>
-                                ${!isValid.valid ? `<br><small class="text-danger">${isValid.error}</small>` : ''}
+                                ${!isValid.valid ? `<br><small class=\"text-danger\">${isValid.error}</small>` : ''}
                             </div>
                             <div class="file-actions">
                                 ${isValid.valid ? 
@@ -454,13 +476,12 @@
                             </div>
                         </div>
                     `);
-                    
                     fileList.append(fileItem);
                 }
             } else {
                 filePreview.hide();
             }
-        });
+        }
     });
 
     // File validation function
