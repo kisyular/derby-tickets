@@ -8,42 +8,11 @@ from .models import Ticket, UserProfile, Comment, Category
 from .security import SecurityManager, domain_required, staff_required
 from .audit_security import audit_security_manager
 from .logging_utils import log_auth_event, log_security_event
+from .utils import user_can_access_ticket
 
 # Create your views here.
 
 # Restore proper authentication with User model linked to custom profiles
-
-
-def user_can_access_ticket(user, ticket):
-    """
-    Check if a user has permission to access a ticket.
-    Users can access tickets if they are:
-    - The creator (created_by)
-    - The assignee (assigned_to)
-    - A CC Admin (cc_admins)
-    - A CC Non-Admin (cc_non_admins)
-    - Staff/superuser
-    """
-    if not user or not ticket:
-        return False
-
-    # Check basic permissions
-    if (
-        ticket.created_by == user
-        or ticket.assigned_to == user
-        or user.is_staff
-        or user.is_superuser
-    ):
-        return True
-
-    # Check CC permissions
-    if (
-        ticket.cc_admins.filter(id=user.id).exists()
-        or ticket.cc_non_admins.filter(id=user.id).exists()
-    ):
-        return True
-
-    return False
 
 
 @login_required
@@ -236,7 +205,7 @@ def ticket_detail(request, ticket_id):
     try:
         from .related_tickets import get_related_tickets_for_display
 
-        related_tickets = get_related_tickets_for_display(ticket)
+        related_tickets = get_related_tickets_for_display(ticket, request.user)
     except ImportError:
         related_tickets = []
 
