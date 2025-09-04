@@ -67,16 +67,16 @@ class Command(BaseCommand):
         # Test read connection
         self.stdout.write("Testing READ connection...")
         if self.test_pyodbc_connection(db_host, db_port, db_name, read_user, read_password):
-            self.stdout.write(self.style.SUCCESS("✅ READ connection successful"))
+            self.stdout.write(self.style.SUCCESS("READ connection successful"))
         else:
-            self.stdout.write(self.style.ERROR("❌ READ connection failed"))
+            self.stdout.write(self.style.ERROR("READ connection failed"))
 
         # Test write connection
         self.stdout.write("Testing WRITE connection...")
         if self.test_pyodbc_connection(db_host, db_port, db_name, write_user, write_password):
-            self.stdout.write(self.style.SUCCESS("✅ WRITE connection successful"))
+            self.stdout.write(self.style.SUCCESS("WRITE connection successful"))
         else:
-            self.stdout.write(self.style.ERROR("❌ WRITE connection failed"))
+            self.stdout.write(self.style.ERROR("WRITE connection failed"))
 
     def test_pyodbc_connection(self, host, port, database, username, password):
         """Test a pyodbc connection with given parameters"""
@@ -116,12 +116,12 @@ class Command(BaseCommand):
                     result = cursor.fetchone()
                     
                 if result:
-                    self.stdout.write(self.style.SUCCESS(f"✅ {db_name} connection successful"))
+                    self.stdout.write(self.style.SUCCESS(f"{db_name} connection successful"))
                 else:
-                    self.stdout.write(self.style.ERROR(f"❌ {db_name} connection failed"))
+                    self.stdout.write(self.style.ERROR(f"{db_name} connection failed"))
                     
             except Exception as e:
-                self.stdout.write(self.style.ERROR(f"❌ {db_name} connection failed: {str(e)}"))
+                self.stdout.write(self.style.ERROR(f"{db_name} connection failed: {str(e)}"))
 
     def show_current_config(self):
         """Show current database configuration"""
