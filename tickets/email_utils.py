@@ -405,29 +405,52 @@ def send_ticket_updated_notification(ticket, changed_fields, updated_by):
 # if the field cc_admins and cc_non_admin changes, we email the new people
 def send_ticket_cc_updated_notification(ticket, new_cc_admins, new_cc_non_admins):
     """Send notification when ticket CC Admins or CC Non-Admins are updated."""
-    recipients = set()
-    # New CC Admins
-    recipients.update([u.email for u in new_cc_admins if u.email])
-    # New CC Non-Admins
-    recipients.update([u.email for u in new_cc_non_admins if u.email])
-    if not recipients:
+    # Convert QuerySets to lists and get all new users
+    all_new_users = list(new_cc_admins) + list(new_cc_non_admins)
+
+    print(f"DEBUG: send_ticket_cc_updated_notification called with:")
+    print(f"  new_cc_admins: {new_cc_admins} (type: {type(new_cc_admins)})")
+    print(f"  new_cc_non_admins: {new_cc_non_admins} (type: {type(new_cc_non_admins)})")
+    print(f"  all_new_users: {[str(u) for u in all_new_users]}")
+
+    if not all_new_users:
         print("No new CC recipients for ticket CC update notification")
         return False
 
-    context = {
+    # Prepare base context
+    base_context = {
         "ticket": prepare_ticket_context(ticket),
-        "new_cc_admins": [prepare_user_context(u) for u in new_cc_admins],
-        "new_cc_non_admins": [prepare_user_context(u) for u in new_cc_non_admins],
         "ticket_creator": prepare_user_context(ticket.created_by),
+        "assigned_user": prepare_user_context(ticket.assigned_to),
         "site_url": os.environ.get("DJANGO_SITE_URL", "http://127.0.0.1:8000"),
     }
 
-    html_body = render_to_string("emails/ticket_assigned.html", context)
-    subject = f"Ticket Assigned to You : #{context['ticket']['ticket_number']} - {ticket.title}"
+    success = True
+    for user in all_new_users:
+        # print(f"DEBUG: Processing user {user} (email: {user.email})")
+        if user.email:
+            # Create personalized context for each recipient
+            context = dict(base_context)
+            user_context = prepare_user_context(user)
+            context["recipient"] = user_context
+            # For CC notifications, use the CC user as the "assigned_user" in template
+            context["assigned_user"] = user_context
 
-    return send_email(
-        subject=subject,
-        html_body=html_body,
-        recipients=list(recipients),
-        in_test=sending_email_in_test,
-    )
+            # print(f"DEBUG: User context for {user}: {user_context}")
+
+            html_body = render_to_string("emails/ticket_assigned.html", context)
+            subject = f"Ticket Assigned to You : #{context['ticket']['ticket_number']} - {ticket.title}"
+
+            result = send_email(
+                subject=subject,
+                html_body=html_body,
+                recipients=[user.email],
+                in_test=sending_email_in_test,
+            )
+            if not result:
+                success = False
+        else:
+            # print(f"DEBUG: User {user} has no email address")
+            pass
+
+    return success

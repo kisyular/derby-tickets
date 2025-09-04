@@ -35,7 +35,7 @@
                                 {{ ticket.title }}
                             </h3>
                             <div class="card-tools">
-                                {% if ticket.created_by == user or user.is_staff %}
+                                {% if can_edit_ticket %}
                                     <button type="button" class="btn btn-tool" data-toggle="modal"
                                             data-target="#editTicketModal">
                                         <i class="fas fa-edit"></i> Edit
@@ -107,6 +107,42 @@
                                     </div>
                                 </div>
                             </div>
+
+                            <!-- CC Information -->
+                            {% if ticket.cc_admins.exists or ticket.cc_non_admins.exists %}
+                            <div class="row mb-4">
+                                {% if ticket.cc_admins.exists %}
+                                <div class="col-md-6">
+                                    <div class="info-box bg-light">
+                                        <span class="info-box-icon bg-warning"><i class="fas fa-users"></i></span>
+                                        <div class="info-box-content">
+                                            <span class="info-box-text">CC Admins</span>
+                                            <span class="info-box-number">
+                                                {% for admin in ticket.cc_admins.all %}
+                                                    <span class="badge badge-warning mr-1">{{ admin.get_full_name|default:admin.username }}</span>
+                                                {% endfor %}
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
+                                {% endif %}
+                                {% if ticket.cc_non_admins.exists %}
+                                <div class="col-md-6">
+                                    <div class="info-box bg-light">
+                                        <span class="info-box-icon bg-secondary"><i class="fas fa-users"></i></span>
+                                        <div class="info-box-content">
+                                            <span class="info-box-text">CC Non-Admins</span>
+                                            <span class="info-box-number">
+                                                {% for user in ticket.cc_non_admins.all %}
+                                                    <span class="badge badge-secondary mr-1">{{ user.get_full_name|default:user.username }}</span>
+                                                {% endfor %}
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
+                                {% endif %}
+                            </div>
+                            {% endif %}
 
                             <!-- Description -->
                             <div class="mb-4">
@@ -271,7 +307,7 @@
                         </div>
                         <div class="card-body">
                             <div class="btn-group-vertical btn-block">
-                                {% if ticket.created_by == user or user.is_staff %}
+                                {% if can_edit_ticket %}
                                     <button type="button" class="btn btn-warning" data-toggle="modal"
                                             data-target="#editTicketModal">
                                         <i class="fas fa-edit"></i> Edit Ticket
@@ -452,7 +488,7 @@
     </section>
 
     <!-- Edit Ticket Modal -->
-    {% if ticket.created_by == user or user.is_staff %}
+    {% if can_edit_ticket %}
         <div class="modal fade" id="editTicketModal" tabindex="-1" role="dialog" aria-labelledby="editTicketModalLabel"
              aria-hidden="true">
             <div class="modal-dialog modal-lg" role="document">

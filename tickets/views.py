@@ -14,11 +14,48 @@ from .logging_utils import log_auth_event, log_security_event
 # Restore proper authentication with User model linked to custom profiles
 
 
+def user_can_access_ticket(user, ticket):
+    """
+    Check if a user has permission to access a ticket.
+    Users can access tickets if they are:
+    - The creator (created_by)
+    - The assignee (assigned_to)
+    - A CC Admin (cc_admins)
+    - A CC Non-Admin (cc_non_admins)
+    - Staff/superuser
+    """
+    if not user or not ticket:
+        return False
+
+    # Check basic permissions
+    if (
+        ticket.created_by == user
+        or ticket.assigned_to == user
+        or user.is_staff
+        or user.is_superuser
+    ):
+        return True
+
+    # Check CC permissions
+    if (
+        ticket.cc_admins.filter(id=user.id).exists()
+        or ticket.cc_non_admins.filter(id=user.id).exists()
+    ):
+        return True
+
+    return False
+
+
 @login_required
 def ticket_list(request):
     """Display a list of all tickets with filtering"""
-    # Users can see all tickets they created
-    tickets = Ticket.objects.filter(Q(created_by=request.user)).distinct()
+    # Users can see tickets they created, are assigned to, or are CC'd on
+    tickets = Ticket.objects.filter(
+        Q(created_by=request.user)
+        | Q(assigned_to=request.user)
+        | Q(cc_admins=request.user)
+        | Q(cc_non_admins=request.user)
+    ).distinct()
 
     # Apply filters
     status_filter = request.GET.get("status")
@@ -86,11 +123,7 @@ def ticket_detail(request, ticket_id):
     ticket = get_object_or_404(Ticket, id=ticket_id)
 
     # Check if user has permission to view this ticket
-    if (
-        ticket.created_by != request.user
-        and ticket.assigned_to != request.user
-        and not request.user.is_staff
-    ):
+    if not user_can_access_ticket(request.user, ticket):
         messages.error(request, "You don't have permission to view this ticket.")
         return redirect("tickets:ticket_list")
 
@@ -212,6 +245,7 @@ def ticket_detail(request, ticket_id):
         "comments": comments,
         "related_tickets": related_tickets,
         "can_add_internal_comments": request.user.is_staff,
+        "can_edit_ticket": (ticket.created_by == request.user or request.user.is_staff),
     }
     return render(request, "tickets/ticket_detail.html", context)
 
@@ -292,7 +326,10 @@ def home(request):
     if request.user.is_authenticated:
         # Get comprehensive ticket statistics
         user_tickets = Ticket.objects.filter(
-            Q(created_by=request.user) | Q(assigned_to=request.user)
+            Q(created_by=request.user)
+            | Q(assigned_to=request.user)
+            | Q(cc_admins=request.user)
+            | Q(cc_non_admins=request.user)
         ).distinct()
 
         # Recent tickets (last 5)
@@ -472,11 +509,7 @@ def serve_protected_file(request, ticket_id, filename):
         ticket = get_object_or_404(Ticket, id=ticket_id)
 
         # Check if user has permission to access this ticket
-        if not (
-            ticket.created_by == request.user
-            or request.user.is_staff
-            or request.user.is_superuser
-        ):
+        if not user_can_access_ticket(request.user, ticket):
             # Log security event
             audit_security_manager.log_security_event(
                 request=request,
