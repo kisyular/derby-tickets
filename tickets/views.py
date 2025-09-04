@@ -240,6 +240,14 @@ def create_ticket(request):
                 assigned_to=assigned_to if assigned_to else None,
             )
 
+            # Save CC Admins and CC Non-Admins
+            cc_admins = form.cleaned_data.get("cc_admins")
+            cc_non_admins = form.cleaned_data.get("cc_non_admins")
+            if cc_admins:
+                ticket.cc_admins.set(cc_admins)
+            if cc_non_admins:
+                ticket.cc_non_admins.set(cc_non_admins)
+
             # Handle file attachments
             attachments = request.FILES.getlist("attachments")
             for attachment in attachments:

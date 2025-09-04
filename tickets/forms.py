@@ -239,6 +239,25 @@ class TicketWithAttachmentsForm(forms.Form):
         help_text="Optional: Upload images (JPG, PNG, WebP) or PDF documents. Max 5MB per file.",
     )
 
+    cc_admins = forms.ModelMultipleChoiceField(
+        queryset=User.objects.filter(is_staff=True, is_active=True).order_by(
+            "first_name", "last_name"
+        ),
+        required=False,
+        widget=forms.SelectMultiple(attrs={"class": "form-control"}),
+        label="CC Admins",
+        help_text="Optional: Select additional staff/admins to CC.",
+    )
+    cc_non_admins = forms.ModelMultipleChoiceField(
+        queryset=User.objects.filter(is_staff=False, is_active=True).order_by(
+            "first_name", "last_name"
+        ),
+        required=False,
+        widget=forms.SelectMultiple(attrs={"class": "form-control"}),
+        label="CC Non-Admins",
+        help_text="Optional: Select additional non-admin users to CC.",
+    )
+
     def clean_attachments(self):
         """Validate all uploaded attachments"""
         files = self.cleaned_data.get("attachments")

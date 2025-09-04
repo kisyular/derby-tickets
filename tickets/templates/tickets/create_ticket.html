@@ -176,6 +176,37 @@
                                 </div>
                             {% endif %}
 
+                            <!-- CC Admins Field -->
+                            <div class="form-group">
+                                <label for="id_cc_admins">
+                                    CC Admins
+                                </label>
+                                {{ form.cc_admins }}
+                                <small class="form-text text-muted">
+                                    Optionally select additional staff/admins to CC on this ticket.
+                                </small>
+                                {% if form.cc_admins.errors %}
+                                    <div class="invalid-feedback">
+                                        {% for error in form.cc_admins.errors %}{{ error }}{% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+
+                            <!-- CC Non-Admins Field -->
+                            <div class="form-group">
+                                <label for="id_cc_non_admins">
+                                    CC Non-Admins
+                                </label>
+                                {{ form.cc_non_admins }}
+                                <small class="form-text text-muted">
+                                    Optionally select additional non-admin users to CC on this ticket.
+                                </small>
+                                {% if form.cc_non_admins.errors %}
+                                    <div class="invalid-feedback">
+                                        {% for error in form.cc_non_admins.errors %}{{ error }}{% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
 
                             <!-- Attachments Section -->
                             <div class="form-group mb-4">

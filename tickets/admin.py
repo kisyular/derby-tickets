@@ -112,19 +112,36 @@ class UserProfileAdmin(admin.ModelAdmin):
 
 @admin.register(Ticket)
 class TicketAdmin(admin.ModelAdmin):
+    def get_created_by_name(self, obj):
+        return obj.created_by.get_full_name() or obj.created_by.username
+
+    get_created_by_name.short_description = "Created By"
+
+    def get_assigned_to_name(self, obj):
+        return obj.assigned_to.get_full_name() if obj.assigned_to else "-"
+
+    get_assigned_to_name.short_description = "Assigned To"
+
     list_display = [
         "ticket_number",
         "title",
-        "created_by",
+        "get_created_by_name",
         "assigned_to",
         "status",
         "priority",
         "category",
+        "get_cc_admins",
+        "get_cc_non_admins",
         "location",
         "department",
         "created_at",
         "closed_on",
         "due_on",
+    ]
+    list_editable = [
+        "assigned_to",
+        "status",
+        "priority",
     ]
     list_filter = [
         "status",
@@ -136,6 +153,8 @@ class TicketAdmin(admin.ModelAdmin):
         "closed_on",
         "created_by",
         "assigned_to",
+        "cc_admins",
+        "cc_non_admins",
     ]
     search_fields = [
         "ticket_number",
@@ -150,35 +169,94 @@ class TicketAdmin(admin.ModelAdmin):
         "assigned_to__last_name",
         "assigned_to__email",
         "category__name",
+        "cc_admins__username",
+        "cc_non_admins__username",
     ]
-    list_editable = ["assigned_to", "status", "priority", "category", "created_by"]
-    ordering = ["-created_at"]
-    list_per_page = 25  # Default number of items per page
-    list_max_show_all = 500  # Maximum items to show when "Show all" is clicked
-    date_hierarchy = "created_at"
+    filter_horizontal = ["cc_admins", "cc_non_admins"]
+    fieldsets = (
+        (
+            None,
+            {
+                "fields": (
+                    "ticket_number",
+                    "title",
+                    "description",
+                    "category",
+                    "location",
+                    "department",
+                    "created_by",
+                    "assigned_to",
+                    "cc_admins",
+                    "cc_non_admins",
+                    "status",
+                    "priority",
+                    "created_at",
+                    "closed_on",
+                    "due_on",
+                )
+            },
+        ),
+        (
+            "Ticket Details (Auto-generated)",
+            {
+                "fields": ("ticket_number",),
+                "classes": ["collapse"],
+                "description": "Automatically generated when ticket is created",
+            },
+        ),
+        ("Dates", {"fields": ("created_at", "closed_on", "due_on")}),
+        (
+            "System Tracking (Read-only)",
+            {
+                "fields": (
+                    "first_response_at",
+                    "status_changed_at",
+                    "last_user_response_at",
+                ),
+                "classes": ["collapse"],
+            },
+        ),
+    )
     readonly_fields = [
-        "ticket_number",
+        "created_at",
         "updated_at",
         "first_response_at",
         "status_changed_at",
         "last_user_response_at",
     ]
 
+    def get_cc_admins(self, obj):
+        return ", ".join([u.get_full_name() or u.username for u in obj.cc_admins.all()])
+
+    get_cc_admins.short_description = "CC Admins"
+
+    def get_cc_non_admins(self, obj):
+        return ", ".join(
+            [u.get_full_name() or u.username for u in obj.cc_non_admins.all()]
+        )
+
+    get_cc_non_admins.short_description = "CC Non-Admins"
+
     def get_queryset(self, request):
         return super().get_queryset(request).select_related("created_by", "assigned_to")
 
     def formfield_for_foreignkey(self, db_field, request, **kwargs):
         if db_field.name == "assigned_to":
-            # Only show staff users (admins) in the assigned_to dropdown
-            kwargs["queryset"] = User.objects.filter(is_staff=True)
+            # Only show staff users (admins) in the assigned_to dropdown, order by name
+            kwargs["queryset"] = User.objects.filter(is_staff=True).order_by(
+                "first_name", "last_name"
+            )
         elif db_field.name == "created_by":
-            # Show all users for created_by dropdown
-            kwargs["queryset"] = User.objects.all()
+            # Show all users for created_by dropdown, order by name
+            kwargs["queryset"] = User.objects.all().order_by("first_name", "last_name")
         return super().formfield_for_foreignkey(db_field, request, **kwargs)
 
     fieldsets = (
         ("Ticket Information", {"fields": ("title", "description", "category")}),
-        ("Assignment", {"fields": ("created_by", "assigned_to")}),
+        (
+            "Assignment",
+            {"fields": ("created_by", "assigned_to", "cc_admins", "cc_non_admins")},
+        ),
         ("Status & Priority", {"fields": ("status", "priority")}),
         (
             "Location & Department",
