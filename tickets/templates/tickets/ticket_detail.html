@@ -79,6 +79,35 @@
                                 {% endif %}
                             </div>
 
+                            <div class="row mb-4">
+                                <div class="col-md-6">
+                                    <div class="info-box bg-light">
+                                        <span class="info-box-icon bg-primary"><i class="fas fa-user"></i></span>
+                                        <div class="info-box-content">
+                                            <span class="info-box-text">Created By</span>
+                                            <span class="info-box-number">
+                                                {{ ticket.created_by.get_full_name|default:ticket.created_by.username|default:"Unassigned" }}
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="info-box bg-light">
+                                        <span class="info-box-icon bg-info"><i class="fas fa-user-check"></i></span>
+                                        <div class="info-box-content">
+                                            <span class="info-box-text">Assigned To</span>
+                                            <span class="info-box-number">
+                                                {% if ticket.assigned_to %}
+                                                    {{ ticket.assigned_to.get_full_name|default:ticket.assigned_to.username }}
+                                                {% else %}
+                                                    <span class="text-muted">Unassigned</span>
+                                                {% endif %}
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
                             <!-- Description -->
                             <div class="mb-4">
                                 <h5><i class="fas fa-file-alt"></i> Description</h5>
@@ -108,7 +137,7 @@
                                 <div class="col-md-6">
                                     <div class="info-box bg-light">
                                         <span class="info-box-icon bg-warning"><i
-                                                class="fas fa-calendar-edit"></i></span>
+                                                class="fas fa-calendar-check"></i></span>
                                         <div class="info-box-content">
                                             <span class="info-box-text">Last Updated</span>
                                             <span class="info-box-number">{{ ticket.updated_at|date:"M d, Y" }}</span>
@@ -233,111 +262,6 @@
 
                 <!-- Sidebar Column -->
                 <div class="col-md-4">
-                    <!-- Ticket Meta Information -->
-                    <div class="card">
-                        <div class="card-header">
-                            <h3 class="card-title">
-                                <i class="fas fa-info-circle"></i> Ticket Information: <strong>#{{ ticket.id }}</strong>
-                            </h3>
-                        </div>
-                        <div class="card-body">
-                            <dl class="row">
-                                <dt class="col-sm-4">Created by:</dt>
-                                <dd class="col-sm-8">
-                                    <i class="fas fa-user"></i>
-                                    {{ ticket.created_by.get_full_name|default:ticket.created_by.username }}
-                                </dd>
-
-                                <dt class="col-sm-4">Assigned to:</dt>
-                                <dd class="col-sm-8">
-                                    {% if ticket.assigned_to %}
-                                        <i class="fas fa-user"></i>
-                                        {{ ticket.assigned_to.get_full_name|default:ticket.assigned_to.username }}
-                                    {% else %}
-                                        <span class="text-muted">Unassigned</span>
-                                    {% endif %}
-                                </dd>
-                            </dl>
-                        </div>
-                    </div>
-
-                    <!-- Move image here -->
-                    <!-- Attachments Section -->
-                    {% if ticket.attachments.all %}
-                        <div class="mb-4">
-                            <h5><i class="fas fa-paperclip"></i> Attachments ({{ ticket.attachments.count }})</h5>
-                            {% for attachment in ticket.attachments.all %}
-                                <div class="card h-100">
-                                    {% if attachment.is_image %}
-                                        <!-- Image Attachment -->
-                                        <div class="card-img-top position-relative"
-                                             style="height: 200px; overflow: hidden;">
-                                            <img src="{{ attachment.get_secure_url }}"
-                                                 alt="{{ attachment.original_filename }}"
-                                                 class="img-fluid w-100 h-100"
-                                                 style="object-fit: cover; cursor: pointer;"
-                                                 onclick="openImageModal('{{ attachment.get_secure_url }}', '{{ attachment.original_filename }}')"
-                                                 title="Click to view full size">
-                                            <div class="position-absolute" style="top: 5px; right: 5px;">
-                                                    <span class="badge badge-success">
-                                                        <i class="fas fa-image"></i>
-                                                    </span>
-                                            </div>
-                                        </div>
-                                    {% elif attachment.is_pdf %}
-                                        <!-- PDF Attachment -->
-                                        <div class="card-img-top d-flex align-items-center justify-content-center bg-light"
-                                             style="height: 200px;">
-                                            <div class="text-center">
-                                                <i class="fas fa-file-pdf fa-4x text-danger mb-2"></i>
-                                                <br>
-                                                <span class="badge badge-danger">PDF</span>
-                                            </div>
-                                        </div>
-                                    {% endif %}
-
-                                    <div class="card-body p-2">
-                                        <h6 class="card-title text-truncate" title="{{ attachment.original_filename }}">
-                                            {{ attachment.original_filename }}
-                                        </h6>
-                                        <p class="card-text small text-muted mb-1">
-                                            <i class="fas fa-weight-hanging"></i> {{ attachment.file_size_mb }} MB
-                                            <br>
-                                            <i class="fas fa-clock"></i> {{ attachment.uploaded_at|date:"M d, Y H:i" }}
-                                            <br>
-                                            <i class="fas fa-user"></i> {{ attachment.uploaded_by.get_full_name|default:attachment.uploaded_by.username }}
-                                        </p>
-                                        {% if attachment.description %}
-                                            <p class="card-text small">
-                                                <em>"{{ attachment.description }}"</em>
-                                            </p>
-                                        {% endif %}
-                                    </div>
-
-                                    <div class="card-footer p-2">
-                                        {% if attachment.is_image %}
-                                            <button class="btn btn-primary btn-sm btn-block"
-                                                    onclick="openImageModal('{{ attachment.get_secure_url }}', '{{ attachment.original_filename }}')">
-                                                <i class="fas fa-eye"></i> View Image
-                                            </button>
-                                        {% elif attachment.is_pdf %}
-                                            <a href="{{ attachment.get_secure_url }}"
-                                               target="_blank"
-                                               class="btn btn-danger btn-sm btn-block">
-                                                <i class="fas fa-external-link-alt"></i> Open PDF
-                                            </a>
-                                        {% endif %}
-                                        <a href="{{ attachment.get_secure_url }}"
-                                           download="{{ attachment.original_filename }}"
-                                           class="btn btn-success btn-sm btn-block mt-1">
-                                            <i class="fas fa-download"></i> Download
-                                        </a>
-                                    </div>
-                                </div>
-                            {% endfor %}
-                        </div>
-                    {% endif %}
-
                     <!-- Quick Actions -->
                     <div class="card">
                         <div class="card-header">
@@ -371,6 +295,93 @@
                             </div>
                         </div>
                     </div>
+
+                    <!-- Move image here -->
+                    <!-- Attachments Section -->
+                    {% if ticket.attachments.all %}
+                        <div class="mb-4">
+                            <h5><i class="fas fa-paperclip"></i> Attachments ({{ ticket.attachments.count }})</h5>
+                            <div id="attachmentsCarousel" class="carousel slide" data-ride="carousel">
+                                <div class="carousel-inner">
+                                    {% for attachment in ticket.attachments.all %}
+                                    <div class="carousel-item {% if forloop.first %}active{% endif %}">
+                                        <div class="card h-100">
+                                            {% if attachment.is_image %}
+                                                <!-- Image Attachment -->
+                                                <div class="card-img-top position-relative" style="height: 200px; overflow: hidden;">
+                                                    <img src="{{ attachment.get_secure_url }}"
+                                                         alt="{{ attachment.original_filename }}"
+                                                         class="img-fluid w-100 h-100"
+                                                         style="object-fit: cover; cursor: pointer;"
+                                                         onclick="openImageModal('{{ attachment.get_secure_url }}', '{{ attachment.original_filename }}')"
+                                                         title="Click to view full size">
+                                                    <div class="position-absolute" style="top: 5px; right: 5px;">
+                                                        <span class="badge badge-success">
+                                                            <i class="fas fa-image"></i>
+                                                        </span>
+                                                    </div>
+                                                </div>
+                                            {% elif attachment.is_pdf %}
+                                                <!-- PDF Attachment -->
+                                                <div class="card-img-top d-flex align-items-center justify-content-center bg-light" style="height: 200px;">
+                                                    <div class="text-center">
+                                                        <i class="fas fa-file-pdf fa-4x text-danger mb-2"></i>
+                                                        <br>
+                                                        <span class="badge badge-danger">PDF</span>
+                                                    </div>
+                                                </div>
+                                            {% endif %}
+                                            <div class="card-body p-2">
+                                                <h6 class="card-title text-truncate" title="{{ attachment.original_filename }}">
+                                                    {{ attachment.original_filename }}
+                                                </h6>
+                                                <p class="card-text small text-muted mb-1">
+                                                    <i class="fas fa-weight-hanging"></i> {{ attachment.file_size_mb }} MB
+                                                    <br>
+                                                    <i class="fas fa-clock"></i> {{ attachment.uploaded_at|date:"M d, Y H:i" }}
+                                                    <br>
+                                                    <i class="fas fa-user"></i> {{ attachment.uploaded_by.get_full_name|default:attachment.uploaded_by.username }}
+                                                </p>
+                                                {% if attachment.description %}
+                                                    <p class="card-text small">
+                                                        <em>"{{ attachment.description }}"</em>
+                                                    </p>
+                                                {% endif %}
+                                            </div>
+                                            <div class="card-footer p-2">
+                                                {% if attachment.is_image %}
+                                                    <button class="btn btn-primary btn-sm btn-block"
+                                                            onclick="openImageModal('{{ attachment.get_secure_url }}', '{{ attachment.original_filename }}')">
+                                                        <i class="fas fa-eye"></i> View Image
+                                                    </button>
+                                                {% elif attachment.is_pdf %}
+                                                    <a href="{{ attachment.get_secure_url }}"
+                                                       target="_blank"
+                                                       class="btn btn-danger btn-sm btn-block">
+                                                        <i class="fas fa-external-link-alt"></i> Open PDF
+                                                    </a>
+                                                {% endif %}
+                                                <a href="{{ attachment.get_secure_url }}"
+                                                   download="{{ attachment.original_filename }}"
+                                                   class="btn btn-success btn-sm btn-block mt-1">
+                                                    <i class="fas fa-download"></i> Download
+                                                </a>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    {% endfor %}
+                                </div>
+                                <a class="carousel-control-prev" href="#attachmentsCarousel" role="button" data-slide="prev">
+                                    <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                                    <span class="sr-only">Previous</span>
+                                </a>
+                                <a class="carousel-control-next" href="#attachmentsCarousel" role="button" data-slide="next">
+                                    <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                                    <span class="sr-only">Next</span>
+                                </a>
+                            </div>
+                        </div>
+                    {% endif %}
 
                     <!-- Related Tickets -->
                     <div class="card">
