@@ -477,3 +477,20 @@ def generate_api_token_on_create(sender, instance, created, **kwargs):
 
         instance.token = generate_api_token()
         instance.save(update_fields=["token"])
+
+
+@receiver(post_save, sender=Ticket)
+def update_closed_on(sender, instance, created, **kwargs):
+    """
+    Update closed_on when status changes to 'Closed'.
+    Clear closed_on if status changes to anything else.
+    Works for both admin and web interface.
+    """
+    if instance.status == "Closed":
+        if not instance.closed_on:
+            instance.closed_on = timezone.now()
+            instance.save(update_fields=["closed_on"])
+    else:
+        if instance.closed_on:
+            instance.closed_on = None
+            instance.save(update_fields=["closed_on"])
