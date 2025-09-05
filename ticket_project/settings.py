@@ -193,7 +193,7 @@ LOGGING = {
             "datefmt": "%Y-%m-%d %H:%M:%S",
         },
         "security": {
-            "format": "[SECURITY] {asctime} | {name} | IP:{remote_addr} | User:{user} | {message}",
+            "format": "[SECURITY] {asctime} | {name} | {message}",
             "style": "{",
             "datefmt": "%Y-%m-%d %H:%M:%S",
         },
@@ -460,7 +460,10 @@ X_FRAME_OPTIONS = "DENY"  # Prevent clickjacking
 
 # Content Security Policy (CSP) - Prevent XSS attacks
 CSP_DEFAULT_SRC = ("'self'",)
-CSP_SCRIPT_SRC = ("'self'", "'unsafe-inline'")  # Allow inline scripts for Bootstrap/jQuery
+CSP_SCRIPT_SRC = (
+    "'self'",
+    "'unsafe-inline'",
+)  # Allow inline scripts for Bootstrap/jQuery
 CSP_STYLE_SRC = ("'self'", "'unsafe-inline'")  # Allow inline styles for Bootstrap
 CSP_IMG_SRC = ("'self'", "data:")  # Allow images from same origin and data URLs
 CSP_FONT_SRC = ("'self'",)
