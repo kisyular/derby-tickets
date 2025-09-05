@@ -27,7 +27,7 @@ load_dotenv(BASE_DIR / ".env")
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = os.environ.get("DJANGO_SECRET_KEY", "your-production-secret-key")
+SECRET_KEY = os.environ.get("DJANGO_SECRET_KEY")
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.environ.get("DJANGO_DEBUG", "False") == "True"
@@ -53,6 +53,7 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
+    "csp.middleware.CSPMiddleware",  # Content Security Policy middleware
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
@@ -456,6 +457,16 @@ CSRF_COOKIE_SAMESITE = "Lax"
 SECURE_BROWSER_XSS_FILTER = True  # Enable XSS filtering
 SECURE_CONTENT_TYPE_NOSNIFF = True  # Prevent MIME sniffing
 X_FRAME_OPTIONS = "DENY"  # Prevent clickjacking
+
+# Content Security Policy (CSP) - Prevent XSS attacks
+CSP_DEFAULT_SRC = ("'self'",)
+CSP_SCRIPT_SRC = ("'self'", "'unsafe-inline'")  # Allow inline scripts for Bootstrap/jQuery
+CSP_STYLE_SRC = ("'self'", "'unsafe-inline'")  # Allow inline styles for Bootstrap
+CSP_IMG_SRC = ("'self'", "data:")  # Allow images from same origin and data URLs
+CSP_FONT_SRC = ("'self'",)
+CSP_CONNECT_SRC = ("'self'",)
+CSP_FRAME_SRC = ("'none'",)  # No iframes allowed
+CSP_OBJECT_SRC = ("'none'",)  # No objects/plugins allowed
 
 # Production security (enable when using HTTPS)
 if not DEBUG:

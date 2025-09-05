@@ -60,3 +60,4 @@ coverage.xml
 # Testing
 .pytest_cache/
 .tox/
+Actions.md

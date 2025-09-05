@@ -3,6 +3,7 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.models import User
 from django.contrib import messages
+from django.core.paginator import Paginator
 from django.db.models import Q
 from django.core.cache import cache
 from .models import Ticket, UserProfile, Comment, Category
@@ -89,8 +90,14 @@ def ticket_list(request):
         assigned_tickets = assigned_tickets.order_by("-updated_at")
         assigned_count = assigned_tickets.count()
 
+    # Add pagination for better performance
+    paginator = Paginator(tickets, 25)  # 25 tickets per page
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+
     context = {
-        "tickets": tickets,
+        "tickets": page_obj,  # Use paginated tickets
+        "page_obj": page_obj,  # For pagination controls in template
         "open_count": open_count,
         "in_progress_count": in_progress_count,
         "closed_count": closed_count,
