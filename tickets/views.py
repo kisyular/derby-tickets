@@ -148,6 +148,9 @@ def ticket_detail(request, ticket_id):
             description = request.POST.get("description")
             priority = request.POST.get("priority")
             status = request.POST.get("status")
+            assigned_to_id = request.POST.get("assigned_to")
+            cc_admin_ids = request.POST.getlist("cc_admins")
+            cc_non_admin_ids = request.POST.getlist("cc_non_admins")
 
             if title and priority and status:
                 # Capture changes for audit trail
@@ -164,6 +167,29 @@ def ticket_detail(request, ticket_id):
                 if ticket.status != status:
                     changes["status"] = {"old": ticket.status, "new": status}
 
+                # Handle assignment changes
+                if request.user.is_staff:
+                    old_assigned_to = ticket.assigned_to
+                    new_assigned_to = None
+                    if assigned_to_id:
+                        try:
+                            new_assigned_to = User.objects.get(
+                                id=assigned_to_id, is_staff=True
+                            )
+                        except User.DoesNotExist:
+                            pass
+
+                    if old_assigned_to != new_assigned_to:
+                        changes["assigned_to"] = {
+                            "old": (
+                                old_assigned_to.username if old_assigned_to else None
+                            ),
+                            "new": (
+                                new_assigned_to.username if new_assigned_to else None
+                            ),
+                        }
+                        ticket.assigned_to = new_assigned_to
+
                 ticket.title = title
                 ticket.description = description
                 ticket.priority = priority
@@ -171,6 +197,32 @@ def ticket_detail(request, ticket_id):
                 # Set the user who made the changes for email notifications
                 ticket._updated_by = request.user
                 ticket.save()
+
+                # Handle CC changes for staff users
+                if request.user.is_staff:
+                    # Update CC admins
+                    if cc_admin_ids:
+                        cc_admins = User.objects.filter(
+                            id__in=cc_admin_ids, is_staff=True
+                        )
+                        ticket.cc_admins.set(cc_admins)
+                        changes["cc_admins"] = {"new": [u.username for u in cc_admins]}
+                    else:
+                        ticket.cc_admins.clear()
+                        changes["cc_admins"] = {"new": []}
+
+                    # Update CC non-admins
+                    if cc_non_admin_ids:
+                        cc_non_admins = User.objects.filter(
+                            id__in=cc_non_admin_ids, is_staff=False
+                        )
+                        ticket.cc_non_admins.set(cc_non_admins)
+                        changes["cc_non_admins"] = {
+                            "new": [u.username for u in cc_non_admins]
+                        }
+                    else:
+                        ticket.cc_non_admins.clear()
+                        changes["cc_non_admins"] = {"new": []}
 
                 # Log the ticket update for audit trail
                 audit_security_manager.log_audit_event(
@@ -270,12 +322,31 @@ def ticket_detail(request, ticket_id):
     except ImportError:
         related_tickets = []
 
+    # Get user lists for admin controls
+    staff_users = []
+    admin_users = []
+    regular_users = []
+
+    if request.user.is_staff:
+        staff_users = User.objects.filter(is_staff=True, is_active=True).order_by(
+            "first_name", "last_name", "username"
+        )
+        admin_users = User.objects.filter(is_staff=True, is_active=True).order_by(
+            "first_name", "last_name", "username"
+        )
+        regular_users = User.objects.filter(is_staff=False, is_active=True).order_by(
+            "first_name", "last_name", "username"
+        )
+
     context = {
         "ticket": ticket,
         "comments": comments,
         "related_tickets": related_tickets,
         "can_add_internal_comments": request.user.is_staff,
         "can_edit_ticket": (ticket.created_by == request.user or request.user.is_staff),
+        "staff_users": staff_users,
+        "admin_users": admin_users,
+        "regular_users": regular_users,
     }
     return render(request, "tickets/ticket_detail.html", context)
 

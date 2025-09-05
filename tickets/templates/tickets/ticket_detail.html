@@ -38,7 +38,11 @@
                                 {% if can_edit_ticket %}
                                     <button type="button" class="btn btn-tool" data-toggle="modal"
                                             data-target="#editTicketModal">
-                                        <i class="fas fa-edit"></i> Edit
+                                        {% if user.is_staff %}
+                                            <i class="fas fa-cogs"></i> Admin Control
+                                        {% else %}
+                                            <i class="fas fa-edit"></i> Edit
+                                        {% endif %}
                                     </button>
                                 {% endif %}
                             </div>
@@ -363,7 +367,11 @@
                                 {% if can_edit_ticket %}
                                     <button type="button" class="btn btn-warning" data-toggle="modal"
                                             data-target="#editTicketModal">
-                                        <i class="fas fa-edit"></i> Edit Ticket
+                                        {% if user.is_staff %}
+                                            <i class="fas fa-cogs"></i> Admin Control
+                                        {% else %}
+                                            <i class="fas fa-edit"></i> Edit Ticket
+                                        {% endif %}
                                     </button>
                                 {% endif %}
 
@@ -548,7 +556,11 @@
                 <div class="modal-content">
                     <div class="modal-header">
                         <h5 class="modal-title" id="editTicketModalLabel">
-                            <i class="fas fa-edit"></i> Edit Ticket #{{ ticket.id }}
+                            {% if user.is_staff %}
+                                <i class="fas fa-cogs"></i> Admin Control - Ticket #{{ ticket.id }}
+                            {% else %}
+                                <i class="fas fa-edit"></i> Edit Ticket #{{ ticket.id }}
+                            {% endif %}
                         </h5>
                         <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                             <span aria-hidden="true">&times;</span>
@@ -590,25 +602,75 @@
                                     </div>
                                 </div>
                                 {% if user.is_staff %}
-                                    <div class="col-md-6">
-                                        <div class="form-group">
-                                            <label for="status">Status</label>
-                                            <select class="form-control" id="status" name="status">
-                                                <option value="Open"
-                                                        {% if ticket.status == 'Open' %}selected{% endif %}>Open
-                                                </option>
-                                                <option value="In Progress"
-                                                        {% if ticket.status == 'In Progress' %}selected{% endif %}>In
-                                                    Progress
-                                                </option>
-                                                <option value="Closed"
-                                                        {% if ticket.status == 'Closed' %}selected{% endif %}>Closed
-                                                </option>
-                                            </select>
-                                        </div>
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="status">Status</label>
+                                        <select class="form-control" id="status" name="status">
+                                            <option value="Open"
+                                                    {% if ticket.status == 'Open' %}selected{% endif %}>Open
+                                            </option>
+                                            <option value="In Progress"
+                                                    {% if ticket.status == 'In Progress' %}selected{% endif %}>In
+                                                Progress
+                                            </option>
+                                            <option value="Closed"
+                                                    {% if ticket.status == 'Closed' %}selected{% endif %}>Closed
+                                            </option>
+                                        </select>
                                     </div>
+                                </div>
                                 {% endif %}
                             </div>
+
+                            {% if user.is_staff %}
+                                <!-- Admin-only fields -->
+                                <hr>
+                                <h6><i class="fas fa-user-shield"></i> Administrative Controls</h6>
+                                
+                                <div class="form-group">
+                                    <label for="assigned_to">Assign To</label>
+                                    <select class="form-control" id="assigned_to" name="assigned_to">
+                                        <option value="">-- Unassigned --</option>
+                                        {% for staff_user in staff_users %}
+                                            <option value="{{ staff_user.id }}" 
+                                                    {% if ticket.assigned_to and ticket.assigned_to.id == staff_user.id %}selected{% endif %}>
+                                                {{ staff_user.get_full_name|default:staff_user.username }}
+                                            </option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label for="cc_admins">CC Admins</label>
+                                            <select class="form-control" id="cc_admins" name="cc_admins" multiple>
+                                                {% for admin_user in admin_users %}
+                                                    <option value="{{ admin_user.id }}" 
+                                                            {% if admin_user in ticket.cc_admins.all %}selected{% endif %}>
+                                                        {{ admin_user.get_full_name|default:admin_user.username }}
+                                                    </option>
+                                                {% endfor %}
+                                            </select>
+                                            <small class="form-text text-muted">Hold Ctrl/Cmd to select multiple</small>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label for="cc_non_admins">CC Users</label>
+                                            <select class="form-control" id="cc_non_admins" name="cc_non_admins" multiple>
+                                                {% for regular_user in regular_users %}
+                                                    <option value="{{ regular_user.id }}" 
+                                                            {% if regular_user in ticket.cc_non_admins.all %}selected{% endif %}>
+                                                        {{ regular_user.get_full_name|default:regular_user.username }}
+                                                    </option>
+                                                {% endfor %}
+                                            </select>
+                                            <small class="form-text text-muted">Hold Ctrl/Cmd to select multiple</small>
+                                        </div>
+                                    </div>
+                                </div>
+                            {% endif %}
                         </div>
                         <div class="modal-footer">
                             <button type="button" class="btn btn-secondary" data-dismiss="modal">

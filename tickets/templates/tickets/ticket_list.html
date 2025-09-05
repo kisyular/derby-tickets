@@ -129,7 +129,7 @@
                     <div class="card-header">
                         <h3 class="card-title">
                             <i class="fas fa-list"></i> 
-                            Tickets Created by You ({{ tickets|length }} found)
+                            Tickets Created by Me ({{ tickets|length }} found)
                         </h3>
                         <div class="card-tools">
                             <!-- Export buttons can be added here -->
@@ -153,7 +153,7 @@
                             <table class="table table-hover text-nowrap">
                                 <thead>
                                     <tr>
-                                        <th>ID</th>
+                                        <th>Ticket #</th>
                                         <th>Title</th>
                                         <th>Priority</th>
                                         <th>Status</th>
@@ -384,7 +384,7 @@
                                     {% for ticket in assigned_tickets %}
                                     <tr class="{% if ticket.priority == 'Urgent' %}ticket-priority-urgent{% elif ticket.priority == 'High' %}ticket-priority-high{% elif ticket.priority == 'Medium' %}ticket-priority-medium{% else %}ticket-priority-low{% endif %}">
                                         <td>
-                                            <strong>#{{ ticket.ticket_number|default:ticket.id }}</strong>
+                                            <strong>#{{ ticket.id|default:ticket.ticket_number }}</strong>
                                         </td>
                                         <td>
                                             <a href="{% url 'tickets:ticket_detail' ticket.pk %}" class="text-dark">
