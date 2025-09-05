@@ -114,38 +114,40 @@
 
                             <!-- CC Information -->
                             {% if ticket.cc_admins.exists or ticket.cc_non_admins.exists %}
-                            <div class="row mb-4">
-                                {% if ticket.cc_admins.exists %}
-                                <div class="col-md-6">
-                                    <div class="info-box bg-light">
-                                        <span class="info-box-icon bg-warning"><i class="fas fa-users"></i></span>
-                                        <div class="info-box-content">
-                                            <span class="info-box-text">CC Admins</span>
-                                            <span class="info-box-number">
+                                <div class="row mb-4">
+                                    {% if ticket.cc_admins.exists %}
+                                        <div class="col-md-6">
+                                            <div class="info-box bg-light">
+                                                <span class="info-box-icon bg-warning"><i
+                                                        class="fas fa-users"></i></span>
+                                                <div class="info-box-content">
+                                                    <span class="info-box-text">CC Admins</span>
+                                                    <span class="info-box-number">
                                                 {% for admin in ticket.cc_admins.all %}
                                                     <span class="badge badge-warning mr-1">{{ admin.get_full_name|default:admin.username }}</span>
                                                 {% endfor %}
                                             </span>
+                                                </div>
+                                            </div>
                                         </div>
-                                    </div>
-                                </div>
-                                {% endif %}
-                                {% if ticket.cc_non_admins.exists %}
-                                <div class="col-md-6">
-                                    <div class="info-box bg-light">
-                                        <span class="info-box-icon bg-secondary"><i class="fas fa-users"></i></span>
-                                        <div class="info-box-content">
-                                            <span class="info-box-text">CC Non-Admins</span>
-                                            <span class="info-box-number">
+                                    {% endif %}
+                                    {% if ticket.cc_non_admins.exists %}
+                                        <div class="col-md-6">
+                                            <div class="info-box bg-light">
+                                                <span class="info-box-icon bg-secondary"><i
+                                                        class="fas fa-users"></i></span>
+                                                <div class="info-box-content">
+                                                    <span class="info-box-text">CC Non-Admins</span>
+                                                    <span class="info-box-number">
                                                 {% for user in ticket.cc_non_admins.all %}
                                                     <span class="badge badge-secondary mr-1">{{ user.get_full_name|default:user.username }}</span>
                                                 {% endfor %}
                                             </span>
+                                                </div>
+                                            </div>
                                         </div>
-                                    </div>
+                                    {% endif %}
                                 </div>
-                                {% endif %}
-                            </div>
                             {% endif %}
 
                             <!-- Description -->
@@ -247,7 +249,7 @@
                                                 {{ group.grouper|date:"M d, Y" }}
                                             </span>
                                         </div>
-                                        
+
                                         {% for entry in group.list %}
                                             {% if entry.type == 'comment' %}
                                                 <!-- Comment Entry -->
@@ -264,7 +266,8 @@
                                                         </span>
 
                                                         <h3 class="timeline-header">
-                                                            <a href="#" class="text-decoration-none">{{ entry.content.author.get_full_name|default:entry.content.author.username }}</a>
+                                                            <a href="#" class="text-decoration-none">
+                                                                {{ entry.content.author.get_full_name|default:entry.content.author.username }}</a>
                                                             {% if entry.content.is_internal %}
                                                                 <span class="badge badge-warning">
                                                                     <i class="fas fa-lock"></i> Internal
@@ -275,18 +278,15 @@
                                                                     <i class="fas fa-user-shield"></i> Staff
                                                                 </span>
                                                             {% endif %}
+                                                         {% if can_edit_ticket and entry.content.author == user %}
+                                                                <a href="#" class="text-danger float-right">
+                                                                    <i class="fas fa-edit"></i> Edit
+                                                                </a>
+                                                            {% endif %}
                                                         </h3>
 
                                                         <div class="timeline-body">
                                                             {{ entry.content.content|linebreaks }}
-                                                        </div>
-
-                                                        <div class="m-2 text-right">
-                                                            {% if can_edit_ticket and entry.content.author == user %}
-                                                                <a href="#" class="btn btn-sm btn-primary">
-                                                                    <i class="fas fa-edit"></i> Edit
-                                                                </a>
-                                                            {% endif %}
                                                         </div>
                                                     </div>
                                                 </div>
@@ -295,7 +295,6 @@
                                                 <!-- Update Entry - Clean AdminLTE style -->
                                                 <div>
                                                     <i class="{{ entry.content.icon_class }} bg-gray"></i>
-
                                                     <div class="timeline-item">
                                                         <span class="time">
                                                             <i class="far fa-clock"></i> {{ entry.content.created_at|time:"H:i" }}
@@ -319,7 +318,8 @@
                                                         <i class="fas fa-clock"></i> {{ ticket.created_at|time:"H:i" }}
                                                     </span>
                                                         <h3 class="timeline-header">
-                                                            <a href="#" class="text-decoration-none">{{ ticket.created_by.get_full_name|default:ticket.created_by.username }}</a>
+                                                            <a href="#" class="text-decoration-none">
+                                                                {{ ticket.created_by.get_full_name|default:ticket.created_by.username }}</a>
                                                             created this ticket
                                                         </h3>
                                                         <div class="timeline-body">
@@ -331,7 +331,7 @@
                                             {% endif %}
                                         {% endfor %}
                                     {% endfor %}
-    
+
                                 </div>
                             {% else %}
                                 <div class="text-center p-4">
@@ -384,7 +384,7 @@
                         </div>
                     </div>
 
-                     <!-- Computer Information Section -->
+                    <!-- Computer Information Section -->
                     {% if ticket.computer_info and user.is_staff %}
                         <div class="row mt-3">
                             <div class="col-12">
@@ -398,39 +398,48 @@
                                         <div class="row">
                                             <div class="col-md-6">
                                                 <strong></i> Hostname:</strong>
-                                                <p class="text-muted">{{ ticket.computer_info.hostname|default:"Not available" }}</p>
-                                                
+                                                <p class="text-muted">
+                                                    {{ ticket.computer_info.hostname|default:"Not available" }}</p>
+
                                                 <strong>Current User:</strong>
-                                                <p class="text-muted">{{ ticket.computer_info.current_user|default:"Not available" }}</p>
-                                                
+                                                <p class="text-muted">
+                                                    {{ ticket.computer_info.current_user|default:"Not available" }}</p>
+
                                                 <strong>Location:</strong>
-                                                <p class="text-muted">{{ ticket.computer_info.derby_plant_loc|default:"Not available" }}</p>
-                                                
+                                                <p class="text-muted">
+                                                    {{ ticket.computer_info.derby_plant_loc|default:"Not available" }}</p>
+
                                                 <strong>IP Address:</strong>
-                                                <p class="text-muted">{{ ticket.computer_info.client_ip|default:"Not available" }}</p>
+                                                <p class="text-muted">
+                                                    {{ ticket.computer_info.client_ip|default:"Not available" }}</p>
                                             </div>
                                             <div class="col-md-6">
                                                 <strong>Make/Model:</strong>
-                                                <p class="text-muted">{{ ticket.computer_info.pc_make_model|default:"Not available" }}</p>
-                                                
+                                                <p class="text-muted">
+                                                    {{ ticket.computer_info.pc_make_model|default:"Not available" }}</p>
+
                                                 <strong>RAM:</strong>
-                                                <p class="text-muted">{{ ticket.computer_info.ram|default:"Not available" }}</p>
-                                                
+                                                <p class="text-muted">
+                                                    {{ ticket.computer_info.ram|default:"Not available" }}</p>
+
                                                 <strong>Processor:</strong>
-                                                <p class="text-muted">{{ ticket.computer_info.processor_name|default:"Not available" }}</p>
-                                                
+                                                <p class="text-muted">
+                                                    {{ ticket.computer_info.processor_name|default:"Not available" }}</p>
+
                                                 <strong>Operating System:</strong>
-                                                <p class="text-muted">{{ ticket.computer_info.os_name|default:"Not available" }}</p>
+                                                <p class="text-muted">
+                                                    {{ ticket.computer_info.os_name|default:"Not available" }}</p>
                                             </div>
                                         </div>
                                         <div class="row">
                                             <div class="col-12">
                                                 <hr>
                                                 <small class="text-muted">
-                                                    <i class="fas fa-info-circle"></i> 
-                                                    Computer information captured at ticket creation: {{ ticket.computer_info.captured_at|date:"M d, Y H:i" }}
+                                                    <i class="fas fa-info-circle"></i>
+                                                    Computer information captured at ticket creation:
+                                                    {{ ticket.computer_info.captured_at|date:"M d, Y H:i" }}
                                                     {% if ticket.computer_info.serial_number %}
-                                                    | Serial: {{ ticket.computer_info.serial_number }}
+                                                        | Serial: {{ ticket.computer_info.serial_number }}
                                                     {% endif %}
                                                 </small>
                                             </div>
@@ -449,78 +458,86 @@
                             <div id="attachmentsCarousel" class="carousel slide" data-ride="carousel">
                                 <div class="carousel-inner">
                                     {% for attachment in ticket.attachments.all %}
-                                    <div class="carousel-item {% if forloop.first %}active{% endif %}">
-                                        <div class="card h-100">
-                                            {% if attachment.is_image %}
-                                                <!-- Image Attachment -->
-                                                <div class="card-img-top position-relative" style="height: 200px; overflow: hidden;">
-                                                    <img src="{{ attachment.get_secure_url }}"
-                                                         alt="{{ attachment.original_filename }}"
-                                                         class="img-fluid w-100 h-100"
-                                                         style="object-fit: cover; cursor: pointer;"
-                                                         onclick="openImageModal('{{ attachment.get_secure_url }}', '{{ attachment.original_filename }}')"
-                                                         title="Click to view full size">
-                                                    <div class="position-absolute" style="top: 5px; right: 5px;">
+                                        <div class="carousel-item {% if forloop.first %}active{% endif %}">
+                                            <div class="card h-100">
+                                                {% if attachment.is_image %}
+                                                    <!-- Image Attachment -->
+                                                    <div class="card-img-top position-relative"
+                                                         style="height: 200px; overflow: hidden;">
+                                                        <img src="{{ attachment.get_secure_url }}"
+                                                             alt="{{ attachment.original_filename }}"
+                                                             class="img-fluid w-100 h-100"
+                                                             style="object-fit: cover; cursor: pointer;"
+                                                             onclick="openImageModal('{{ attachment.get_secure_url }}', '{{ attachment.original_filename }}')"
+                                                             title="Click to view full size">
+                                                        <div class="position-absolute" style="top: 5px; right: 5px;">
                                                         <span class="badge badge-success">
                                                             <i class="fas fa-image"></i>
                                                         </span>
+                                                        </div>
                                                     </div>
-                                                </div>
-                                            {% elif attachment.is_pdf %}
-                                                <!-- PDF Attachment -->
-                                                <div class="card-img-top d-flex align-items-center justify-content-center bg-light" style="height: 200px;">
-                                                    <div class="text-center">
-                                                        <i class="fas fa-file-pdf fa-4x text-danger mb-2"></i>
-                                                        <br>
-                                                        <span class="badge badge-danger">PDF</span>
-                                                    </div>
-                                                </div>
-                                            {% endif %}
-                                            <div class="card-body p-2">
-                                                <h6 class="card-title text-truncate" title="{{ attachment.original_filename }}">
-                                                    {{ attachment.original_filename }}
-                                                </h6>
-                                                <p class="card-text small text-muted mb-1">
-                                                    <i class="fas fa-weight-hanging"></i> {{ attachment.file_size_mb }} MB
-                                                    <br>
-                                                    <i class="fas fa-clock"></i> {{ attachment.uploaded_at|date:"M d, Y H:i" }}
-                                                    <br>
-                                                    <i class="fas fa-user"></i> {{ attachment.uploaded_by.get_full_name|default:attachment.uploaded_by.username }}
-                                                </p>
-                                                {% if attachment.description %}
-                                                    <p class="card-text small">
-                                                        <em>"{{ attachment.description }}"</em>
-                                                    </p>
-                                                {% endif %}
-                                            </div>
-                                            <div class="card-footer p-2">
-                                                {% if attachment.is_image %}
-                                                    <button class="btn btn-primary btn-sm btn-block"
-                                                            onclick="openImageModal('{{ attachment.get_secure_url }}', '{{ attachment.original_filename }}')">
-                                                        <i class="fas fa-eye"></i> View Image
-                                                    </button>
                                                 {% elif attachment.is_pdf %}
-                                                    <a href="{{ attachment.get_secure_url }}"
-                                                       target="_blank"
-                                                       class="btn btn-danger btn-sm btn-block">
-                                                        <i class="fas fa-external-link-alt"></i> Open PDF
-                                                    </a>
+                                                    <!-- PDF Attachment -->
+                                                    <div class="card-img-top d-flex align-items-center justify-content-center bg-light"
+                                                         style="height: 200px;">
+                                                        <div class="text-center">
+                                                            <i class="fas fa-file-pdf fa-4x text-danger mb-2"></i>
+                                                            <br>
+                                                            <span class="badge badge-danger">PDF</span>
+                                                        </div>
+                                                    </div>
                                                 {% endif %}
-                                                <a href="{{ attachment.get_secure_url }}"
-                                                   download="{{ attachment.original_filename }}"
-                                                   class="btn btn-success btn-sm btn-block mt-1">
-                                                    <i class="fas fa-download"></i> Download
-                                                </a>
+                                                <div class="card-body p-2">
+                                                    <h6 class="card-title text-truncate"
+                                                        title="{{ attachment.original_filename }}">
+                                                        {{ attachment.original_filename }}
+                                                    </h6>
+                                                    <p class="card-text small text-muted mb-1">
+                                                        <i class="fas fa-weight-hanging"></i> {{ attachment.file_size_mb }}
+                                                        MB
+                                                        <br>
+                                                        <i class="fas fa-clock"></i>
+                                                        {{ attachment.uploaded_at|date:"M d, Y H:i" }}
+                                                        <br>
+                                                        <i class="fas fa-user"></i>
+                                                        {{ attachment.uploaded_by.get_full_name|default:attachment.uploaded_by.username }}
+                                                    </p>
+                                                    {% if attachment.description %}
+                                                        <p class="card-text small">
+                                                            <em>"{{ attachment.description }}"</em>
+                                                        </p>
+                                                    {% endif %}
+                                                </div>
+                                                <div class="card-footer p-2">
+                                                    {% if attachment.is_image %}
+                                                        <button class="btn btn-primary btn-sm btn-block"
+                                                                onclick="openImageModal('{{ attachment.get_secure_url }}', '{{ attachment.original_filename }}')">
+                                                            <i class="fas fa-eye"></i> View Image
+                                                        </button>
+                                                    {% elif attachment.is_pdf %}
+                                                        <a href="{{ attachment.get_secure_url }}"
+                                                           target="_blank"
+                                                           class="btn btn-danger btn-sm btn-block">
+                                                            <i class="fas fa-external-link-alt"></i> Open PDF
+                                                        </a>
+                                                    {% endif %}
+                                                    <a href="{{ attachment.get_secure_url }}"
+                                                       download="{{ attachment.original_filename }}"
+                                                       class="btn btn-success btn-sm btn-block mt-1">
+                                                        <i class="fas fa-download"></i> Download
+                                                    </a>
+                                                </div>
                                             </div>
                                         </div>
-                                    </div>
                                     {% endfor %}
                                 </div>
-                                <a class="carousel-control-prev" href="#attachmentsCarousel" role="button" data-slide="prev">
+                                <a class="carousel-control-prev" href="#attachmentsCarousel" role="button"
+                                   data-slide="prev">
                                     <span class="carousel-control-prev-icon" aria-hidden="true"></span>
                                     <span class="sr-only">Previous</span>
                                 </a>
-                                <a class="carousel-control-next" href="#attachmentsCarousel" role="button" data-slide="next">
+                                <a class="carousel-control-next" href="#attachmentsCarousel" role="button"
+                                   data-slide="next">
                                     <span class="carousel-control-next-icon" aria-hidden="true"></span>
                                     <span class="sr-only">Next</span>
                                 </a>
@@ -557,7 +574,8 @@
                                             </small>
                                             <br>
                                             <small class="text-muted">
-                                                <i class="fas fa-calendar"></i> {{ related.ticket.created_at|date:"M d, Y" }}
+                                                <i class="fas fa-calendar"></i>
+                                                {{ related.ticket.created_at|date:"M d, Y" }}
                                                 {% if related.ticket.status == 'Open' %}
                                                     <span class="badge badge-success badge-sm ml-1">{{ related.ticket.status }}</span>
                                                 {% elif related.ticket.status == 'In Progress' %}
@@ -650,23 +668,23 @@
                                     </div>
                                 </div>
                                 {% if user.is_staff %}
-                                <div class="col-md-6">
-                                    <div class="form-group">
-                                        <label for="status">Status</label>
-                                        <select class="form-control" id="status" name="status">
-                                            <option value="Open"
-                                                    {% if ticket.status == 'Open' %}selected{% endif %}>Open
-                                            </option>
-                                            <option value="In Progress"
-                                                    {% if ticket.status == 'In Progress' %}selected{% endif %}>In
-                                                Progress
-                                            </option>
-                                            <option value="Closed"
-                                                    {% if ticket.status == 'Closed' %}selected{% endif %}>Closed
-                                            </option>
-                                        </select>
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label for="status">Status</label>
+                                            <select class="form-control" id="status" name="status">
+                                                <option value="Open"
+                                                        {% if ticket.status == 'Open' %}selected{% endif %}>Open
+                                                </option>
+                                                <option value="In Progress"
+                                                        {% if ticket.status == 'In Progress' %}selected{% endif %}>In
+                                                    Progress
+                                                </option>
+                                                <option value="Closed"
+                                                        {% if ticket.status == 'Closed' %}selected{% endif %}>Closed
+                                                </option>
+                                            </select>
+                                        </div>
                                     </div>
-                                </div>
                                 {% endif %}
                             </div>
 
@@ -674,13 +692,13 @@
                                 <!-- Admin-only fields -->
                                 <hr>
                                 <h6><i class="fas fa-user-shield"></i> Administrative Controls</h6>
-                                
+
                                 <div class="form-group">
                                     <label for="assigned_to">Assign To</label>
                                     <select class="form-control" id="assigned_to" name="assigned_to">
                                         <option value="">-- Unassigned --</option>
                                         {% for staff_user in staff_users %}
-                                            <option value="{{ staff_user.id }}" 
+                                            <option value="{{ staff_user.id }}"
                                                     {% if ticket.assigned_to and ticket.assigned_to.id == staff_user.id %}selected{% endif %}>
                                                 {{ staff_user.get_full_name|default:staff_user.username }}
                                             </option>
@@ -694,7 +712,7 @@
                                             <label for="cc_admins">CC Admins</label>
                                             <select class="form-control" id="cc_admins" name="cc_admins" multiple>
                                                 {% for admin_user in admin_users %}
-                                                    <option value="{{ admin_user.id }}" 
+                                                    <option value="{{ admin_user.id }}"
                                                             {% if admin_user in ticket.cc_admins.all %}selected{% endif %}>
                                                         {{ admin_user.get_full_name|default:admin_user.username }}
                                                     </option>
@@ -706,9 +724,10 @@
                                     <div class="col-md-6">
                                         <div class="form-group">
                                             <label for="cc_non_admins">CC Users</label>
-                                            <select class="form-control" id="cc_non_admins" name="cc_non_admins" multiple>
+                                            <select class="form-control" id="cc_non_admins" name="cc_non_admins"
+                                                    multiple>
                                                 {% for regular_user in regular_users %}
-                                                    <option value="{{ regular_user.id }}" 
+                                                    <option value="{{ regular_user.id }}"
                                                             {% if regular_user in ticket.cc_non_admins.all %}selected{% endif %}>
                                                         {{ regular_user.get_full_name|default:regular_user.username }}
                                                     </option>
@@ -763,193 +782,212 @@
 {% endblock %}
 
 {% block extra_css %}
-<style>
-    /* AdminLTE Timeline Styling */
-    .timeline {
-        position: relative;
-        margin: 0 0 30px 0;
-        padding: 0;
-        list-style: none;
-    }
-
-    .timeline:before {
-        content: '';
-        position: absolute;
-        top: 0;
-        bottom: 0;
-        width: 4px;
-        background: #ddd;
-        left: 31px;
-        margin: 0;
-        border-radius: 2px;
-    }
-
-    .timeline > li {
-        position: relative;
-        margin-right: 10px;
-        margin-bottom: 15px;
-    }
-
-    .timeline > li:before,
-    .timeline > li:after {
-        content: " ";
-        display: table;
-    }
-
-    .timeline > li:after {
-        clear: both;
-    }
-
-    .timeline > li > .timeline-item {
-        background: #fff;
-        border-radius: 3px;
-        margin-top: 0;
-        color: #444;
-        margin-left: 60px;
-        margin-right: 15px;
-        padding: 0;
-        position: relative;
-        box-shadow: 0 1px 3px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.24);
-    }
-
-    .timeline > li > .timeline-item:before {
-        content: '';
-        display: block;
-        position: absolute;
-        left: -15px;
-        top: 20px;
-        width: 0;
-        height: 0;
-        border: 7px solid transparent;
-        border-right-color: #fff;
-    }
-
-    .timeline > li > .timeline-item > .time {
-        color: #999;
-        font-size: 11px;
-        padding: 10px;
-        margin: 0;
-        background: #f9f9f9;
-        border-bottom: 1px solid #f4f4f4;
-    }
-
-    .timeline > li > .timeline-item > .timeline-header {
-        margin: 0;
-        color: #555;
-        border-bottom: 1px solid #f4f4f4;
-        padding: 10px;
-        font-size: 16px;
-        line-height: 1.1;
-    }
-
-    .timeline > li > .timeline-item > .timeline-header.no-border {
-        border-bottom: 0;
-        padding: 10px;
-    }
-
-    .timeline > li > .timeline-item > .timeline-body,
-    .timeline > li > .timeline-item > .timeline-footer {
-        padding: 10px;
-    }
-
-    .timeline > li > .fa,
-    .timeline > li > .fas,
-    .timeline > li > .far,
-    .timeline > li > .fab,
-    .timeline > li > .fal,
-    .timeline > li > .fad,
-    .timeline > li > .ion {
-        width: 30px;
-        height: 30px;
-        font-size: 15px;
-        line-height: 30px;
-        position: absolute;
-        color: #666;
-        background: #d2d6de;
-        border-radius: 50%;
-        text-align: center;
-        left: 18px;
-        top: 0;
-    }
-
-    .timeline > .time-label > span {
-        font-weight: 600;
-        color: #fff;
-        font-size: 12px;
-        padding: 5px;
-        display: inline-block;
-        background-color: #00a65a;
-        border-radius: 4px;
-    }
-
-    /* Color variations */
-    .bg-blue { background-color: #3c8dbc !important; }
-    .bg-green { background-color: #00a65a !important; }
-    .bg-yellow { background-color: #f39c12 !important; }
-    .bg-red { background-color: #dd4b39 !important; }
-    .bg-gray { background-color: #d2d6de !important; }
-
-    /* Description blocks for ticket creation */
-    .description-block {
-        display: block;
-        margin: 10px 0;
-        text-align: center;
-    }
-
-    .description-block.border-right {
-        border-right: 1px solid #f4f4f4;
-    }
-
-    .description-header {
-        margin: 0;
-        padding: 0;
-        font-weight: 600;
-        font-size: 16px;
-    }
-
-    .description-text {
-        text-transform: uppercase;
-        font-size: 12px;
-        font-weight: 600;
-    }
-
-    .description-percentage {
-        color: #00a65a;
-        font-size: 20px;
-        display: block;
-    }
-
-    /* Responsive timeline */
-    @media (max-width: 767px) {
-        .timeline > li > .timeline-item {
-            margin-left: 45px;
-            margin-right: 10px;
+    <style>
+        /* AdminLTE Timeline Styling */
+        .timeline {
+            position: relative;
+            margin: 0 0 30px 0;
+            padding: 0;
+            list-style: none;
         }
-        
+
+        .timeline:before {
+            content: '';
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            width: 4px;
+            background: #ddd;
+            left: 31px;
+            margin: 0;
+            border-radius: 2px;
+        }
+
+        .timeline > li {
+            position: relative;
+            margin-right: 10px;
+            margin-bottom: 15px;
+        }
+
+        .timeline > li:before,
+        .timeline > li:after {
+            content: " ";
+            display: table;
+        }
+
+        .timeline > li:after {
+            clear: both;
+        }
+
+        .timeline > li > .timeline-item {
+            background: #fff;
+            border-radius: 3px;
+            margin-top: 0;
+            color: #444;
+            margin-left: 60px;
+            margin-right: 15px;
+            padding: 0;
+            position: relative;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.24);
+        }
+
         .timeline > li > .timeline-item:before {
-            left: -10px;
+            content: '';
+            display: block;
+            position: absolute;
+            left: -15px;
+            top: 20px;
+            width: 0;
+            height: 0;
+            border: 7px solid transparent;
             border-right-color: #fff;
         }
-        
+
+        .timeline > li > .timeline-item > .time {
+            color: #999;
+            font-size: 11px;
+            padding: 10px;
+            margin: 0;
+            background: #f9f9f9;
+            border-bottom: 1px solid #f4f4f4;
+        }
+
+        .timeline > li > .timeline-item > .timeline-header {
+            margin: 0;
+            color: #555;
+            border-bottom: 1px solid #f4f4f4;
+            padding: 10px;
+            font-size: 16px;
+            line-height: 1.1;
+        }
+
+        .timeline > li > .timeline-item > .timeline-header.no-border {
+            border-bottom: 0;
+            padding: 10px;
+        }
+
+        .timeline > li > .timeline-item > .timeline-body,
+        .timeline > li > .timeline-item > .timeline-footer {
+            padding: 10px;
+        }
+
         .timeline > li > .fa,
         .timeline > li > .fas,
-        .timeline > li > .far {
-            left: 15px;
-            width: 25px;
-            height: 25px;
-            font-size: 12px;
-            line-height: 25px;
+        .timeline > li > .far,
+        .timeline > li > .fab,
+        .timeline > li > .fal,
+        .timeline > li > .fad,
+        .timeline > li > .ion {
+            width: 30px;
+            height: 30px;
+            font-size: 15px;
+            line-height: 30px;
+            position: absolute;
+            color: #666;
+            background: #d2d6de;
+            border-radius: 50%;
+            text-align: center;
+            left: 18px;
+            top: 0;
         }
-    }
 
-    /* Text utilities */
-    .text-decoration-none {
-        text-decoration: none !important;
-    }
+        .timeline > .time-label > span {
+            font-weight: 600;
+            color: #fff;
+            font-size: 12px;
+            padding: 5px;
+            display: inline-block;
+            background-color: #00a65a;
+            border-radius: 4px;
+        }
 
-    .text-green { color: #00a65a !important; }
-    .text-blue { color: #3c8dbc !important; }
-</style>
+        /* Color variations */
+        .bg-blue {
+            background-color: #3c8dbc !important;
+        }
+
+        .bg-green {
+            background-color: #00a65a !important;
+        }
+
+        .bg-yellow {
+            background-color: #f39c12 !important;
+        }
+
+        .bg-red {
+            background-color: #dd4b39 !important;
+        }
+
+        .bg-gray {
+            background-color: #d2d6de !important;
+        }
+
+        /* Description blocks for ticket creation */
+        .description-block {
+            display: block;
+            margin: 10px 0;
+            text-align: center;
+        }
+
+        .description-block.border-right {
+            border-right: 1px solid #f4f4f4;
+        }
+
+        .description-header {
+            margin: 0;
+            padding: 0;
+            font-weight: 600;
+            font-size: 16px;
+        }
+
+        .description-text {
+            text-transform: uppercase;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .description-percentage {
+            color: #00a65a;
+            font-size: 20px;
+            display: block;
+        }
+
+        /* Responsive timeline */
+        @media (max-width: 767px) {
+            .timeline > li > .timeline-item {
+                margin-left: 45px;
+                margin-right: 10px;
+            }
+
+            .timeline > li > .timeline-item:before {
+                left: -10px;
+                border-right-color: #fff;
+            }
+
+            .timeline > li > .fa,
+            .timeline > li > .fas,
+            .timeline > li > .far {
+                left: 15px;
+                width: 25px;
+                height: 25px;
+                font-size: 12px;
+                line-height: 25px;
+            }
+        }
+
+        /* Text utilities */
+        .text-decoration-none {
+            text-decoration: none !important;
+        }
+
+        .text-green {
+            color: #00a65a !important;
+        }
+
+        .text-blue {
+            color: #3c8dbc !important;
+        }
+    </style>
 {% endblock %}
 
 {% block extra_js %}
@@ -967,8 +1005,8 @@
 
             // Auto-hide the edit modal if there are form errors
             // {% if form.errors %}
-            //     $('#editTicketModal').modal('show');
-            // {% endif %}
+                //     $('#editTicketModal').modal('show');
+                // {% endif %}
         });
 
         // Function to open image modal

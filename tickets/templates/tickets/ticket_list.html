@@ -3,155 +3,170 @@
 {% block title %}My Tickets - Ticket Management System{% endblock %}
 
 {% block content %}
-<!-- Content Header (Page header) -->
-<div class="content-header">
-    <div class="container-fluid">
-        <div class="row mb-2">
-            <div class="col-sm-6">
-                <h1 class="m-0">My Tickets</h1>
-            </div>
-            <div class="col-sm-6">
-                <ol class="breadcrumb float-sm-right">
-                    <li class="breadcrumb-item"><a href="{% url 'tickets:home' %}">Home</a></li>
-                    <li class="breadcrumb-item active">My Tickets</li>
-                </ol>
+    <!-- Content Header (Page header) -->
+    <div class="content-header">
+        <div class="container-fluid">
+            <div class="row mb-2">
+                <div class="col-sm-6">
+                    <h1 class="m-0">My Tickets</h1>
+                </div>
+                <div class="col-sm-6">
+                    <ol class="breadcrumb float-sm-right">
+                        <li class="breadcrumb-item"><a href="{% url 'tickets:home' %}">Home</a></li>
+                        <li class="breadcrumb-item active">My Tickets</li>
+                    </ol>
+                </div>
             </div>
         </div>
     </div>
-</div>
 
-<!-- Main content -->
-<section class="content">
-    <div class="container-fluid">
-               <!-- Summary Cards -->
-        <div class="row">
-            <div class="col-md-3">
-                <div class="info-box">
-                    <span class="info-box-icon bg-info"><i class="fas fa-list"></i></span>
-                    <div class="info-box-content">
-                        <span class="info-box-text">Total</span>
-                        <span class="info-box-number">{{ tickets|length }}</span>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-3">
-                <div class="info-box">
-                    <span class="info-box-icon bg-success"><i class="fas fa-folder-open"></i></span>
-                    <div class="info-box-content">
-                        <span class="info-box-text">Open</span>
-                        <span class="info-box-number">{{ open_count }}</span>
-                    </div>
-                </div>
-            </div>
-
-            <div class="col-md-3">
-                <div class="info-box">
-                    <span class="info-box-icon bg-danger"><i class="fas fa-exclamation-triangle"></i></span>
-                    <div class="info-box-content">
-                        <span class="info-box-text">Urgent</span>
-                        <span class="info-box-number">{{ urgent_count }}</span>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-3">
-                <div class="info-box">
-                    <span class="info-box-icon bg-secondary"><i class="fas fa-check-circle"></i></span>
-                    <div class="info-box-content">
-                        <span class="info-box-text">Closed</span>
-                        <span class="info-box-number">{{ closed_count }}</span>
-                    </div>
-                </div>
-            </div>
-        </div>
-        <!-- Filter and Actions Row -->
-        <div class="row mb-3">
-            <div class="col-12">
-                <div class="card">
-                    <div class="card-header">
-                        <h3 class="card-title">
-                            <i class="fas fa-filter"></i> Filters & Actions
-                        </h3>
-                        <div class="card-tools">
-                            {% if user.is_staff or user.is_superuser %}
-                                <small class="text-muted mr-3">
-                                    <i class="fas fa-info-circle"></i> Filters apply to both tables
-                                </small>
-                            {% endif %}
-                            <a href="{% url 'tickets:create_ticket' %}" class="btn btn-success btn-sm">
-                                <i class="fas fa-plus-circle"></i> Create New Ticket
-                            </a>
+    <!-- Main content -->
+    <section class="content">
+        <div class="container-fluid">
+            <!-- Summary Cards -->
+            <div class="row">
+                <div class="col-md-3">
+                    <div class="info-box">
+                        <span class="info-box-icon bg-info"><i class="fas fa-list"></i></span>
+                        <div class="info-box-content">
+                            <span class="info-box-text">Total</span>
+                            <span class="info-box-number">{{ tickets|length }}</span>
                         </div>
                     </div>
-                    <div class="card-body">
-                        <form method="get" class="row">
-                            <div class="col-md-3">
-                                <div class="form-group">
-                                    <label for="status">Status</label>
-                                    <select name="status" id="status" class="form-control">
-                                        <option value="">All Statuses</option>
-                                        <option value="Open" {% if request.GET.status == 'Open' %}selected{% endif %}>Open</option>
-                                        <option value="In Progress" {% if request.GET.status == 'In Progress' %}selected{% endif %}>In Progress</option>
-                                        <option value="Closed" {% if request.GET.status == 'Closed' %}selected{% endif %}>Closed</option>
-                                    </select>
-                                </div>
-                            </div>
-                            <div class="col-md-3">
-                                <div class="form-group">
-                                    <label for="priority">Priority</label>
-                                    <select name="priority" id="priority" class="form-control">
-                                        <option value="">All Priorities</option>
-                                        <option value="Low" {% if request.GET.priority == 'Low' %}selected{% endif %}>Low</option>
-                                        <option value="Medium" {% if request.GET.priority == 'Medium' %}selected{% endif %}>Medium</option>
-                                        <option value="High" {% if request.GET.priority == 'High' %}selected{% endif %}>High</option>
-                                        <option value="Urgent" {% if request.GET.priority == 'Urgent' %}selected{% endif %}>Urgent</option>
-                                    </select>
-                                </div>
-                            </div>
-                            <div class="col-md-6">
-                                <div class="form-group">
-                                    <label for="search">Search</label>
-                                    <input type="text" name="search" id="search" class="form-control" 
-                                           placeholder="Search by title or description..." 
-                                           value="{{ request.GET.search }}">
-                                </div>
-                            </div>
-                            
-                        </form>
+                </div>
+                <div class="col-md-3">
+                    <div class="info-box">
+                        <span class="info-box-icon bg-success"><i class="fas fa-folder-open"></i></span>
+                        <div class="info-box-content">
+                            <span class="info-box-text">Open</span>
+                            <span class="info-box-number">{{ open_count }}</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-3">
+                    <div class="info-box">
+                        <span class="info-box-icon bg-danger"><i class="fas fa-exclamation-triangle"></i></span>
+                        <div class="info-box-content">
+                            <span class="info-box-text">Urgent</span>
+                            <span class="info-box-number">{{ urgent_count }}</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="info-box">
+                        <span class="info-box-icon bg-secondary"><i class="fas fa-check-circle"></i></span>
+                        <div class="info-box-content">
+                            <span class="info-box-text">Closed</span>
+                            <span class="info-box-number">{{ closed_count }}</span>
+                        </div>
                     </div>
                 </div>
             </div>
-        </div>
+            <!-- Filter and Actions Row -->
+            <div class="row mb-3">
+                <div class="col-12">
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title">
+                                <i class="fas fa-filter"></i> Filters & Actions
+                            </h3>
+                            <div class="card-tools">
+                                {% if user.is_staff or user.is_superuser %}
+                                    <small class="text-muted mr-3">
+                                        <i class="fas fa-info-circle"></i> Filters apply to both tables
+                                    </small>
+                                {% endif %}
+                                <a href="{% url 'tickets:create_ticket' %}" class="btn btn-success btn-sm">
+                                    <i class="fas fa-plus-circle"></i> Create New Ticket
+                                </a>
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            <form method="get" class="row">
+                                <div class="col-md-3">
+                                    <div class="form-group">
+                                        <label for="status">Status</label>
+                                        <select name="status" id="status" class="form-control">
+                                            <option value="">All Statuses</option>
+                                            <option value="Open"
+                                                    {% if request.GET.status == 'Open' %}selected{% endif %}>Open
+                                            </option>
+                                            <option value="In Progress"
+                                                    {% if request.GET.status == 'In Progress' %}selected{% endif %}>In
+                                                Progress
+                                            </option>
+                                            <option value="Closed"
+                                                    {% if request.GET.status == 'Closed' %}selected{% endif %}>Closed
+                                            </option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="form-group">
+                                        <label for="priority">Priority</label>
+                                        <select name="priority" id="priority" class="form-control">
+                                            <option value="">All Priorities</option>
+                                            <option value="Low"
+                                                    {% if request.GET.priority == 'Low' %}selected{% endif %}>Low
+                                            </option>
+                                            <option value="Medium"
+                                                    {% if request.GET.priority == 'Medium' %}selected{% endif %}>Medium
+                                            </option>
+                                            <option value="High"
+                                                    {% if request.GET.priority == 'High' %}selected{% endif %}>High
+                                            </option>
+                                            <option value="Urgent"
+                                                    {% if request.GET.priority == 'Urgent' %}selected{% endif %}>Urgent
+                                            </option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="search">Search</label>
+                                        <input type="text" name="search" id="search" class="form-control"
+                                               placeholder="Search by title or description..."
+                                               value="{{ request.GET.search }}">
+                                    </div>
+                                </div>
 
-        <!-- Tickets Table -->
-        <div class="row">
-            <div class="col-12">
-                <div class="card">
-                    <div class="card-header">
-                        <h3 class="card-title">
-                            <i class="fas fa-list"></i> 
-                            Tickets Created by Me ({{ tickets|length }} found)
-                        </h3>
-                        <div class="card-tools">
-                            <!-- Export buttons can be added here -->
-                            <div class="btn-group">
-                                <button type="button" class="btn btn-tool dropdown-toggle" data-toggle="dropdown">
-                                    <i class="fas fa-download"></i> Export
-                                </button>
-                                <div class="dropdown-menu dropdown-menu-right">
-                                    <a class="dropdown-item" href="#">
-                                        <i class="fas fa-file-csv"></i> Export as CSV
-                                    </a>
-                                    <a class="dropdown-item" href="#">
-                                        <i class="fas fa-file-pdf"></i> Export as PDF
-                                    </a>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tickets Table -->
+            <div class="row">
+                <div class="col-12">
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title">
+                                <i class="fas fa-list"></i>
+                                Tickets Created by Me ({{ tickets|length }} found)
+                            </h3>
+                            <div class="card-tools">
+                                <!-- Export buttons can be added here -->
+                                <div class="btn-group">
+                                    <button type="button" class="btn btn-tool dropdown-toggle" data-toggle="dropdown">
+                                        <i class="fas fa-download"></i> Export
+                                    </button>
+                                    <div class="dropdown-menu dropdown-menu-right">
+                                        <a class="dropdown-item" href="#">
+                                            <i class="fas fa-file-csv"></i> Export as CSV
+                                        </a>
+                                        <a class="dropdown-item" href="#">
+                                            <i class="fas fa-file-pdf"></i> Export as PDF
+                                        </a>
+                                    </div>
                                 </div>
                             </div>
                         </div>
-                    </div>
-                    <div class="card-body table-responsive p-0">
-                        {% if tickets %}
-                            <table class="table table-hover text-nowrap">
-                                <thead>
+                        <div class="card-body table-responsive p-0">
+                            {% if tickets %}
+                                <table class="table table-hover text-nowrap">
+                                    <thead>
                                     <tr>
                                         <th>Ticket #</th>
                                         <th>Title</th>
@@ -162,8 +177,8 @@
                                         <th>Updated</th>
                                         <th>Actions</th>
                                     </tr>
-                                </thead>
-                                <tbody>
+                                    </thead>
+                                    <tbody>
                                     {% for ticket in tickets %}
                                         <tr class="{% if ticket.priority == 'Urgent' %}ticket-priority-urgent{% elif ticket.priority == 'High' %}ticket-priority-high{% elif ticket.priority == 'Medium' %}ticket-priority-medium{% else %}ticket-priority-low{% endif %}">
                                             <td>
@@ -174,15 +189,16 @@
                                                     <strong>{{ ticket.title|truncatechars:60 }}</strong>
                                                 </a>
                                                 {% if ticket.description %}
-                                                <br>
-                                                <small class="text-muted">{{ ticket.description|truncatechars:70 }}</small>
-                                            {% endif %}
-                                            {% if ticket.category %}
-                                                <br>
-                                                <small class="badge badge-light">
-                                                    <i class="fas fa-tag"></i> {{ ticket.category }}
-                                                </small>
-                                            {% endif %}
+                                                    <br>
+                                                    <small class="text-muted">
+                                                        {{ ticket.description|truncatechars:70 }}</small>
+                                                {% endif %}
+                                                {% if ticket.category %}
+                                                    <br>
+                                                    <small class="badge badge-light">
+                                                        <i class="fas fa-tag"></i> {{ ticket.category }}
+                                                    </small>
+                                                {% endif %}
                                             </td>
                                             <td>
                                                 {% if ticket.priority == 'Urgent' %}
@@ -218,10 +234,11 @@
                                                     </span>
                                                 {% endif %}
                                             </td>
-                                                                                        <td>
+                                            <td>
                                                 <small>
                                                     <i class="fas fa-user"></i>
-                                                    {{ ticket.assigned_to.first_name }} {{ ticket.assigned_to.last_name|default:ticket.created_by.username }}
+                                                    {{ ticket.assigned_to.first_name }}
+                                                    {{ ticket.assigned_to.last_name|default:ticket.created_by.username }}
                                                     <br>
                                                     <span class="text-muted">{{ ticket.assigned_to.email }}</span>
                                                 </small>
@@ -244,16 +261,16 @@
                                             </td>
                                             <td>
                                                 <div class="btn-group">
-                                                    <a href="{% url 'tickets:ticket_detail' ticket.pk %}" 
-                                                       class="btn btn-sm btn-outline-primary" 
-                                                       data-toggle="tooltip" 
+                                                    <a href="{% url 'tickets:ticket_detail' ticket.pk %}"
+                                                       class="btn btn-sm btn-outline-primary"
+                                                       data-toggle="tooltip"
                                                        title="View Details">
                                                         <i class="fas fa-eye"></i>
                                                     </a>
                                                     {% if ticket.created_by == user or user.is_staff %}
-                                                        <a href="{% url 'tickets:ticket_detail' ticket.pk %}#edit" 
-                                                           class="btn btn-sm btn-outline-warning" 
-                                                           data-toggle="tooltip" 
+                                                        <a href="{% url 'tickets:ticket_detail' ticket.pk %}#edit"
+                                                           class="btn btn-sm btn-outline-warning"
+                                                           data-toggle="tooltip"
                                                            title="Edit Ticket">
                                                             <i class="fas fa-edit"></i>
                                                         </a>
@@ -262,317 +279,328 @@
                                             </td>
                                         </tr>
                                     {% endfor %}
-                                </tbody>
-                            </table>
-                        {% else %}
-                            <div class="p-5 text-center">
-                                <i class="fas fa-inbox fa-4x text-muted mb-4"></i>
-                                <h4 class="text-muted">No tickets found</h4>
-                                <p class="text-muted">
-                                    {% if request.GET.status or request.GET.priority or request.GET.search %}
-                                        Try adjusting your filters or 
-                                        <a href="{% url 'tickets:ticket_list' %}">clear all filters</a>.
-                                    {% else %}
-                                        You haven't created any tickets yet.
-                                    {% endif %}
-                                </p>
-                                <a href="{% url 'tickets:create_ticket' %}" class="btn btn-success btn-lg">
-                                    <i class="fas fa-plus-circle"></i> Create Your First Ticket
-                                </a>
-                            </div>
-                        {% endif %}
-                    </div>
-                    
-                    {% if tickets %}
-                        <div class="card-footer clearfix">
-                            <!-- Pagination Controls -->
-                            {% if page_obj.has_other_pages %}
-                                <ul class="pagination pagination-sm m-0 float-right">
-                                    {% if page_obj.has_previous %}
-                                        <li class="page-item">
-                                            <a class="page-link" href="?page=1{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}{% if request.GET.priority %}&priority={{ request.GET.priority }}{% endif %}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}">
-                                                &laquo; First
-                                            </a>
-                                        </li>
-                                        <li class="page-item">
-                                            <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}{% if request.GET.priority %}&priority={{ request.GET.priority }}{% endif %}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}">
-                                                Previous
-                                            </a>
-                                        </li>
-                                    {% endif %}
-                                    
-                                    <li class="page-item active">
+                                    </tbody>
+                                </table>
+                            {% else %}
+                                <div class="p-5 text-center">
+                                    <i class="fas fa-inbox fa-4x text-muted mb-4"></i>
+                                    <h4 class="text-muted">No tickets found</h4>
+                                    <p class="text-muted">
+                                        {% if request.GET.status or request.GET.priority or request.GET.search %}
+                                            Try adjusting your filters or
+                                            <a href="{% url 'tickets:ticket_list' %}">clear all filters</a>.
+                                        {% else %}
+                                            You haven't created any tickets yet.
+                                        {% endif %}
+                                    </p>
+                                    <a href="{% url 'tickets:create_ticket' %}" class="btn btn-success btn-lg">
+                                        <i class="fas fa-plus-circle"></i> Create Your First Ticket
+                                    </a>
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        {% if tickets %}
+                            <div class="card-footer clearfix">
+                                <!-- Pagination Controls -->
+                                {% if page_obj.has_other_pages %}
+                                    <ul class="pagination pagination-sm m-0 float-right">
+                                        {% if page_obj.has_previous %}
+                                            <li class="page-item">
+                                                <a class="page-link"
+                                                   href="?page=1{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}{% if request.GET.priority %}&priority={{ request.GET.priority }}{% endif %}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}">
+                                                    &laquo; First
+                                                </a>
+                                            </li>
+                                            <li class="page-item">
+                                                <a class="page-link" href="?page=
+                                                        {{ page_obj.previous_page_number }}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}{% if request.GET.priority %}&priority={{ request.GET.priority }}{% endif %}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}">
+                                                    Previous
+                                                </a>
+                                            </li>
+                                        {% endif %}
+
+                                        <li class="page-item active">
                                         <span class="page-link">
                                             Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
                                         </span>
-                                    </li>
-                                    
-                                    {% if page_obj.has_next %}
-                                        <li class="page-item">
-                                            <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}{% if request.GET.priority %}&priority={{ request.GET.priority }}{% endif %}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}">
-                                                Next
-                                            </a>
                                         </li>
-                                        <li class="page-item">
-                                            <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}{% if request.GET.priority %}&priority={{ request.GET.priority }}{% endif %}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}">
-                                                Last &raquo;
-                                            </a>
-                                        </li>
-                                    {% endif %}
-                                </ul>
-                            {% endif %}
-                            <div class="float-left">
-                                <small class="text-muted">
-                                    Showing {{ page_obj.start_index }} to {{ page_obj.end_index }} of {{ page_obj.paginator.count }} tickets
-                                </small>
-                            </div>
-                        </div>
-                    {% endif %}
-                </div>
-            </div>
-        </div>
 
-        <!-- Tickets Assigned to Me (Admin/Staff Only) -->
-        {% if user.is_staff or user.is_superuser %}
-        <div class="row mt-4">
-            <div class="col-12">
-                <div class="card">
-                    <div class="card-header">
-                        <h3 class="card-title">
-                            <i class="fas fa-user-check"></i> 
-                            Tickets Assigned to Me
-                            ({{ assigned_count }}{% if request.GET.status or request.GET.priority or request.GET.search %} filtered{% endif %})
-                        </h3>
-                        <div class="card-tools">
-                            <div class="btn-group">
-                                <button type="button" class="btn btn-tool dropdown-toggle" data-toggle="dropdown">
-                                    <i class="fas fa-cog"></i> Actions
-                                </button>
-                                <div class="dropdown-menu dropdown-menu-right">
-                                    <a class="dropdown-item" href="?assigned_to={{ user.id }}">
-                                        <i class="fas fa-filter"></i> Filter My Assignments
-                                    </a>
-                                    <a class="dropdown-item" href="#">
-                                        <i class="fas fa-file-export"></i> Export My Tasks
-                                    </a>
+                                        {% if page_obj.has_next %}
+                                            <li class="page-item">
+                                                <a class="page-link" href="?page=
+                                                        {{ page_obj.next_page_number }}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}{% if request.GET.priority %}&priority={{ request.GET.priority }}{% endif %}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}">
+                                                    Next
+                                                </a>
+                                            </li>
+                                            <li class="page-item">
+                                                <a class="page-link" href="?page=
+                                                        {{ page_obj.paginator.num_pages }}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}{% if request.GET.priority %}&priority={{ request.GET.priority }}{% endif %}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}">
+                                                    Last &raquo;
+                                                </a>
+                                            </li>
+                                        {% endif %}
+                                    </ul>
+                                {% endif %}
+                                <div class="float-left">
+                                    <small class="text-muted">
+                                        Showing {{ page_obj.start_index }} to {{ page_obj.end_index }}
+                                        of {{ page_obj.paginator.count }} tickets
+                                    </small>
                                 </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="card-body table-responsive p-0">
-                        {% if assigned_tickets %}
-                            <table class="table table-hover text-nowrap">
-                                <thead>
-                                    <tr>
-                                        <th>Ticket #</th>
-                                        <th>Title</th>
-                                        <th>Priority</th>
-                                        <th>Status</th>
-                                        <th>Created By</th>
-                                        <th>Due Date</th>
-                                        <th>Last Updated</th>
-                                        <th>Actions</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {% for ticket in assigned_tickets %}
-                                    <tr class="{% if ticket.priority == 'Urgent' %}ticket-priority-urgent{% elif ticket.priority == 'High' %}ticket-priority-high{% elif ticket.priority == 'Medium' %}ticket-priority-medium{% else %}ticket-priority-low{% endif %}">
-                                        <td>
-                                            <strong>#{{ ticket.id|default:ticket.ticket_number }}</strong>
-                                        </td>
-                                        <td>
-                                            <a href="{% url 'tickets:ticket_detail' ticket.pk %}" class="text-dark">
-                                                <strong>{{ ticket.title|truncatechars:50 }}</strong>
-                                            </a>
-                                            {% if ticket.description %}
-                                                <br>
-                                                <small class="text-muted">{{ ticket.description|truncatechars:70 }}</small>
-                                            {% endif %}
-                                            {% if ticket.category %}
-                                                <br>
-                                                <small class="badge badge-light">
-                                                    <i class="fas fa-tag"></i> {{ ticket.category }}
-                                                </small>
-                                            {% endif %}
-                                        </td>
-                                        <td>
-                                            {% if ticket.priority == 'Urgent' %}
-                                                <span class="badge badge-danger">
-                                                    {{ ticket.priority }}
-                                                </span>
-                                            {% elif ticket.priority == 'High' %}
-                                                <span class="badge badge-warning">
-                                                    {{ ticket.priority }}
-                                                </span>
-                                            {% elif ticket.priority == 'Medium' %}
-                                                <span class="badge badge-info">
-                                                   {{ ticket.priority }}
-                                                </span>
-                                            {% else %}
-                                                <span class="badge badge-secondary">
-                                                     {{ ticket.priority }}
-                                                </span>
-                                            {% endif %}
-                                        </td>
-                                        <td>
-                                            {% if ticket.status == 'Open' %}
-                                                <span class="badge badge-success">
-                                                    <i class="fas fa-folder-open"></i> {{ ticket.status }}
-                                                </span>
-                                            {% elif ticket.status == 'In Progress' %}
-                                                <span class="badge badge-warning">
-                                                    <i class="fas fa-clock"></i> {{ ticket.status }}
-                                                </span>
-                                            {% else %}
-                                                <span class="badge badge-secondary">
-                                                    <i class="fas fa-check-circle"></i> {{ ticket.status }}
-                                                </span>
-                                            {% endif %}
-                                        </td>
-                                        <td>
-                                            <small>
-                                                <i class="fas fa-user"></i>
-                                                {{ ticket.created_by.first_name }} {{ ticket.created_by.last_name|default:ticket.created_by.username }}
-                                                <br>
-                                                <span class="text-muted">{{ ticket.created_by.email }}</span>
-                                            </small>
-                                        </td>
-                                        <td>
-                                            {% if ticket.due_on %}
-                                                <small>
-                                                    <i class="fas fa-calendar-alt"></i>
-                                                    {{ ticket.due_on|date:"M d, Y" }}<br>
-                                                    {% now "Y-m-d" as today %}
-                                                    {% if ticket.due_on|date:"Y-m-d" < today %}
-                                                        <span class="text-danger">
-                                                            <i class="fas fa-exclamation-triangle"></i> Overdue
-                                                        </span>
-                                                    {% elif ticket.due_on|date:"Y-m-d" == today %}
-                                                        <span class="text-warning">
-                                                            <i class="fas fa-clock"></i> Due Today
-                                                        </span>
-                                                    {% else %}
-                                                        <span class="text-muted">
-                                                            <i class="fas fa-clock"></i> {{ ticket.due_on|timeuntil }}
-                                                        </span>
-                                                    {% endif %}
-                                                </small>
-                                            {% else %}
-                                                <small class="text-muted">
-                                                    <i class="fas fa-calendar-times"></i> No due date
-                                                </small>
-                                            {% endif %}
-                                        </td>
-                                        <td>
-                                            <small>
-                                                <i class="fas fa-calendar-edit"></i>
-                                                {{ ticket.updated_at|date:"M d, Y" }}<br>
-                                                <i class="fas fa-clock"></i>
-                                                {{ ticket.updated_at|time:"H:i" }}
-                                            </small>
-                                        </td>
-                                        <td>
-                                            <div class="btn-group">
-                                                <a href="{% url 'tickets:ticket_detail' ticket.pk %}" 
-                                                   class="btn btn-sm btn-outline-primary" 
-                                                   data-toggle="tooltip" 
-                                                   title="View Details">
-                                                    <i class="fas fa-eye"></i>
-                                                </a>
-                                                <a href="{% url 'tickets:ticket_detail' ticket.pk %}#edit" 
-                                                   class="btn btn-sm btn-outline-success" 
-                                                   data-toggle="tooltip" 
-                                                   title="Update Status">
-                                                    <i class="fas fa-edit"></i>
-                                                </a>
-                                                {% if ticket.status != 'Closed' %}
-                                                <button type="button" 
-                                                        class="btn btn-sm btn-outline-info" 
-                                                        data-toggle="tooltip" 
-                                                        title="Mark Complete"
-                                                        onclick="markComplete({{ ticket.pk }})">
-                                                    <i class="fas fa-check"></i>
-                                                </button>
-                                                {% endif %}
-                                            </div>
-                                        </td>
-                                    </tr>
-                                    {% endfor %}
-                                </tbody>
-                            </table>
-                        {% else %}
-                            <div class="p-5 text-center">
-                                <i class="fas fa-user-clock fa-4x text-muted mb-4"></i>
-                                <h4 class="text-muted">No tickets assigned to you</h4>
-                                <p class="text-muted">
-                                    You don't have any tickets assigned to you at the moment.
-                                    <br>
-                                    Check back later or contact your supervisor for task assignments.
-                                </p>
                             </div>
                         {% endif %}
                     </div>
-                    
-                    {% if assigned_count > 0 %}
-                        <div class="card-footer clearfix">
-                            <div class="float-left">
-                                <small class="text-muted">
-                                    <i class="fas fa-tasks"></i>
-                                    Showing {{ assigned_count }} assigned ticket{{ assigned_count|pluralize }}
-                                </small>
-                            </div>
-                            {% if assigned_tickets %}
-                            <div class="float-right">
-                                <small class="text-muted">
-                                    <i class="fas fa-info-circle"></i>
-                                    Last updated: {{ assigned_tickets.0.updated_at|date:"M d, Y H:i" }}
-                                </small>
-                            </div>
-                            {% endif %}
-                        </div>
-                    {% endif %}
                 </div>
             </div>
-        </div>
-        {% endif %}
 
-    </div>
-</section>
+            <!-- Tickets Assigned to Me (Admin/Staff Only) -->
+            {% if user.is_staff or user.is_superuser %}
+                <div class="row mt-4">
+                    <div class="col-12">
+                        <div class="card">
+                            <div class="card-header">
+                                <h3 class="card-title">
+                                    <i class="fas fa-user-check"></i>
+                                    Tickets Assigned to Me
+                                    ({{ assigned_count }}
+                                        {% if request.GET.status or request.GET.priority or request.GET.search %}
+                                            filtered{% endif %})
+                                </h3>
+                                <div class="card-tools">
+                                    <div class="btn-group">
+                                        <button type="button" class="btn btn-tool dropdown-toggle"
+                                                data-toggle="dropdown">
+                                            <i class="fas fa-cog"></i> Actions
+                                        </button>
+                                        <div class="dropdown-menu dropdown-menu-right">
+                                            <a class="dropdown-item" href="?assigned_to={{ user.id }}">
+                                                <i class="fas fa-filter"></i> Filter My Assignments
+                                            </a>
+                                            <a class="dropdown-item" href="#">
+                                                <i class="fas fa-file-export"></i> Export My Tasks
+                                            </a>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="card-body table-responsive p-0">
+                                {% if assigned_tickets %}
+                                    <table class="table table-hover text-nowrap">
+                                        <thead>
+                                        <tr>
+                                            <th>Ticket #</th>
+                                            <th>Title</th>
+                                            <th>Priority</th>
+                                            <th>Status</th>
+                                            <th>Created By</th>
+                                            <th>Due Date</th>
+                                            <th>Last Updated</th>
+                                            <th>Actions</th>
+                                        </tr>
+                                        </thead>
+                                        <tbody>
+                                        {% for ticket in assigned_tickets %}
+                                            <tr class="{% if ticket.priority == 'Urgent' %}ticket-priority-urgent{% elif ticket.priority == 'High' %}ticket-priority-high{% elif ticket.priority == 'Medium' %}ticket-priority-medium{% else %}ticket-priority-low{% endif %}">
+                                                <td>
+                                                    <strong>#{{ ticket.id|default:ticket.ticket_number }}</strong>
+                                                </td>
+                                                <td>
+                                                    <a href="{% url 'tickets:ticket_detail' ticket.pk %}"
+                                                       class="text-dark">
+                                                        <strong>{{ ticket.title|truncatechars:50 }}</strong>
+                                                    </a>
+                                                    {% if ticket.description %}
+                                                        <br>
+                                                        <small class="text-muted">
+                                                            {{ ticket.description|truncatechars:70 }}</small>
+                                                    {% endif %}
+                                                    {% if ticket.category %}
+                                                        <br>
+                                                        <small class="badge badge-light">
+                                                            <i class="fas fa-tag"></i> {{ ticket.category }}
+                                                        </small>
+                                                    {% endif %}
+                                                </td>
+                                                <td>
+                                                    {% if ticket.priority == 'Urgent' %}
+                                                        <span class="badge badge-danger">
+                                                    {{ ticket.priority }}
+                                                </span>
+                                                    {% elif ticket.priority == 'High' %}
+                                                        <span class="badge badge-warning">
+                                                    {{ ticket.priority }}
+                                                </span>
+                                                    {% elif ticket.priority == 'Medium' %}
+                                                        <span class="badge badge-info">
+                                                   {{ ticket.priority }}
+                                                </span>
+                                                    {% else %}
+                                                        <span class="badge badge-secondary">
+                                                     {{ ticket.priority }}
+                                                </span>
+                                                    {% endif %}
+                                                </td>
+                                                <td>
+                                                    {% if ticket.status == 'Open' %}
+                                                        <span class="badge badge-success">
+                                                    <i class="fas fa-folder-open"></i> {{ ticket.status }}
+                                                </span>
+                                                    {% elif ticket.status == 'In Progress' %}
+                                                        <span class="badge badge-warning">
+                                                    <i class="fas fa-clock"></i> {{ ticket.status }}
+                                                </span>
+                                                    {% else %}
+                                                        <span class="badge badge-secondary">
+                                                    <i class="fas fa-check-circle"></i> {{ ticket.status }}
+                                                </span>
+                                                    {% endif %}
+                                                </td>
+                                                <td>
+                                                    <small>
+                                                        <i class="fas fa-user"></i>
+                                                        {{ ticket.created_by.first_name }}
+                                                        {{ ticket.created_by.last_name|default:ticket.created_by.username }}
+                                                        <br>
+                                                        <span class="text-muted">{{ ticket.created_by.email }}</span>
+                                                    </small>
+                                                </td>
+                                                <td>
+                                                    {% if ticket.due_on %}
+                                                        <small>
+                                                            <i class="fas fa-calendar-alt"></i>
+                                                            {{ ticket.due_on|date:"M d, Y" }}<br>
+                                                            {% now "Y-m-d" as today %}
+                                                            {% if ticket.due_on|date:"Y-m-d" < today %}
+                                                                <span class="text-danger">
+                                                            <i class="fas fa-exclamation-triangle"></i> Overdue
+                                                        </span>
+                                                            {% elif ticket.due_on|date:"Y-m-d" == today %}
+                                                                <span class="text-warning">
+                                                            <i class="fas fa-clock"></i> Due Today
+                                                        </span>
+                                                            {% else %}
+                                                                <span class="text-muted">
+                                                            <i class="fas fa-clock"></i> {{ ticket.due_on|timeuntil }}
+                                                        </span>
+                                                            {% endif %}
+                                                        </small>
+                                                    {% else %}
+                                                        <small class="text-muted">
+                                                            <i class="fas fa-calendar-times"></i> No due date
+                                                        </small>
+                                                    {% endif %}
+                                                </td>
+                                                <td>
+                                                    <small>
+                                                        <i class="fas fa-calendar-edit"></i>
+                                                        {{ ticket.updated_at|date:"M d, Y" }}<br>
+                                                        <i class="fas fa-clock"></i>
+                                                        {{ ticket.updated_at|time:"H:i" }}
+                                                    </small>
+                                                </td>
+                                                <td>
+                                                    <div class="btn-group">
+                                                        <a href="{% url 'tickets:ticket_detail' ticket.pk %}"
+                                                           class="btn btn-sm btn-outline-primary"
+                                                           data-toggle="tooltip"
+                                                           title="View Details">
+                                                            <i class="fas fa-eye"></i>
+                                                        </a>
+                                                        <a href="{% url 'tickets:ticket_detail' ticket.pk %}#edit"
+                                                           class="btn btn-sm btn-outline-success"
+                                                           data-toggle="tooltip"
+                                                           title="Update Status">
+                                                            <i class="fas fa-edit"></i>
+                                                        </a>
+                                                        {% if ticket.status != 'Closed' %}
+                                                            <button type="button"
+                                                                    class="btn btn-sm btn-outline-info"
+                                                                    data-toggle="tooltip"
+                                                                    title="Mark Complete"
+                                                                    onclick="markComplete({{ ticket.pk }})">
+                                                                <i class="fas fa-check"></i>
+                                                            </button>
+                                                        {% endif %}
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        {% endfor %}
+                                        </tbody>
+                                    </table>
+                                {% else %}
+                                    <div class="p-5 text-center">
+                                        <i class="fas fa-user-clock fa-4x text-muted mb-4"></i>
+                                        <h4 class="text-muted">No tickets assigned to you</h4>
+                                        <p class="text-muted">
+                                            You don't have any tickets assigned to you at the moment.
+                                            <br>
+                                            Check back later or contact your supervisor for task assignments.
+                                        </p>
+                                    </div>
+                                {% endif %}
+                            </div>
+
+                            {% if assigned_count > 0 %}
+                                <div class="card-footer clearfix">
+                                    <div class="float-left">
+                                        <small class="text-muted">
+                                            <i class="fas fa-tasks"></i>
+                                            Showing {{ assigned_count }} assigned ticket{{ assigned_count|pluralize }}
+                                        </small>
+                                    </div>
+                                    {% if assigned_tickets %}
+                                        <div class="float-right">
+                                            <small class="text-muted">
+                                                <i class="fas fa-info-circle"></i>
+                                                Last updated: {{ assigned_tickets.0.updated_at|date:"M d, Y H:i" }}
+                                            </small>
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            {% endif %}
+
+        </div>
+    </section>
 {% endblock %}
 
 {% block extra_js %}
-<script>
-    $(document).ready(function() {
-        // Initialize tooltips
-        $('[data-toggle="tooltip"]').tooltip();
-        
-        // Auto-submit form on filter change (optional)
-        $('#status, #priority').change(function() {
-            // Uncomment the line below for auto-submit
-            $(this).closest('form').submit();
+    <script>
+        $(document).ready(function () {
+            // Initialize tooltips
+            $('[data-toggle="tooltip"]').tooltip();
+
+            // Auto-submit form on filter change (optional)
+            $('#status, #priority').change(function () {
+                // Uncomment the line below for auto-submit
+                $(this).closest('form').submit();
+            });
+
+            // Clear filters button functionality
+            function clearFilters() {
+                window.location.href = '{% url "tickets:ticket_list" %}';
+            }
+
+            // Add clear filters button if filters are active
+            {% if request.GET.status or request.GET.priority or request.GET.search %}
+                $('.card-tools').prepend(
+                    '<a href="{% url "tickets:ticket_list" %}" class="btn btn-secondary btn-sm mr-2">' +
+                    '<i class="fas fa-times"></i> Clear Filters</a>'
+                );
+            {% endif %}
         });
-        
-        // Clear filters button functionality
-        function clearFilters() {
-            window.location.href = '{% url "tickets:ticket_list" %}';
+
+        // Mark Complete functionality for assigned tickets
+        function markComplete(ticketId) {
+            if (confirm('Are you sure you want to mark this ticket as complete?')) {
+                // This would typically make an AJAX call to update the ticket status
+                // For now, redirect to the ticket detail page
+                window.location.href = '/tickets/' + ticketId + '/#edit';
+            }
         }
-        
-        // Add clear filters button if filters are active
-        {% if request.GET.status or request.GET.priority or request.GET.search %}
-            $('.card-tools').prepend(
-                '<a href="{% url "tickets:ticket_list" %}" class="btn btn-secondary btn-sm mr-2">' +
-                '<i class="fas fa-times"></i> Clear Filters</a>'
-            );
-        {% endif %}
-    });
-    
-    // Mark Complete functionality for assigned tickets
-    function markComplete(ticketId) {
-        if (confirm('Are you sure you want to mark this ticket as complete?')) {
-            // This would typically make an AJAX call to update the ticket status
-            // For now, redirect to the ticket detail page
-            window.location.href = '/tickets/' + ticketId + '/#edit';
-        }
-    }
-</script>
+    </script>
 {% endblock %}

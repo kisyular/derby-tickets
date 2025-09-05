@@ -3,498 +3,518 @@
 {% block title %}Create New Ticket - Ticket Management System{% endblock %}
 
 {% block content %}
-<!-- Content Header (Page header) -->
-<div class="content-header">
-    <div class="container-fluid">
-        <div class="row mb-2">
-            <div class="col-sm-6">
-                <h1 class="m-0">Create New Ticket</h1>
-            </div>
-            <div class="col-sm-6">
-                <ol class="breadcrumb float-sm-right">
-                    <li class="breadcrumb-item"><a href="{% url 'tickets:home' %}">Home</a></li>
-                    <li class="breadcrumb-item"><a href="{% url 'tickets:ticket_list' %}">Tickets</a></li>
-                    <li class="breadcrumb-item active">Create New</li>
-                </ol>
+    <!-- Content Header (Page header) -->
+    <div class="content-header">
+        <div class="container-fluid">
+            <div class="row mb-2">
+                <div class="col-sm-6">
+                    <h1 class="m-0">Create New Ticket</h1>
+                </div>
+                <div class="col-sm-6">
+                    <ol class="breadcrumb float-sm-right">
+                        <li class="breadcrumb-item"><a href="{% url 'tickets:home' %}">Home</a></li>
+                        <li class="breadcrumb-item"><a href="{% url 'tickets:ticket_list' %}">Tickets</a></li>
+                        <li class="breadcrumb-item active">Create New</li>
+                    </ol>
+                </div>
             </div>
         </div>
     </div>
-</div>
 
-<!-- Main content -->
-<section class="content">
-    <div class="container-fluid">
-        <div class="row justify-content-center">
-            <div class="col-md-8">
-                <!-- Create Ticket Form -->
-                <div class="card card-primary">
-                    <div class="card-header">
-                        <h3 class="card-title">
-                            <i class="fas fa-plus-circle"></i> New Ticket Details
-                        </h3>
-                    </div>
-                    
-                    <!-- Display form errors -->
-                    {% if form.errors %}
-                        <div class="alert alert-danger alert-dismissible m-3">
-                            <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
-                            <h5><i class="icon fas fa-ban"></i> Please correct the following errors:</h5>
-                            {% for field, errors in form.errors.items %}
-                                {% for error in errors %}
-                                    <p class="mb-1">{{ field|capfirst }}: {{ error }}</p>
-                                {% endfor %}
-                            {% endfor %}
+    <!-- Main content -->
+    <section class="content">
+        <div class="container-fluid">
+            <div class="row justify-content-center">
+                <div class="col-md-8">
+                    <!-- Create Ticket Form -->
+                    <div class="card card-primary">
+                        <div class="card-header">
+                            <h3 class="card-title">
+                                <i class="fas fa-plus-circle"></i> New Ticket Details
+                            </h3>
                         </div>
-                    {% endif %}
 
-                    <form method="post" enctype="multipart/form-data">
-                        {% csrf_token %}
-                        <div class="card-body">
-                            <!-- Title Field -->
-                            <div class="form-group">
-                                <label for="id_title">
-                                    Title <span class="text-danger">*</span>
-                                </label>
-                                <input type="text" 
-                                       class="form-control {% if form.title.errors %}is-invalid{% endif %}" 
-                                       id="id_title" 
-                                       name="title" 
-                                       placeholder="Enter a clear, descriptive title for your ticket"
-                                       value="{{ form.title.value|default:'' }}"
-                                       required>
-                                <small class="form-text text-muted">
-                                    Provide a brief but descriptive title that summarizes your issue or request.
-                                </small>
-                                {% if form.title.errors %}
-                                    <div class="invalid-feedback">
-                                        {% for error in form.title.errors %}{{ error }}{% endfor %}
-                                    </div>
-                                {% endif %}
-                            </div>
-
-                            <!-- Description Field -->
-                            <div class="form-group">
-                                <label for="id_description">
-                                    Description
-                                </label>
-                                <textarea class="form-control {% if form.description.errors %}is-invalid{% endif %}" 
-                                          id="id_description" 
-                                          name="description" 
-                                          rows="6"
-                                          placeholder="Provide detailed information about your issue or request...">{{ form.description.value|default:'' }}</textarea>
-                                <small class="form-text text-muted">
-                                    Include as much detail as possible: what happened, when it happened, steps to reproduce, etc.
-                                </small>
-                                {% if form.description.errors %}
-                                    <div class="invalid-feedback">
-                                        {% for error in form.description.errors %}{{ error }}{% endfor %}
-                                    </div>
-                                {% endif %}
-                            </div>
-
-                            <!-- Category Field -->
-                            <div class="form-group">
-                                <label for="id_category">
-                                    Category
-                                </label>
-                                <select class="form-control {% if form.category.errors %}is-invalid{% endif %}" 
-                                        id="id_category" 
-                                        name="category">
-                                    <option value="">Select Category (Optional)</option>
-                                    {% for category in categories %}
-                                        <option value="{{ category.id }}" {% if form.category.value == category.id %}selected{% endif %}>
-                                            {{ category.name }}
-                                        </option>
+                        <!-- Display form errors -->
+                        {% if form.errors %}
+                            <div class="alert alert-danger alert-dismissible m-3">
+                                <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;
+                                </button>
+                                <h5><i class="icon fas fa-ban"></i> Please correct the following errors:</h5>
+                                {% for field, errors in form.errors.items %}
+                                    {% for error in errors %}
+                                        <p class="mb-1">{{ field|capfirst }}: {{ error }}</p>
                                     {% endfor %}
-                                </select>
-                                <small class="form-text text-muted">
-                                    Choose the category that best describes your request to help with proper assignment.
-                                </small>
-                                {% if form.category.errors %}
-                                    <div class="invalid-feedback">
-                                        {% for error in form.category.errors %}{{ error }}{% endfor %}
-                                    </div>
-                                {% endif %}
+                                {% endfor %}
                             </div>
+                        {% endif %}
 
-                            <!-- Priority Field -->
-                            <div class="form-group">
-                                <label for="id_priority">
-                                    Priority <span class="text-danger">*</span>
-                                </label>
-                                <select class="form-control {% if form.priority.errors %}is-invalid{% endif %}" 
-                                        id="id_priority" 
-                                        name="priority" 
-                                        required>
-                                    <option value="">Select Priority Level</option>
-                                    <option value="Low" {% if form.priority.value == 'Low' %}selected{% endif %}>
-                                        Low - Minor issue, no urgent timeline
-                                    </option>
-                                    <option value="Medium" {% if form.priority.value == 'Medium' %}selected{% endif %}>
-                                        Medium - Standard issue, normal timeline
-                                    </option>
-                                    <option value="High" {% if form.priority.value == 'High' %}selected{% endif %}>
-                                        High - Important issue, needs prompt attention
-                                    </option>
-                                    <option value="Urgent" {% if form.priority.value == 'Urgent' %}selected{% endif %}>
-                                        Urgent - Critical issue, immediate attention required
-                                    </option>
-                                </select>
-                                <small class="form-text text-muted">
-                                    Choose the appropriate priority level based on the urgency and impact of your issue.
-                                </small>
-                                {% if form.priority.errors %}
-                                    <div class="invalid-feedback">
-                                        {% for error in form.priority.errors %}{{ error }}{% endfor %}
-                                    </div>
-                                {% endif %}
-                            </div>
-
-                            <!-- Assignment Field (Only for Admin/Staff Users) -->
-                            {% if user.is_staff or user.is_superuser %}
+                        <form method="post" enctype="multipart/form-data">
+                            {% csrf_token %}
+                            <div class="card-body">
+                                <!-- Title Field -->
                                 <div class="form-group">
-                                    <label for="id_assigned_to">
-                                        <i class="fas fa-user-cog"></i> Assign To Staff Member
+                                    <label for="id_title">
+                                        Title <span class="text-danger">*</span>
                                     </label>
-                                    <select class="form-control" 
-                                            id="id_assigned_to" 
-                                            name="assigned_to">
-                                        <option value="">Select Staff Member (Optional)</option>
-                                        {% for assignable_user in admin_users %}
-                                            <option value="{{ assignable_user.id }}">
-                                                {{ assignable_user.get_full_name|default:assignable_user.username }}
-                                                {% if assignable_user.userprofile.department %} - {{ assignable_user.userprofile.department }}{% endif %}
-                                                {% if assignable_user.is_superuser %} (Super Admin){% else %} (Staff){% endif %}
+                                    <input type="text"
+                                           class="form-control {% if form.title.errors %}is-invalid{% endif %}"
+                                           id="id_title"
+                                           name="title"
+                                           placeholder="Enter a clear, descriptive title for your ticket"
+                                           value="{{ form.title.value|default:'' }}"
+                                           required>
+                                    <small class="form-text text-muted">
+                                        Provide a brief but descriptive title that summarizes your issue or request.
+                                    </small>
+                                    {% if form.title.errors %}
+                                        <div class="invalid-feedback">
+                                            {% for error in form.title.errors %}{{ error }}{% endfor %}
+                                        </div>
+                                    {% endif %}
+                                </div>
+
+                                <!-- Description Field -->
+                                <div class="form-group">
+                                    <label for="id_description">
+                                        Description
+                                    </label>
+                                    <textarea class="form-control {% if form.description.errors %}is-invalid{% endif %}"
+                                              id="id_description"
+                                              name="description"
+                                              rows="6"
+                                              placeholder="Provide detailed information about your issue or request...">{{ form.description.value|default:'' }}</textarea>
+                                    <small class="form-text text-muted">
+                                        Include as much detail as possible: what happened, when it happened, steps to
+                                        reproduce, etc.
+                                    </small>
+                                    {% if form.description.errors %}
+                                        <div class="invalid-feedback">
+                                            {% for error in form.description.errors %}{{ error }}{% endfor %}
+                                        </div>
+                                    {% endif %}
+                                </div>
+
+                                <!-- Category Field -->
+                                <div class="form-group">
+                                    <label for="id_category">
+                                        Category
+                                    </label>
+                                    <select class="form-control {% if form.category.errors %}is-invalid{% endif %}"
+                                            id="id_category"
+                                            name="category">
+                                        <option value="">Select Category (Optional)</option>
+                                        {% for category in categories %}
+                                            <option value="{{ category.id }}"
+                                                    {% if form.category.value == category.id %}selected{% endif %}>
+                                                {{ category.name }}
                                             </option>
                                         {% endfor %}
                                     </select>
                                     <small class="form-text text-muted">
-                                        <i class="fas fa-info-circle text-info"></i> 
-                                        As an admin, you can assign this ticket to any staff member for immediate attention.
-                                        Leave blank to keep unassigned.
+                                        Choose the category that best describes your request to help with proper
+                                        assignment.
                                     </small>
+                                    {% if form.category.errors %}
+                                        <div class="invalid-feedback">
+                                            {% for error in form.category.errors %}{{ error }}{% endfor %}
+                                        </div>
+                                    {% endif %}
                                 </div>
-                            {% endif %}
 
-                            <!-- CC Admins Field -->
-                             {% if user.is_staff or user.is_superuser %}
-                            <div class="form-group">
-                                <label for="id_cc_admins">
-                                    CC Admins
-                                </label>
-                                {{ form.cc_admins }}
-                                <small class="form-text text-muted">
-                                    Optionally select additional staff/admins to CC on this ticket.
-                                </small>
-                                {% if form.cc_admins.errors %}
-                                    <div class="invalid-feedback">
-                                        {% for error in form.cc_admins.errors %}{{ error }}{% endfor %}
+                                <!-- Priority Field -->
+                                <div class="form-group">
+                                    <label for="id_priority">
+                                        Priority <span class="text-danger">*</span>
+                                    </label>
+                                    <select class="form-control {% if form.priority.errors %}is-invalid{% endif %}"
+                                            id="id_priority"
+                                            name="priority"
+                                            required>
+                                        <option value="">Select Priority Level</option>
+                                        <option value="Low" {% if form.priority.value == 'Low' %}selected{% endif %}>
+                                            Low - Minor issue, no urgent timeline
+                                        </option>
+                                        <option value="Medium"
+                                                {% if form.priority.value == 'Medium' %}selected{% endif %}>
+                                            Medium - Standard issue, normal timeline
+                                        </option>
+                                        <option value="High" {% if form.priority.value == 'High' %}selected{% endif %}>
+                                            High - Important issue, needs prompt attention
+                                        </option>
+                                        <option value="Urgent"
+                                                {% if form.priority.value == 'Urgent' %}selected{% endif %}>
+                                            Urgent - Critical issue, immediate attention required
+                                        </option>
+                                    </select>
+                                    <small class="form-text text-muted">
+                                        Choose the appropriate priority level based on the urgency and impact of your
+                                        issue.
+                                    </small>
+                                    {% if form.priority.errors %}
+                                        <div class="invalid-feedback">
+                                            {% for error in form.priority.errors %}{{ error }}{% endfor %}
+                                        </div>
+                                    {% endif %}
+                                </div>
+
+                                <!-- Assignment Field (Only for Admin/Staff Users) -->
+                                {% if user.is_staff or user.is_superuser %}
+                                    <div class="form-group">
+                                        <label for="id_assigned_to">
+                                            <i class="fas fa-user-cog"></i> Assign To Staff Member
+                                        </label>
+                                        <select class="form-control"
+                                                id="id_assigned_to"
+                                                name="assigned_to">
+                                            <option value="">Select Staff Member (Optional)</option>
+                                            {% for assignable_user in admin_users %}
+                                                <option value="{{ assignable_user.id }}">
+                                                    {{ assignable_user.get_full_name|default:assignable_user.username }}
+                                                    {% if assignable_user.userprofile.department %} -
+                                                        {{ assignable_user.userprofile.department }}{% endif %}
+                                                    {% if assignable_user.is_superuser %} (Super Admin){% else %}
+                                                        (Staff){% endif %}
+                                                </option>
+                                            {% endfor %}
+                                        </select>
+                                        <small class="form-text text-muted">
+                                            <i class="fas fa-info-circle text-info"></i>
+                                            As an admin, you can assign this ticket to any staff member for immediate
+                                            attention.
+                                            Leave blank to keep unassigned.
+                                        </small>
                                     </div>
                                 {% endif %}
-                            </div>
-                            
 
-                            <!-- CC Non-Admins Field -->
-                            <div class="form-group">
-                                <label for="id_cc_non_admins">
-                                    CC Non-Admins
-                                </label>
-                                {{ form.cc_non_admins }}
-                                <small class="form-text text-muted">
-                                    Optionally select additional non-admin users to CC on this ticket.
-                                </small>
-                                {% if form.cc_non_admins.errors %}
-                                    <div class="invalid-feedback">
-                                        {% for error in form.cc_non_admins.errors %}{{ error }}{% endfor %}
+                                <!-- CC Admins Field -->
+                                {% if user.is_staff or user.is_superuser %}
+                                    <div class="form-group">
+                                        <label for="id_cc_admins">
+                                            CC Admins
+                                        </label>
+                                        {{ form.cc_admins }}
+                                        <small class="form-text text-muted">
+                                            Optionally select additional staff/admins to CC on this ticket.
+                                        </small>
+                                        {% if form.cc_admins.errors %}
+                                            <div class="invalid-feedback">
+                                                {% for error in form.cc_admins.errors %}{{ error }}{% endfor %}
+                                            </div>
+                                        {% endif %}
+                                    </div>
+
+
+                                    <!-- CC Non-Admins Field -->
+                                    <div class="form-group">
+                                        <label for="id_cc_non_admins">
+                                            CC Non-Admins
+                                        </label>
+                                        {{ form.cc_non_admins }}
+                                        <small class="form-text text-muted">
+                                            Optionally select additional non-admin users to CC on this ticket.
+                                        </small>
+                                        {% if form.cc_non_admins.errors %}
+                                            <div class="invalid-feedback">
+                                                {% for error in form.cc_non_admins.errors %}{{ error }}{% endfor %}
+                                            </div>
+                                        {% endif %}
                                     </div>
                                 {% endif %}
-                            </div>
-                            {% endif %}
 
-                            <!-- Attachments Section -->
-                            <div class="form-group mb-4">
-                                <label for="id_attachments">
-                                    <i class="fas fa-paperclip"></i> <strong>Attachments</strong> <span class="text-muted">(Optional)</span>
-                                </label>
-                                <div class="bg-warning text-center py-2 px-3 mb-2 mt-6 ">
-                                    <i class="fas fa-info-circle text-warning"></i>
-                                    <strong>Allowed:</strong> JPG, PNG, WebP (max 3MB each), PDF (max 5MB each).<br>
-                                    <span class="text-small">You can upload multiple files to help explain your issue.</span>
-                                </div>
-                                <div class="custom-file mb-2" style="position:relative;">
-                                    <input type="file" class="custom-file-input" id="id_attachments" name="attachments" multiple accept=".jpg,.jpeg,.png,.webp,.pdf" style="display:none;">
-                                    <div id="drop-area" class="border rounded bg-light text-center py-3" style="cursor:pointer; border-style:dashed; margin-top:8px;">
-                                        <i class="fas fa-cloud-upload-alt fa-2x text-primary mb-2"></i><br>
-                                        <span class="text-secondary">Drag & drop files here or click to select</span>
+                                <!-- Attachments Section -->
+                                <div class="form-group mb-4">
+                                    <label for="id_attachments">
+                                        <i class="fas fa-paperclip"></i> <strong>Attachments</strong> <span
+                                            class="text-muted">(Optional)</span>
+                                    </label>
+                                    <div class="bg-warning text-center py-2 px-3 mb-2 mt-6 ">
+                                        <i class="fas fa-info-circle text-warning"></i>
+                                        <strong>Allowed:</strong> JPG, PNG, WebP (max 3MB each), PDF (max 5MB each).<br>
+                                        <span class="text-small">You can upload multiple files to help explain your issue.</span>
                                     </div>
-                                </div>
-                                <!-- File Preview Area -->
-                                <div id="file-preview" class="mt-4" style="display: none;">
-                                    <h6 class="text-muted mb-2"><i class="fas fa-list"></i> Selected Files:</h6>
-                                    <div id="file-list" class="border rounded p-2 bg-white">
-                                        <!-- Files will be listed here -->
+                                    <div class="custom-file mb-2" style="position:relative;">
+                                        <input type="file" class="custom-file-input" id="id_attachments"
+                                               name="attachments" multiple accept=".jpg,.jpeg,.png,.webp,.pdf"
+                                               style="display:none;">
+                                        <div id="drop-area" class="border rounded bg-light text-center py-3"
+                                             style="cursor:pointer; border-style:dashed; margin-top:8px;">
+                                            <i class="fas fa-cloud-upload-alt fa-2x text-primary mb-2"></i><br>
+                                            <span class="text-secondary">Drag & drop files here or click to select</span>
+                                        </div>
                                     </div>
-                                </div>
-                            </div>
-
-                                                        <!-- User Information Display -->
-                            <div class="form-group">
-                                <label><i class="fas fa-user"></i> Ticket Creator Information</label>
-                                <div class="card bg-light">
-                                    <div class="card-body">
-                                        <div class="row">
-                                            <div class="col-md-6">
-                                                <strong>Name:</strong> {{ user.get_full_name|default:user.username }}<br>
-                                                <strong>Username:</strong> {{ user.username }}
-                                            </div>
-                                            <div class="col-md-6">
-                                                {% if user.userprofile %}
-                                                    {% if user.userprofile.department %}
-                                                        <strong>Department:</strong> {{ user.userprofile.department }}<br>
-                                                    {% endif %}
-                                                    {% if user.userprofile.location %}
-                                                        <strong>Location:</strong> {{ user.userprofile.location }}<br>
-                                                    {% endif %}
-                                                    {% if user.userprofile.role %}
-                                                        <strong>Role:</strong> {{ user.userprofile.role }}
-                                                    {% endif %}
-                                                {% endif %}
-                                            </div>
+                                    <!-- File Preview Area -->
+                                    <div id="file-preview" class="mt-4" style="display: none;">
+                                        <h6 class="text-muted mb-2"><i class="fas fa-list"></i> Selected Files:</h6>
+                                        <div id="file-list" class="border rounded p-2 bg-white">
+                                            <!-- Files will be listed here -->
                                         </div>
                                     </div>
                                 </div>
-                                <small class="form-text text-muted">
-                                    This ticket will be created under your account. Contact information is automatically included.
-                                </small>
-                            </div>
-                        </div>
 
-                        <div class="card-footer">
-                            <div class="row">
-                                <div class="col-md-6">
-                                    <button type="button" class="btn btn-danger btn-lg w-100 mt-2" onclick="resetForm()">
-                                        <i class="fas fa-undo"></i> Reset Form
-                                    </button>
+                                <!-- User Information Display -->
+                                <div class="form-group">
+                                    <label><i class="fas fa-user"></i> Ticket Creator Information</label>
+                                    <div class="card bg-light">
+                                        <div class="card-body">
+                                            <div class="row">
+                                                <div class="col-md-6">
+                                                    <strong>Name:</strong>
+                                                    {{ user.get_full_name|default:user.username }}<br>
+                                                    <strong>Username:</strong> {{ user.username }}
+                                                </div>
+                                                <div class="col-md-6">
+                                                    {% if user.userprofile %}
+                                                        {% if user.userprofile.department %}
+                                                            <strong>Department:</strong>
+                                                            {{ user.userprofile.department }}<br>
+                                                        {% endif %}
+                                                        {% if user.userprofile.location %}
+                                                            <strong>Location:</strong> {{ user.userprofile.location }}
+                                                            <br>
+                                                        {% endif %}
+                                                        {% if user.userprofile.role %}
+                                                            <strong>Role:</strong> {{ user.userprofile.role }}
+                                                        {% endif %}
+                                                    {% endif %}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <small class="form-text text-muted">
+                                        This ticket will be created under your account. Contact information is
+                                        automatically included.
+                                    </small>
                                 </div>
-                                <div class="col-md-6 text-right">
-                                    <button type="submit" class="btn btn-success btn-lg w-100 mt-2">
-                                        <i class="fas fa-save"></i> Create Ticket
-                                    </button>
+                            </div>
+
+                            <div class="card-footer">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <button type="button" class="btn btn-danger btn-lg w-100 mt-2"
+                                                onclick="resetForm()">
+                                            <i class="fas fa-undo"></i> Reset Form
+                                        </button>
+                                    </div>
+                                    <div class="col-md-6 text-right">
+                                        <button type="submit" class="btn btn-success btn-lg w-100 mt-2">
+                                            <i class="fas fa-save"></i> Create Ticket
+                                        </button>
+                                    </div>
                                 </div>
                             </div>
-                        </div>
-                    </form>
-                </div>
-            </div>
-
-            <!-- Help Sidebar -->
-            <div class="col-md-4">
-                <!-- Help & Tips -->
-                <div class="card card-info">
-                    <div class="card-header">
-                        <h3 class="card-title">
-                            <i class="fas fa-lightbulb mr-1"></i> Tips for Better Tickets
-                        </h3>
-                    </div>
-                    <div class="card-body">
-                        <div class="callout callout-info">
-                            <h5>Writing Effective Titles</h5>
-                            <p>Use clear, specific titles that describe the issue:</p>
-                            <ul class="mb-0">
-                                <li>"Login page returns 500 error on Chrome" <i class="fas fa-check text-success"></i></li>
-                                <li>"Something is broken" <i class="fas fa-times text-danger"></i> </li>
-                            </ul>
-                        </div>
-
-                        <div class="callout callout-warning">
-                            <h5> Include Details</h5>
-                            <p>Help us help you faster by including:</p>
-                            <ul class="mb-0">
-                                <li>Steps to reproduce the issue</li>
-                                <li>What you expected to happen</li>
-                                <li>What actually happened</li>
-                                <li>Browser/device information if relevant</li>
-                            </ul>
-                        </div>
-
-                        <div class="callout callout-success">
-                            <h5>Priority Guidelines</h5>
-                            <ul class="mb-0">
-                                <li><strong>Urgent:</strong> System down, security issues</li>
-                                <li><strong>High:</strong> Major functionality broken</li>
-                                <li><strong>Medium:</strong> Minor bugs, feature requests</li>
-                                <li><strong>Low:</strong> Nice-to-have improvements</li>
-                            </ul>
-                        </div>
+                        </form>
                     </div>
                 </div>
 
-                <!-- Quick Actions -->
-                <div class="card card-secondary">
-                    <div class="card-header">
-                        <h3 class="card-title">
-                            <i class="fas fa-bolt"></i> Quick Actions
-                        </h3>
+                <!-- Help Sidebar -->
+                <div class="col-md-4">
+                    <!-- Help & Tips -->
+                    <div class="card card-info">
+                        <div class="card-header">
+                            <h3 class="card-title">
+                                <i class="fas fa-lightbulb mr-1"></i> Tips for Better Tickets
+                            </h3>
+                        </div>
+                        <div class="card-body">
+                            <div class="callout callout-info">
+                                <h5>Writing Effective Titles</h5>
+                                <p>Use clear, specific titles that describe the issue:</p>
+                                <ul class="mb-0">
+                                    <li>"Login page returns 500 error on Chrome" <i
+                                            class="fas fa-check text-success"></i></li>
+                                    <li>"Something is broken" <i class="fas fa-times text-danger"></i></li>
+                                </ul>
+                            </div>
+
+                            <div class="callout callout-warning">
+                                <h5> Include Details</h5>
+                                <p>Help us help you faster by including:</p>
+                                <ul class="mb-0">
+                                    <li>Steps to reproduce the issue</li>
+                                    <li>What you expected to happen</li>
+                                    <li>What actually happened</li>
+                                    <li>Browser/device information if relevant</li>
+                                </ul>
+                            </div>
+
+                            <div class="callout callout-success">
+                                <h5>Priority Guidelines</h5>
+                                <ul class="mb-0">
+                                    <li><strong>Urgent:</strong> System down, security issues</li>
+                                    <li><strong>High:</strong> Major functionality broken</li>
+                                    <li><strong>Medium:</strong> Minor bugs, feature requests</li>
+                                    <li><strong>Low:</strong> Nice-to-have improvements</li>
+                                </ul>
+                            </div>
+                        </div>
                     </div>
-                    <div class="card-body">
-                        <div class="btn-group-vertical btn-block">
-                            <a href="{% url 'tickets:ticket_list' %}" class="btn btn-outline-primary">
-                                <i class="fas fa-list"></i> View My Tickets
-                            </a>
-                            <a href="{% url 'tickets:home' %}" class="btn btn-outline-info">
-                                <i class="fas fa-home"></i> Back to Dashboard
-                            </a>
-                            {% if user.is_staff %}
-                                <a href="/admin/tickets/ticket/" target="_blank" class="btn btn-outline-warning">
-                                    <i class="fas fa-cogs"></i> Manage All Tickets
+
+                    <!-- Quick Actions -->
+                    <div class="card card-secondary">
+                        <div class="card-header">
+                            <h3 class="card-title">
+                                <i class="fas fa-bolt"></i> Quick Actions
+                            </h3>
+                        </div>
+                        <div class="card-body">
+                            <div class="btn-group-vertical btn-block">
+                                <a href="{% url 'tickets:ticket_list' %}" class="btn btn-outline-primary">
+                                    <i class="fas fa-list"></i> View My Tickets
                                 </a>
-                            {% endif %}
+                                <a href="{% url 'tickets:home' %}" class="btn btn-outline-info">
+                                    <i class="fas fa-home"></i> Back to Dashboard
+                                </a>
+                                {% if user.is_staff %}
+                                    <a href="/admin/tickets/ticket/" target="_blank" class="btn btn-outline-warning">
+                                        <i class="fas fa-cogs"></i> Manage All Tickets
+                                    </a>
+                                {% endif %}
+                            </div>
                         </div>
                     </div>
-                </div>
 
-                <!-- Recent Activity -->
-                <div class="card card-light">
-                    <div class="card-header">
-                        <h3 class="card-title">
-                            <i class="fas fa-history"></i> Your Recent Activity
-                        </h3>
-                    </div>
-                    <div class="card-body">
-                        <div class="text-center p-3">
-                            <i class="fas fa-clock fa-2x text-muted mb-2"></i>
-                            <p class="text-muted">Your recent tickets will appear here.</p>
-                            <small class="text-muted">Create your first ticket to get started!</small>
+                    <!-- Recent Activity -->
+                    <div class="card card-light">
+                        <div class="card-header">
+                            <h3 class="card-title">
+                                <i class="fas fa-history"></i> Your Recent Activity
+                            </h3>
+                        </div>
+                        <div class="card-body">
+                            <div class="text-center p-3">
+                                <i class="fas fa-clock fa-2x text-muted mb-2"></i>
+                                <p class="text-muted">Your recent tickets will appear here.</p>
+                                <small class="text-muted">Create your first ticket to get started!</small>
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
-    </div>
-</section>
+    </section>
 {% endblock %}
 
 {% block extra_js %}
-<script>
-    $(document).ready(function() {
-        // Character counter for description
-        $('#id_description').on('input', function() {
-            const maxLength = 2000; // Adjust as needed
-            const currentLength = $(this).val().length;
-            const remaining = maxLength - currentLength;
-            if (!$('#char-counter').length) {
-                $(this).after('<small id="char-counter" class="form-text text-muted"></small>');
-            }
-            $('#char-counter').text(`${currentLength} characters`);
-            if (remaining < 100) {
-                $('#char-counter').removeClass('text-muted').addClass('text-warning');
-            } else {
-                $('#char-counter').removeClass('text-warning').addClass('text-muted');
-            }
-        });
-
-        // Form validation
-        $('form').on('submit', function() {
-            let isValid = true;
-            // Check required fields
-            const title = $('#id_title').val().trim();
-            const priority = $('#id_priority').val();
-            if (!title) {
-                isValid = false;
-                $('#id_title').addClass('is-invalid');
-            } else {
-                $('#id_title').removeClass('is-invalid');
-            }
-            if (!priority) {
-                isValid = false;
-                $('#id_priority').addClass('is-invalid');
-            } else {
-                $('#id_priority').removeClass('is-invalid');
-            }
-            if (isValid) {
-                // Show loading state
-                const submitBtn = $(this).find('button[type="submit"]');
-                submitBtn.html('<i class="fas fa-spinner fa-spin"></i> Creating Ticket...')
-                         .prop('disabled', true);
-            }
-            return isValid;
-        });
-
-        // Priority selection helper
-        $('#id_priority').on('change', function() {
-            const priority = $(this).val();
-            const helpText = {
-                'Low': 'Low priority tickets are typically addressed within 3-5 business days.',
-                'Medium': 'Medium priority tickets are typically addressed within 1-2 business days.',
-                'High': 'High priority tickets are typically addressed within 4-8 hours.',
-                'Urgent': 'Urgent tickets receive immediate attention and are prioritized over all other work.'
-            };
-            if (priority && helpText[priority]) {
-                if (!$('#priority-help').length) {
-                    $(this).after('<small id="priority-help" class="form-text"></small>');
+    <script>
+        $(document).ready(function () {
+            // Character counter for description
+            $('#id_description').on('input', function () {
+                const maxLength = 2000; // Adjust as needed
+                const currentLength = $(this).val().length;
+                const remaining = maxLength - currentLength;
+                if (!$('#char-counter').length) {
+                    $(this).after('<small id="char-counter" class="form-text text-muted"></small>');
                 }
-                $('#priority-help').text(helpText[priority]);
-                // Color coding
-                const colors = {
-                    'Low': 'text-success',
-                    'Medium': 'text-info', 
-                    'High': 'text-warning',
-                    'Urgent': 'text-danger'
+                $('#char-counter').text(`${currentLength} characters`);
+                if (remaining < 100) {
+                    $('#char-counter').removeClass('text-muted').addClass('text-warning');
+                } else {
+                    $('#char-counter').removeClass('text-warning').addClass('text-muted');
+                }
+            });
+
+            // Form validation
+            $('form').on('submit', function () {
+                let isValid = true;
+                // Check required fields
+                const title = $('#id_title').val().trim();
+                const priority = $('#id_priority').val();
+                if (!title) {
+                    isValid = false;
+                    $('#id_title').addClass('is-invalid');
+                } else {
+                    $('#id_title').removeClass('is-invalid');
+                }
+                if (!priority) {
+                    isValid = false;
+                    $('#id_priority').addClass('is-invalid');
+                } else {
+                    $('#id_priority').removeClass('is-invalid');
+                }
+                if (isValid) {
+                    // Show loading state
+                    const submitBtn = $(this).find('button[type="submit"]');
+                    submitBtn.html('<i class="fas fa-spinner fa-spin"></i> Creating Ticket...')
+                        .prop('disabled', true);
+                }
+                return isValid;
+            });
+
+            // Priority selection helper
+            $('#id_priority').on('change', function () {
+                const priority = $(this).val();
+                const helpText = {
+                    'Low': 'Low priority tickets are typically addressed within 3-5 business days.',
+                    'Medium': 'Medium priority tickets are typically addressed within 1-2 business days.',
+                    'High': 'High priority tickets are typically addressed within 4-8 hours.',
+                    'Urgent': 'Urgent tickets receive immediate attention and are prioritized over all other work.'
                 };
-                $('#priority-help').removeClass('text-success text-info text-warning text-danger')
-                                   .addClass(colors[priority]);
-            }
-        });
-
-        // File upload handling
-        $('#id_attachments').on('change', function() {
-            handleFiles(this.files);
-        });
-
-        // Drag & drop support
-        var dropArea = document.getElementById('drop-area');
-        var fileInput = document.getElementById('id_attachments');
-
-        if (dropArea && fileInput) {
-            dropArea.addEventListener('dragover', function(e) {
-                e.preventDefault();
-                e.stopPropagation();
-                dropArea.classList.add('bg-info', 'text-white');
-            });
-            dropArea.addEventListener('dragleave', function(e) {
-                e.preventDefault();
-                e.stopPropagation();
-                dropArea.classList.remove('bg-info', 'text-white');
-            });
-            dropArea.addEventListener('drop', function(e) {
-                e.preventDefault();
-                e.stopPropagation();
-                dropArea.classList.remove('bg-info', 'text-white');
-                var files = e.dataTransfer.files;
-                if (files.length > 0) {
-                    // Set files to input (triggers change event)
-                    fileInput.files = files;
-                    $(fileInput).trigger('change');
+                if (priority && helpText[priority]) {
+                    if (!$('#priority-help').length) {
+                        $(this).after('<small id="priority-help" class="form-text"></small>');
+                    }
+                    $('#priority-help').text(helpText[priority]);
+                    // Color coding
+                    const colors = {
+                        'Low': 'text-success',
+                        'Medium': 'text-info',
+                        'High': 'text-warning',
+                        'Urgent': 'text-danger'
+                    };
+                    $('#priority-help').removeClass('text-success text-info text-warning text-danger')
+                        .addClass(colors[priority]);
                 }
             });
-            // Optional: clicking drop area triggers file input
-            dropArea.addEventListener('click', function() {
-                fileInput.click();
-            });
-        }
 
-        // Helper to handle files (for both input and drop)
-        function handleFiles(files) {
-            const fileList = $('#file-list');
-            const filePreview = $('#file-preview');
-            if (files.length > 0) {
-                fileList.empty();
-                filePreview.show();
-                for (let i = 0; i < files.length; i++) {
-                    const file = files[i];
-                    const fileSize = (file.size / (1024 * 1024)).toFixed(2);
-                    const isValid = validateFile(file);
-                    const fileItem = $(`
+            // File upload handling
+            $('#id_attachments').on('change', function () {
+                handleFiles(this.files);
+            });
+
+            // Drag & drop support
+            var dropArea = document.getElementById('drop-area');
+            var fileInput = document.getElementById('id_attachments');
+
+            if (dropArea && fileInput) {
+                dropArea.addEventListener('dragover', function (e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    dropArea.classList.add('bg-info', 'text-white');
+                });
+                dropArea.addEventListener('dragleave', function (e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    dropArea.classList.remove('bg-info', 'text-white');
+                });
+                dropArea.addEventListener('drop', function (e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    dropArea.classList.remove('bg-info', 'text-white');
+                    var files = e.dataTransfer.files;
+                    if (files.length > 0) {
+                        // Set files to input (triggers change event)
+                        fileInput.files = files;
+                        $(fileInput).trigger('change');
+                    }
+                });
+                // Optional: clicking drop area triggers file input
+                dropArea.addEventListener('click', function () {
+                    fileInput.click();
+                });
+            }
+
+            // Helper to handle files (for both input and drop)
+            function handleFiles(files) {
+                const fileList = $('#file-list');
+                const filePreview = $('#file-preview');
+                if (files.length > 0) {
+                    fileList.empty();
+                    filePreview.show();
+                    for (let i = 0; i < files.length; i++) {
+                        const file = files[i];
+                        const fileSize = (file.size / (1024 * 1024)).toFixed(2);
+                        const isValid = validateFile(file);
+                        const fileItem = $(`
                         <div class="file-item d-flex justify-content-between align-items-center p-2 mb-2 border rounded ${isValid.valid ? 'border-success bg-light' : 'border-danger bg-danger-light'}">
                             <div class="file-info">
                                 <i class="fas ${getFileIcon(file.type)} mr-2"></i>
@@ -503,69 +523,69 @@
                                 ${!isValid.valid ? `<br><small class=\"text-danger\">${isValid.error}</small>` : ''}
                             </div>
                             <div class="file-actions">
-                                ${isValid.valid ? 
-                                    '<i class="fas fa-check-circle text-success"></i>' : 
-                                    '<i class="fas fa-times-circle text-danger"></i>'
-                                }
+                                ${isValid.valid ?
+                            '<i class="fas fa-check-circle text-success"></i>' :
+                            '<i class="fas fa-times-circle text-danger"></i>'
+                        }
                             </div>
                         </div>
                     `);
-                    fileList.append(fileItem);
+                        fileList.append(fileItem);
+                    }
+                } else {
+                    filePreview.hide();
                 }
-            } else {
-                filePreview.hide();
+            }
+        });
+
+        // File validation function
+        function validateFile(file) {
+            const allowedTypes = {
+                'image/jpeg': {maxSize: 3, name: 'JPEG Image'},
+                'image/jpg': {maxSize: 3, name: 'JPG Image'},
+                'image/png': {maxSize: 3, name: 'PNG Image'},
+                'image/webp': {maxSize: 3, name: 'WebP Image'},
+                'application/pdf': {maxSize: 5, name: 'PDF Document'}
+            };
+
+            const fileSizeMB = file.size / (1024 * 1024);
+
+            if (!allowedTypes[file.type]) {
+                return {
+                    valid: false,
+                    error: 'File type not allowed. Only JPG, PNG, WebP images and PDF documents are supported.'
+                };
+            }
+
+            if (fileSizeMB > allowedTypes[file.type].maxSize) {
+                return {
+                    valid: false,
+                    error: `File too large. Maximum size for ${allowedTypes[file.type].name} is ${allowedTypes[file.type].maxSize}MB.`
+                };
+            }
+
+            return {valid: true};
+        }
+
+        // Get file icon based on type
+        function getFileIcon(type) {
+            if (type.startsWith('image/')) {
+                return 'fa-image';
+            } else if (type === 'application/pdf') {
+                return 'fa-file-pdf';
+            }
+            return 'fa-file';
+        }
+
+        // Reset form function
+        function resetForm() {
+            if (confirm('Are you sure you want to reset the form? All entered data will be lost.')) {
+                document.querySelector('form').reset();
+                $('.is-invalid').removeClass('is-invalid');
+                $('#char-counter, #priority-help').remove();
+                $('#file-preview').hide();
+                $('#file-list').empty();
             }
         }
-    });
-
-    // File validation function
-    function validateFile(file) {
-        const allowedTypes = {
-            'image/jpeg': { maxSize: 3, name: 'JPEG Image' },
-            'image/jpg': { maxSize: 3, name: 'JPG Image' },
-            'image/png': { maxSize: 3, name: 'PNG Image' },
-            'image/webp': { maxSize: 3, name: 'WebP Image' },
-            'application/pdf': { maxSize: 5, name: 'PDF Document' }
-        };
-        
-        const fileSizeMB = file.size / (1024 * 1024);
-        
-        if (!allowedTypes[file.type]) {
-            return {
-                valid: false,
-                error: 'File type not allowed. Only JPG, PNG, WebP images and PDF documents are supported.'
-            };
-        }
-        
-        if (fileSizeMB > allowedTypes[file.type].maxSize) {
-            return {
-                valid: false,
-                error: `File too large. Maximum size for ${allowedTypes[file.type].name} is ${allowedTypes[file.type].maxSize}MB.`
-            };
-        }
-        
-        return { valid: true };
-    }
-
-    // Get file icon based on type
-    function getFileIcon(type) {
-        if (type.startsWith('image/')) {
-            return 'fa-image';
-        } else if (type === 'application/pdf') {
-            return 'fa-file-pdf';
-        }
-        return 'fa-file';
-    }
-
-    // Reset form function
-    function resetForm() {
-        if (confirm('Are you sure you want to reset the form? All entered data will be lost.')) {
-            document.querySelector('form').reset();
-            $('.is-invalid').removeClass('is-invalid');
-            $('#char-counter, #priority-help').remove();
-            $('#file-preview').hide();
-            $('#file-list').empty();
-        }
-    }
-</script>
+    </script>
 {% endblock %}
