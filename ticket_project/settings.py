@@ -109,9 +109,6 @@ if USE_MSSQL:
         },
     }
 
-    # Database routing for read/write operations (disabled until read user is fixed)
-    # DATABASE_ROUTERS = ['tickets.db_router.DatabaseRouter']
-
 else:
     # SQLite Configuration (Development/Testing)
     DATABASES = {
