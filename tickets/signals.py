@@ -9,6 +9,7 @@ from .email_utils import (
     send_ticket_updated_notification,
     send_ticket_cc_updated_notification,
 )
+from .async_email import send_email_async  # Import async wrapper
 import logging
 
 logger = logging.getLogger(__name__)
@@ -52,6 +53,14 @@ def ticket_saved(sender, instance, created, **kwargs):
             # New ticket created
             logger.info(f"New ticket created: {instance.id}")
             # send_ticket_created_notification(instance)  # <-- Removed, now sent from view after attachments
+
+            # Check if new ticket was created with assignment
+            if instance.assigned_to:
+                logger.info(
+                    f"New ticket {instance.id} created with assignment to {instance.assigned_to}"
+                )
+                # Send assignment notification asynchronously
+                send_email_async(send_ticket_assigned_notification, instance)
         else:
             # Existing ticket updated
             changed_fields = {}
@@ -84,13 +93,22 @@ def ticket_saved(sender, instance, created, **kwargs):
 
             # Check for assignment change
             old_assigned = getattr(instance, "_old_assigned_to", None)
+            logger.debug(
+                f"Assignment check - old: {old_assigned}, new: {instance.assigned_to}, created: {created}"
+            )
+
             if old_assigned != instance.assigned_to:
                 if instance.assigned_to:
                     # Ticket was assigned
                     logger.info(
                         f"Ticket {instance.id} assigned to {instance.assigned_to}"
                     )
-                    send_ticket_assigned_notification(instance)
+                    # Send assignment notification asynchronously
+                    send_email_async(send_ticket_assigned_notification, instance)
+                else:
+                    logger.debug(f"No assigned_to user for ticket {instance.id}")
+            else:
+                logger.debug(f"No assignment change detected for ticket {instance.id}")
 
                 # Track assignment change for update notification
                 changed_fields["assigned_to"] = {
@@ -112,8 +130,12 @@ def ticket_saved(sender, instance, created, **kwargs):
                 # Get the user who made the change (if available from request)
                 updated_by = getattr(instance, "_updated_by", None)
                 if updated_by:
-                    send_ticket_updated_notification(
-                        instance, changed_fields, updated_by
+                    # Send ticket update notification asynchronously
+                    send_email_async(
+                        send_ticket_updated_notification,
+                        instance,
+                        changed_fields,
+                        updated_by,
                     )
                 else:
                     logger.warning(f"No updated_by user found for ticket {instance.id}")
@@ -130,7 +152,8 @@ def comment_saved(sender, instance, created, **kwargs):
             logger.info(
                 f"New comment added to ticket {instance.ticket.id} by {instance.author}"
             )
-            send_comment_notification(instance, instance.ticket)
+            # Send comment notification asynchronously
+            send_email_async(send_comment_notification, instance, instance.ticket)
         except Exception as e:
             logger.error(f"Error in comment_saved signal: {e}")
 
@@ -143,7 +166,10 @@ def cc_admins_changed(sender, instance, action, pk_set, **kwargs):
             new_cc_admins = User.objects.filter(id__in=pk_set)
             if new_cc_admins.exists():
                 logger.info(f"CC Admins added to ticket {instance.id}: {list(pk_set)}")
-                send_ticket_cc_updated_notification(instance, new_cc_admins, [])
+                # Use consistent async email queue
+                send_email_async(
+                    send_ticket_cc_updated_notification, instance, new_cc_admins, []
+                )
         except Exception as e:
             logger.error(f"Error in cc_admins_changed signal: {e}")
 
@@ -158,7 +184,10 @@ def cc_non_admins_changed(sender, instance, action, pk_set, **kwargs):
                 logger.info(
                     f"CC Non-Admins added to ticket {instance.id}: {list(pk_set)}"
                 )
-                send_ticket_cc_updated_notification(instance, [], new_cc_non_admins)
+                # Use consistent async email queue
+                send_email_async(
+                    send_ticket_cc_updated_notification, instance, [], new_cc_non_admins
+                )
         except Exception as e:
             logger.error(f"Error in cc_non_admins_changed signal: {e}")
 

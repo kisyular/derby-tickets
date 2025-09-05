@@ -257,7 +257,8 @@ def create_ticket(request):
     """Create a new ticket with optional file attachments"""
     from .forms import TicketWithAttachmentsForm
     from .models import TicketAttachment
-    from .email_utils import send_ticket_created_notification  # Ensure import
+    from .async_email import send_email_async  # Use consistent async approach
+    from .email_utils import send_ticket_created_notification
 
     if request.method == "POST":
         form = TicketWithAttachmentsForm(request.POST, request.FILES)
@@ -300,8 +301,9 @@ def create_ticket(request):
             if attachment_count > 0:
                 success_msg += f' ({attachment_count} file{"s" if attachment_count > 1 else ""} attached)'
 
-            # Send email after attachments are saved
-            send_ticket_created_notification(ticket)
+            # Send email notification asynchronously using threading
+            # Send email notification asynchronously via queue
+            send_email_async(send_ticket_created_notification, ticket)
 
             messages.success(request, success_msg)
             return redirect("tickets:ticket_detail", ticket_id=ticket.id)
