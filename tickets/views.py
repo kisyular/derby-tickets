@@ -4,6 +4,7 @@ from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.models import User
 from django.contrib import messages
 from django.db.models import Q
+from django.core.cache import cache
 from .models import Ticket, UserProfile, Comment, Category
 from .security import SecurityManager, domain_required, staff_required
 from .audit_security import audit_security_manager
@@ -15,16 +16,30 @@ from .utils import user_can_access_ticket
 # Restore proper authentication with User model linked to custom profiles
 
 
+def get_categories_cached():
+    """Get categories with caching for better performance"""
+    return cache.get_or_set(
+        "categories_list",
+        lambda: list(Category.objects.all().order_by("name")),
+        300,  # Cache for 5 minutes
+    )
+
+
 @login_required
 def ticket_list(request):
     """Display a list of all tickets with filtering"""
     # Users can see tickets they created, are assigned to, or are CC'd on
-    tickets = Ticket.objects.filter(
-        Q(created_by=request.user)
-        | Q(assigned_to=request.user)
-        | Q(cc_admins=request.user)
-        | Q(cc_non_admins=request.user)
-    ).distinct()
+    # Optimize with select_related to prevent N+1 queries
+    tickets = (
+        Ticket.objects.select_related("created_by", "assigned_to", "category")
+        .filter(
+            Q(created_by=request.user)
+            | Q(assigned_to=request.user)
+            | Q(cc_admins=request.user)
+            | Q(cc_non_admins=request.user)
+        )
+        .distinct()
+    )
 
     # Apply filters
     status_filter = request.GET.get("status")
@@ -89,7 +104,13 @@ def ticket_list(request):
 @login_required
 def ticket_detail(request, ticket_id):
     """Display details of a specific ticket with edit functionality and comments"""
-    ticket = get_object_or_404(Ticket, id=ticket_id)
+    # Optimize with select_related to prevent N+1 queries
+    ticket = get_object_or_404(
+        Ticket.objects.select_related(
+            "created_by", "assigned_to", "category"
+        ).prefetch_related("comments__author", "attachments"),
+        id=ticket_id,
+    )
 
     # Check if user has permission to view this ticket
     if not user_can_access_ticket(request.user, ticket):
@@ -313,8 +334,8 @@ def create_ticket(request):
     else:
         form = TicketWithAttachmentsForm()
 
-    # Get categories for the form
-    categories = Category.objects.all().order_by("name")
+    # Get categories for the form (cached for performance)
+    categories = get_categories_cached()
     assignable_users = (
         User.objects.filter(is_staff=True)
         if (request.user.is_staff or request.user.is_superuser)
