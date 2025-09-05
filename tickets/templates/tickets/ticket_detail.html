@@ -280,19 +280,20 @@
                                                             {% endif %}
                                                             <!-- Edit/Delete Controls -->
                                                             {% if entry.content.author == user or user.is_staff %}
-                                                                <div class="float-right">
-                                                                    <button type="button" class=" mr-1 edit-comment-btn"
-                                                                            style="background: #ffe69c; color: #664d03"
+                                                                <div class="comment-actions float-right">
+                                                                    <button type="button" class="comment-action-btn edit-comment-btn bg-warning"
                                                                             data-comment-id="{{ entry.content.id }}" 
                                                                             data-comment-content="{{ entry.content.content }}"
-                                                                            data-comment-internal="{{ entry.content.is_internal }}">
-                                                                        <i class="fas fa-edit"></i> Edit
+                                                                            data-comment-internal="{{ entry.content.is_internal }}"
+                                                                            title="Edit comment">
+                                                                        <i class="fas fa-edit"></i>
                                                                     </button>
                                                                     {% if user.is_staff %}
-                                                                        <button type="button" class="delete-comment-btn"
+                                                                        <button type="button" class="comment-action-btn delete-comment-btn bg-danger"
                                                                                 data-comment-id="{{ entry.content.id }}"
-                                                                                data-comment-author="{{ entry.content.author.get_full_name|default:entry.content.author.username }}">
-                                                                            <i class="fas fa-trash"></i> Delete
+                                                                                data-comment-author="{{ entry.content.author.get_full_name|default:entry.content.author.username }}"
+                                                                                title="Delete comment">
+                                                                            <i class="fas fa-trash"></i>
                                                                         </button>
                                                                     {% endif %}
                                                                 </div>
@@ -1069,6 +1070,23 @@
                 height: 25px;
                 font-size: 12px;
                 line-height: 25px;
+            }
+
+            /* Stack timeline header content on mobile */
+            .timeline-header {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .comment-actions {
+                margin-left: 0;
+                margin-top: 5px;
+                align-self: flex-end;
+            }
+
+            .comment-action-btn {
+                padding: 6px 8px;
+                font-size: 14px;
             }
         }
 
