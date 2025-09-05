@@ -92,7 +92,7 @@ def ticket_list(request):
 
     # Add pagination for better performance
     paginator = Paginator(tickets, 25)  # 25 tickets per page
-    page_number = request.GET.get('page')
+    page_number = request.GET.get("page")
     page_obj = paginator.get_page(page_number)
 
     context = {
