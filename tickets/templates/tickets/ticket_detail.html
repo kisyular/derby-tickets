@@ -278,15 +278,31 @@
                                                                     <i class="fas fa-user-shield"></i> Staff
                                                                 </span>
                                                             {% endif %}
-                                                         {% if can_edit_ticket and entry.content.author == user %}
-                                                                <a href="#" class="text-danger float-right">
-                                                                    <i class="fas fa-edit"></i> Edit
-                                                                </a>
+                                                            <!-- Edit/Delete Controls -->
+                                                            {% if entry.content.author == user or user.is_staff %}
+                                                                <div class="float-right">
+                                                                    <button type="button" class=" mr-1 edit-comment-btn"
+                                                                            style="background: #ffe69c; color: #664d03"
+                                                                            data-comment-id="{{ entry.content.id }}" 
+                                                                            data-comment-content="{{ entry.content.content }}"
+                                                                            data-comment-internal="{{ entry.content.is_internal }}">
+                                                                        <i class="fas fa-edit"></i> Edit
+                                                                    </button>
+                                                                    {% if user.is_staff %}
+                                                                        <button type="button" class="delete-comment-btn"
+                                                                                data-comment-id="{{ entry.content.id }}"
+                                                                                data-comment-author="{{ entry.content.author.get_full_name|default:entry.content.author.username }}">
+                                                                            <i class="fas fa-trash"></i> Delete
+                                                                        </button>
+                                                                    {% endif %}
+                                                                </div>
                                                             {% endif %}
                                                         </h3>
 
                                                         <div class="timeline-body">
-                                                            {{ entry.content.content|linebreaks }}
+                                                            <div id="comment-content-{{ entry.content.id }}">
+                                                                {{ entry.content.content|linebreaks }}
+                                                            </div>
                                                         </div>
                                                     </div>
                                                 </div>
@@ -779,6 +795,87 @@
         </div>
     </div>
 
+    <!-- Edit Comment Modal -->
+    <div class="modal fade" id="editCommentModal" tabindex="-1" role="dialog" aria-labelledby="editCommentModalLabel"
+         aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="editCommentModalLabel">
+                        <i class="fas fa-edit"></i> Edit Comment
+                    </h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <form method="post">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="edit_comment">
+                    <input type="hidden" name="comment_id" id="editCommentId">
+                    <div class="modal-body">
+                        <div class="form-group">
+                            <label for="editCommentContent">Comment:</label>
+                            <textarea class="form-control" id="editCommentContent" name="comment_content" 
+                                      rows="4" required placeholder="Edit your comment..."></textarea>
+                        </div>
+                        {% if can_add_internal_comments %}
+                            <div class="form-group">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="editCommentInternal" 
+                                           name="is_internal">
+                                    <label class="form-check-label" for="editCommentInternal">
+                                        <i class="fas fa-lock text-warning"></i> Internal comment (visible only to staff)
+                                    </label>
+                                </div>
+                            </div>
+                        {% endif %}
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save"></i> Update Comment
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Delete Comment Modal -->
+    <div class="modal fade" id="deleteCommentModal" tabindex="-1" role="dialog" aria-labelledby="deleteCommentModalLabel"
+         aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="deleteCommentModalLabel">
+                        <i class="fas fa-trash text-danger"></i> Delete Comment
+                    </h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <form method="post">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="delete_comment">
+                    <input type="hidden" name="comment_id" id="deleteCommentId">
+                    <div class="modal-body">
+                        <div class="alert alert-warning">
+                            <i class="fas fa-exclamation-triangle"></i>
+                            <strong>Warning:</strong> This action cannot be undone.
+                        </div>
+                        <p>Are you sure you want to delete the comment by <strong id="deleteCommentAuthor"></strong>?</p>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-danger">
+                            <i class="fas fa-trash"></i> Delete Comment
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
 {% endblock %}
 
 {% block extra_css %}
@@ -1007,6 +1104,28 @@
             // {% if form.errors %}
                 //     $('#editTicketModal').modal('show');
                 // {% endif %}
+
+            // Handle comment editing
+            $('.edit-comment-btn').click(function() {
+                const commentId = $(this).data('comment-id');
+                const commentContent = $(this).data('comment-content');
+                const commentInternal = $(this).data('comment-internal');
+                
+                $('#editCommentId').val(commentId);
+                $('#editCommentContent').val(commentContent);
+                $('#editCommentInternal').prop('checked', commentInternal);
+                $('#editCommentModal').modal('show');
+            });
+
+            // Handle comment deletion
+            $('.delete-comment-btn').click(function() {
+                const commentId = $(this).data('comment-id');
+                const commentAuthor = $(this).data('comment-author');
+                
+                $('#deleteCommentId').val(commentId);
+                $('#deleteCommentAuthor').text(commentAuthor);
+                $('#deleteCommentModal').modal('show');
+            });
         });
 
         // Function to open image modal

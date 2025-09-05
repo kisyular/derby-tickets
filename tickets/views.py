@@ -345,6 +345,93 @@ def ticket_detail(request, ticket_id):
             else:
                 messages.error(request, "Comment content is required.")
 
+        elif action == "edit_comment":
+            # Handle comment editing
+            comment_id = request.POST.get("comment_id")
+            new_content = request.POST.get("comment_content", "").strip()
+            is_internal = request.POST.get("is_internal") == "on"
+
+            if comment_id and new_content:
+                try:
+                    comment = Comment.objects.get(id=comment_id, ticket=ticket)
+
+                    # Check permissions: user can edit their own comments, admin can edit any
+                    if comment.author == request.user or request.user.is_staff:
+                        old_content = comment.content
+                        old_is_internal = comment.is_internal
+
+                        comment.content = new_content
+                        # Only staff can set internal status
+                        if request.user.is_staff:
+                            comment.is_internal = is_internal
+                        comment.save()
+
+                        # Log the comment edit for audit trail
+                        audit_security_manager.log_audit_event(
+                            request=request,
+                            action="UPDATE",
+                            user=request.user,
+                            object_type="Comment",
+                            object_id=str(comment.id),
+                            object_repr=f"Comment on Ticket #{ticket.id}",
+                            description=f"Edited comment on Ticket #{ticket.id}: {ticket.title}",
+                            risk_level="LOW",
+                            changes={
+                                "content": {"old": old_content, "new": new_content},
+                                "is_internal": {
+                                    "old": old_is_internal,
+                                    "new": comment.is_internal,
+                                },
+                            },
+                        )
+
+                        messages.success(request, "Comment updated successfully!")
+                    else:
+                        messages.error(
+                            request, "You don't have permission to edit this comment."
+                        )
+                except Comment.DoesNotExist:
+                    messages.error(request, "Comment not found.")
+                return redirect("tickets:ticket_detail", ticket_id=ticket.id)
+            else:
+                messages.error(request, "Comment content is required.")
+
+        elif action == "delete_comment":
+            # Handle comment deletion
+            comment_id = request.POST.get("comment_id")
+
+            if comment_id:
+                try:
+                    comment = Comment.objects.get(id=comment_id, ticket=ticket)
+
+                    # Check permissions: user can delete their own comments, admin can delete any
+                    if comment.author == request.user or request.user.is_staff:
+                        comment_content = comment.content  # Save for audit log
+                        comment_author = comment.author.username
+
+                        # Log the comment deletion for audit trail
+                        audit_security_manager.log_audit_event(
+                            request=request,
+                            action="DELETE",
+                            user=request.user,
+                            object_type="Comment",
+                            object_id=str(comment.id),
+                            object_repr=f"Comment on Ticket #{ticket.id}",
+                            description=f"Deleted comment by {comment_author} on Ticket #{ticket.id}: {ticket.title}",
+                            risk_level="MEDIUM",
+                            changes={"deleted_content": comment_content},
+                        )
+
+                        comment.delete()
+                        messages.success(request, "Comment deleted successfully!")
+                    else:
+                        messages.error(
+                            request, "You don't have permission to delete this comment."
+                        )
+                except Comment.DoesNotExist:
+                    messages.error(request, "Comment not found.")
+                return redirect("tickets:ticket_detail", ticket_id=ticket.id)
+
     # Get timeline entries (comments + updates) for the ticket
     timeline_entries = TicketUpdateService.get_timeline_entries(ticket)
 
