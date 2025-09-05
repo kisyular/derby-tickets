@@ -187,6 +187,59 @@
                                     </div>
                                 </div>
                             </div>
+
+                            <!-- Computer Information Section -->
+                            {% if ticket.computer_info %}
+                            <div class="row mt-3">
+                                <div class="col-12">
+                                    <h5><i class="fas fa-desktop"></i> Computer Information</h5>
+                                    <div class="card card-outline card-info">
+                                        <div class="card-body">
+                                            <div class="row">
+                                                <div class="col-md-6">
+                                                    <strong><i class="fas fa-computer"></i> Hostname:</strong>
+                                                    <p class="text-muted">{{ ticket.computer_info.hostname|default:"Not available" }}</p>
+                                                    
+                                                    <strong><i class="fas fa-user"></i> Current User:</strong>
+                                                    <p class="text-muted">{{ ticket.computer_info.current_user|default:"Not available" }}</p>
+                                                    
+                                                    <strong><i class="fas fa-map-marker-alt"></i> Location:</strong>
+                                                    <p class="text-muted">{{ ticket.computer_info.derby_plant_loc|default:"Not available" }}</p>
+                                                    
+                                                    <strong><i class="fas fa-network-wired"></i> IP Address:</strong>
+                                                    <p class="text-muted">{{ ticket.computer_info.client_ip|default:"Not available" }}</p>
+                                                </div>
+                                                <div class="col-md-6">
+                                                    <strong><i class="fas fa-laptop"></i> Make/Model:</strong>
+                                                    <p class="text-muted">{{ ticket.computer_info.pc_make_model|default:"Not available" }}</p>
+                                                    
+                                                    <strong><i class="fas fa-memory"></i> RAM:</strong>
+                                                    <p class="text-muted">{{ ticket.computer_info.ram|default:"Not available" }}</p>
+                                                    
+                                                    <strong><i class="fas fa-microchip"></i> Processor:</strong>
+                                                    <p class="text-muted">{{ ticket.computer_info.processor_name|default:"Not available" }}</p>
+                                                    
+                                                    <strong><i class="fab fa-windows"></i> Operating System:</strong>
+                                                    <p class="text-muted">{{ ticket.computer_info.os_name|default:"Not available" }}</p>
+                                                </div>
+                                            </div>
+                                            <div class="row">
+                                                <div class="col-12">
+                                                    <hr>
+                                                    <small class="text-muted">
+                                                        <i class="fas fa-info-circle"></i> 
+                                                        Computer information captured at ticket creation: {{ ticket.computer_info.captured_at|date:"M d, Y H:i" }}
+                                                        {% if ticket.computer_info.serial_number %}
+                                                        | Serial: {{ ticket.computer_info.serial_number }}
+                                                        {% endif %}
+                                                    </small>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endif %}
                         </div>
                     </div>
 

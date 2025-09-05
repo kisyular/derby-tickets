@@ -494,3 +494,71 @@ def update_closed_on(sender, instance, created, **kwargs):
         if instance.closed_on:
             instance.closed_on = None
             instance.save(update_fields=["closed_on"])
+
+
+class ComputerInfo(models.Model):
+    """
+    Model for computer information from the Computers database.
+    This is a read-only model that maps to the existing computer table.
+    """
+
+    serial_number = models.CharField(max_length=100, primary_key=True)
+    hostname = models.CharField(max_length=100, db_column="hostName")
+    wan_ip = models.GenericIPAddressField(null=True, blank=True)
+    isp = models.CharField(max_length=200, blank=True)
+    wan_geo_loc = models.CharField(max_length=200, blank=True, db_column="wan_geoLoc")
+    client_ip = models.GenericIPAddressField(null=True, blank=True)
+    mac = models.CharField(max_length=50, blank=True)
+    derby_plant_loc = models.CharField(max_length=100, blank=True)
+    current_user = models.CharField(max_length=100, blank=True)
+    domain = models.CharField(max_length=100, blank=True)
+    pc_make_model = models.CharField(max_length=200, blank=True)
+    ram = models.CharField(max_length=50, blank=True)
+    processor_name = models.CharField(max_length=200, blank=True)
+    date = models.CharField(
+        max_length=50, blank=True
+    )  # Keeping as CharField since format varies
+    os_name = models.CharField(max_length=200, blank=True)
+
+    class Meta:
+        managed = False  # Don't let Django manage this table
+        db_table = "pcInfo"  # Correct table name from discovery
+        app_label = "tickets"
+        verbose_name = "Computer Information"
+        verbose_name_plural = "Computer Information"
+
+    def __str__(self):
+        return f"{self.hostname} ({self.current_user})"
+
+
+class TicketComputerInfo(models.Model):
+    """
+    Links tickets to computer information at the time of ticket creation.
+    This stores a snapshot of the computer info when the ticket was created.
+    """
+
+    ticket = models.OneToOneField(
+        Ticket, on_delete=models.CASCADE, related_name="computer_info"
+    )
+    serial_number = models.CharField(max_length=100)
+    hostname = models.CharField(max_length=100)
+    wan_ip = models.GenericIPAddressField(null=True, blank=True)
+    isp = models.CharField(max_length=200, blank=True)
+    wan_geo_loc = models.CharField(max_length=200, blank=True)
+    client_ip = models.GenericIPAddressField(null=True, blank=True)
+    mac = models.CharField(max_length=50, blank=True)
+    derby_plant_loc = models.CharField(max_length=100, blank=True)
+    current_user = models.CharField(max_length=100, blank=True)
+    domain = models.CharField(max_length=100, blank=True)
+    pc_make_model = models.CharField(max_length=200, blank=True)
+    ram = models.CharField(max_length=50, blank=True)
+    processor_name = models.CharField(max_length=200, blank=True)
+    os_name = models.CharField(max_length=200, blank=True)
+    captured_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        verbose_name = "Ticket Computer Information"
+        verbose_name_plural = "Ticket Computer Information"
+
+    def __str__(self):
+        return f"{self.ticket.title} - {self.hostname}"

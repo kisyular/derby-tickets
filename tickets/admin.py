@@ -5,7 +5,16 @@ from django.utils.html import format_html
 from django.urls import reverse
 from django.utils.safestring import mark_safe
 from django.utils import timezone
-from .models import Ticket, UserProfile, Comment, Category, APIToken, TicketAttachment
+from .models import (
+    Ticket,
+    UserProfile,
+    Comment,
+    Category,
+    APIToken,
+    TicketAttachment,
+    ComputerInfo,
+    TicketComputerInfo,
+)
 from .audit_models import SecurityEvent, LoginAttempt, UserSession, AuditLog
 
 # Register your models here.
@@ -891,6 +900,139 @@ class TicketAttachmentAdmin(admin.ModelAdmin):
         return f"{obj.file_size_mb} MB"
 
     file_size_mb.short_description = "File Size"
+
+    def has_change_permission(self, request, obj=None):
+        return request.user.is_staff
+
+    def has_add_permission(self, request):
+        return request.user.is_staff
+
+    def has_delete_permission(self, request, obj=None):
+        return request.user.is_staff
+
+
+@admin.register(ComputerInfo)
+class ComputerInfoAdmin(admin.ModelAdmin):
+    """
+    Admin interface for viewing computer information.
+    Read-only since this data comes from external database.
+    """
+
+    list_display = (
+        "serial_number",
+        "hostname",
+        "current_user",
+        "derby_plant_loc",
+        "pc_make_model",
+        "client_ip",
+    )
+    list_filter = ("derby_plant_loc", "domain")
+    search_fields = (
+        "serial_number",
+        "hostname",
+        "current_user",
+        "derby_plant_loc",
+        "pc_make_model",
+    )
+    readonly_fields = (
+        "serial_number",
+        "hostname",
+        "wan_ip",
+        "isp",
+        "wan_geo_loc",
+        "client_ip",
+        "mac",
+        "derby_plant_loc",
+        "current_user",
+        "domain",
+        "pc_make_model",
+        "ram",
+        "processor_name",
+        "date",
+        "os_name",
+    )
+
+    fieldsets = (
+        (
+            "Computer Identity",
+            {"fields": ("serial_number", "hostname", "current_user", "domain")},
+        ),
+        (
+            "Location & Network",
+            {
+                "fields": (
+                    "derby_plant_loc",
+                    "client_ip",
+                    "wan_ip",
+                    "mac",
+                    "isp",
+                    "wan_geo_loc",
+                )
+            },
+        ),
+        (
+            "Hardware Information",
+            {"fields": ("pc_make_model", "ram", "processor_name", "os_name", "date")},
+        ),
+    )
+
+    def has_add_permission(self, request):
+        return False  # No adding through Django admin
+
+    def has_change_permission(self, request, obj=None):
+        return False  # No editing through Django admin
+
+    def has_delete_permission(self, request, obj=None):
+        return False  # No deleting through Django admin
+
+
+@admin.register(TicketComputerInfo)
+class TicketComputerInfoAdmin(admin.ModelAdmin):
+    """
+    Admin interface for viewing ticket computer information snapshots.
+    """
+
+    list_display = (
+        "ticket",
+        "hostname",
+        "current_user",
+        "derby_plant_loc",
+        "captured_at",
+    )
+    list_filter = ("derby_plant_loc", "captured_at")
+    search_fields = (
+        "ticket__title",
+        "hostname",
+        "current_user",
+        "serial_number",
+        "derby_plant_loc",
+    )
+    readonly_fields = ("captured_at",)
+
+    fieldsets = (
+        ("Ticket Information", {"fields": ("ticket", "captured_at")}),
+        (
+            "Computer Identity",
+            {"fields": ("serial_number", "hostname", "current_user", "domain")},
+        ),
+        (
+            "Location & Network",
+            {
+                "fields": (
+                    "derby_plant_loc",
+                    "client_ip",
+                    "wan_ip",
+                    "mac",
+                    "isp",
+                    "wan_geo_loc",
+                )
+            },
+        ),
+        (
+            "Hardware Information",
+            {"fields": ("pc_make_model", "ram", "processor_name", "os_name")},
+        ),
+    )
 
     def has_change_permission(self, request, obj=None):
         return request.user.is_staff

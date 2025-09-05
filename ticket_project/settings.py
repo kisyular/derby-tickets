@@ -108,6 +108,20 @@ if USE_MSSQL:
                 "extra_params": "TrustServerCertificate=yes",
             },
         },
+        "computers": {
+            "ENGINE": "mssql",
+            "NAME": os.environ.get("MSSQL_COMPUTER_DB_NAME"),
+            "USER": os.environ.get("MSSQL_COMPUTER_DB_USER_READ"),  # Read-only access
+            "PASSWORD": os.environ.get("MSSQL_COMPUTER_DB_PASSWORD_READ"),
+            "HOST": os.environ.get("MSSQL_COMPUTER_DB_HOST"),
+            "PORT": os.environ.get("MSSQL_COMPUTER_DB_PORT", "1433"),
+            "OPTIONS": {
+                "driver": "ODBC Driver 17 for SQL Server",
+                "unicode_results": True,
+                "host_is_server": True,
+                "extra_params": "TrustServerCertificate=yes",
+            },
+        },
     }
 
 else:

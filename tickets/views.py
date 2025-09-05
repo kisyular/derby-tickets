@@ -305,6 +305,11 @@ def create_ticket(request):
                 assigned_to=assigned_to if assigned_to else None,
             )
 
+            # Link computer information to the ticket
+            from .computer_utils import link_ticket_to_computer_info
+
+            link_ticket_to_computer_info(ticket, request)
+
             # Save CC Admins and CC Non-Admins
             cc_admins = form.cleaned_data.get("cc_admins")
             cc_non_admins = form.cleaned_data.get("cc_non_admins")
