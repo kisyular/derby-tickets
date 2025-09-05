@@ -319,32 +319,37 @@
         </ul>
 
         <!-- Right navbar links -->
-        <ul class="navbar-nav ml-auto">
+        <ul class="navbar-nav ml-auto d-flex align-items-center">
           <!-- Theme Toggle Button -->
-          <li class="nav-item">
+          <li class="nav-item d-flex align-items-center">
             <button
-              class="nav-link theme-toggle"
+              class="nav-link theme-toggle btn btn-link p-0"
               id="themeToggle"
               title="Toggle Dark Mode"
             >
               <i class="fas fa-moon" id="themeIcon"></i>
             </button>
           </li>
+
           {% if user.is_authenticated %}
           <!-- User dropdown -->
-          <li class="nav-item dropdown">
-            <a class="nav-link" data-toggle="dropdown" href="#">
-              <span class="dropdown-item dropdown-header">
-                Welcome, {{ user.first_name|default:user.username }}!
-                <i class="far fa-user ml-1"></i>
-              </span>
-
-              <span class="badge badge-info navbar-badge" style="display: none"
+          <li class="nav-item dropdown d-flex align-items-center ml-3">
+            <a
+              class="nav-link d-flex align-items-center"
+              data-toggle="dropdown"
+              href="#"
+            >
+              <span class="mr-2"
+                >Welcome, {{ user.first_name|default:user.username }}!</span
+              >
+              <i class="far fa-user"></i>
+              <span
+                class="badge badge-info navbar-badge ml-2"
+                style="display: none"
                 >0</span
               >
             </a>
             <div class="dropdown-menu dropdown-menu-lg dropdown-menu-right">
-              <div class="dropdown-divider"></div>
               <a href="{% url 'tickets:ticket_list' %}" class="dropdown-item">
                 <i class="fas fa-ticket-alt mr-2"></i> My Tickets
               </a>
@@ -365,9 +370,12 @@
             </div>
           </li>
           {% else %}
-          <li class="nav-item">
-            <a href="{% url 'tickets:login' %}" class="nav-link">
-              <i class="fas fa-sign-in-alt"></i> Login
+          <li class="nav-item ml-3">
+            <a
+              href="{% url 'tickets:login' %}"
+              class="nav-link d-flex align-items-center"
+            >
+              <i class="fas fa-sign-in-alt mr-2"></i> Login
             </a>
           </li>
           {% endif %}
@@ -381,7 +389,9 @@
           href="{% url 'tickets:home' %}"
           class="brand-link d-flex align-items-center"
         >
-          <span class="brand-text font-weight-light ml-2">DFS Ticket System</span>
+          <span class="brand-text font-weight-light ml-2"
+            >DFS Ticket System</span
+          >
         </a>
 
         <!-- Sidebar -->
@@ -537,11 +547,11 @@
       });
 
       // change the year in the footer automatically
-      document.addEventListener("DOMContentLoaded", function() {
-          const yearSpan = document.querySelector("footer #copyright-year");
-          if (yearSpan) {
-              yearSpan.textContent = new Date().getFullYear();
-          }
+      document.addEventListener("DOMContentLoaded", function () {
+        const yearSpan = document.querySelector("footer #copyright-year");
+        if (yearSpan) {
+          yearSpan.textContent = new Date().getFullYear();
+        }
       });
     </script>
 

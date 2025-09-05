@@ -14,6 +14,7 @@ from .models import (
     TicketAttachment,
     ComputerInfo,
     TicketComputerInfo,
+    TicketUpdate,
 )
 from .audit_models import SecurityEvent, LoginAttempt, UserSession, AuditLog
 
@@ -1042,3 +1043,34 @@ class TicketComputerInfoAdmin(admin.ModelAdmin):
 
     def has_delete_permission(self, request, obj=None):
         return request.user.is_staff
+
+
+@admin.register(TicketUpdate)
+class TicketUpdateAdmin(admin.ModelAdmin):
+    """Admin interface for ticket updates/timeline entries"""
+
+    list_display = ("ticket", "update_type", "user", "description", "created_at")
+    list_filter = ("update_type", "created_at")
+    search_fields = ("ticket__title", "ticket__id", "user__username", "description")
+    readonly_fields = ("created_at",)
+
+    fieldsets = (
+        (
+            "Update Information",
+            {"fields": ("ticket", "update_type", "user", "description")},
+        ),
+        ("Change Details", {"fields": ("change_data",), "classes": ("collapse",)}),
+        ("Timestamps", {"fields": ("created_at",), "classes": ("collapse",)}),
+    )
+
+    def has_add_permission(self, request):
+        # Typically updates are created automatically, not manually
+        return request.user.is_superuser
+
+    def has_change_permission(self, request, obj=None):
+        # Allow viewing but not changing
+        return request.user.is_staff
+
+    def has_delete_permission(self, request, obj=None):
+        # Only superusers can delete audit trail
+        return request.user.is_superuser

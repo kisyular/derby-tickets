@@ -562,3 +562,210 @@ class TicketComputerInfo(models.Model):
 
     def __str__(self):
         return f"{self.ticket.title} - {self.hostname}"
+
+
+class TicketUpdate(models.Model):
+    """
+    Timeline updates for tickets - tracks all administrative actions and changes.
+    This provides a user-friendly timeline display of ticket history.
+    """
+
+    UPDATE_TYPES = [
+        ("ASSIGNED", "Ticket Assigned"),
+        ("UNASSIGNED", "Ticket Unassigned"),
+        ("STATUS_CHANGED", "Status Changed"),
+        ("PRIORITY_CHANGED", "Priority Changed"),
+        ("CC_ADMIN_ADDED", "CC Admin Added"),
+        ("CC_ADMIN_REMOVED", "CC Admin Removed"),
+        ("CC_USER_ADDED", "CC User Added"),
+        ("CC_USER_REMOVED", "CC User Removed"),
+        ("TITLE_CHANGED", "Title Changed"),
+        ("DESCRIPTION_CHANGED", "Description Changed"),
+        ("CATEGORY_CHANGED", "Category Changed"),
+    ]
+
+    ticket = models.ForeignKey(Ticket, on_delete=models.CASCADE, related_name="updates")
+    update_type = models.CharField(max_length=20, choices=UPDATE_TYPES)
+    user = models.ForeignKey(
+        User,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        help_text="User who made the change",
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    # Change details - flexible JSON field for different update types
+    change_data = models.JSONField(default=dict, help_text="Details of what changed")
+
+    # Human-readable description
+    description = models.CharField(
+        max_length=500, help_text="Human-readable description of the change"
+    )
+
+    class Meta:
+        ordering = ["-created_at"]
+        verbose_name = "Ticket Update"
+        verbose_name_plural = "Ticket Updates"
+
+    def __str__(self):
+        user_name = (
+            self.user.get_full_name()
+            if self.user and self.user.get_full_name()
+            else (self.user.username if self.user else "System")
+        )
+        return f"{user_name}: {self.description}"
+
+    @property
+    def user_display_name(self):
+        """Get the display name for the user who made the change"""
+        if not self.user:
+            return "System"
+        return self.user.get_full_name() or self.user.username
+
+    @property
+    def icon_class(self):
+        """Get the appropriate FontAwesome icon for this update type"""
+        icon_map = {
+            "ASSIGNED": "fas fa-user-plus",
+            "UNASSIGNED": "fas fa-user-minus",
+            "STATUS_CHANGED": "fas fa-toggle-on",
+            "PRIORITY_CHANGED": "fas fa-exclamation-triangle",
+            "CC_ADMIN_ADDED": "fas fa-user-shield",
+            "CC_ADMIN_REMOVED": "fas fa-user-shield",
+            "CC_USER_ADDED": "fas fa-users",
+            "CC_USER_REMOVED": "fas fa-users",
+            "TITLE_CHANGED": "fas fa-edit",
+            "DESCRIPTION_CHANGED": "fas fa-file-alt",
+            "CATEGORY_CHANGED": "fas fa-tag",
+        }
+        return icon_map.get(self.update_type, "fas fa-history")
+
+    @classmethod
+    def create_from_audit_log(cls, audit_log):
+        """
+        Create TicketUpdate entries from AuditLog entries for tickets.
+        This method processes audit logs and creates user-friendly timeline entries.
+        """
+        if audit_log.object_type != "Ticket":
+            return []
+
+        updates = []
+        ticket_id = audit_log.object_id
+
+        try:
+            ticket = Ticket.objects.get(id=ticket_id)
+        except Ticket.DoesNotExist:
+            return []
+
+        changes = audit_log.changes or {}
+
+        # Process different types of changes
+        for field, change_info in changes.items():
+            old_value = change_info.get("old", "")
+            new_value = change_info.get("new", "")
+
+            if field == "assigned_to":
+                if old_value and not new_value:
+                    # Unassigned
+                    update = cls(
+                        ticket=ticket,
+                        update_type="UNASSIGNED",
+                        user=audit_log.user,
+                        created_at=audit_log.timestamp,
+                        change_data={"old_assignee": old_value},
+                        description=f"unassigned this ticket from {old_value}",
+                    )
+                elif new_value:
+                    # Assigned
+                    update = cls(
+                        ticket=ticket,
+                        update_type="ASSIGNED",
+                        user=audit_log.user,
+                        created_at=audit_log.timestamp,
+                        change_data={
+                            "new_assignee": new_value,
+                            "old_assignee": old_value,
+                        },
+                        description=f"assigned this ticket to {new_value}",
+                    )
+                else:
+                    continue
+                updates.append(update)
+
+            elif field == "status":
+                update = cls(
+                    ticket=ticket,
+                    update_type="STATUS_CHANGED",
+                    user=audit_log.user,
+                    created_at=audit_log.timestamp,
+                    change_data={"old_status": old_value, "new_status": new_value},
+                    description=f"changed status from {old_value} to {new_value}",
+                )
+                updates.append(update)
+
+            elif field == "priority":
+                update = cls(
+                    ticket=ticket,
+                    update_type="PRIORITY_CHANGED",
+                    user=audit_log.user,
+                    created_at=audit_log.timestamp,
+                    change_data={"old_priority": old_value, "new_priority": new_value},
+                    description=f"changed priority from {old_value} to {new_value}",
+                )
+                updates.append(update)
+
+            elif field == "title":
+                update = cls(
+                    ticket=ticket,
+                    update_type="TITLE_CHANGED",
+                    user=audit_log.user,
+                    created_at=audit_log.timestamp,
+                    change_data={"old_title": old_value, "new_title": new_value},
+                    description=f"changed title",
+                )
+                updates.append(update)
+
+            elif field == "description":
+                update = cls(
+                    ticket=ticket,
+                    update_type="DESCRIPTION_CHANGED",
+                    user=audit_log.user,
+                    created_at=audit_log.timestamp,
+                    change_data={
+                        "old_description": old_value,
+                        "new_description": new_value,
+                    },
+                    description=f"updated description",
+                )
+                updates.append(update)
+
+            elif field == "cc_admins":
+                # Handle CC admin changes
+                new_users = new_value if isinstance(new_value, list) else []
+                for user in new_users:
+                    update = cls(
+                        ticket=ticket,
+                        update_type="CC_ADMIN_ADDED",
+                        user=audit_log.user,
+                        created_at=audit_log.timestamp,
+                        change_data={"added_user": user},
+                        description=f"added {user} to CC Admins",
+                    )
+                    updates.append(update)
+
+            elif field == "cc_non_admins":
+                # Handle CC non-admin changes
+                new_users = new_value if isinstance(new_value, list) else []
+                for user in new_users:
+                    update = cls(
+                        ticket=ticket,
+                        update_type="CC_USER_ADDED",
+                        user=audit_log.user,
+                        created_at=audit_log.timestamp,
+                        change_data={"added_user": user},
+                        description=f"added {user} to CC Users",
+                    )
+                    updates.append(update)
+
+        return updates

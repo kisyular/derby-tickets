@@ -9,6 +9,7 @@ from django.core.cache import cache
 from .models import Ticket, UserProfile, Comment, Category
 from .security import SecurityManager, domain_required, staff_required
 from .audit_security import audit_security_manager
+from .update_service import TicketUpdateService
 from .logging_utils import log_auth_event, log_security_event
 from .utils import user_can_access_ticket
 
@@ -200,29 +201,64 @@ def ticket_detail(request, ticket_id):
 
                 # Handle CC changes for staff users
                 if request.user.is_staff:
-                    # Update CC admins
+                    # Track CC admin changes
+                    old_cc_admins = set(ticket.cc_admins.all())
+                    new_cc_admins = set()
                     if cc_admin_ids:
-                        cc_admins = User.objects.filter(
-                            id__in=cc_admin_ids, is_staff=True
+                        new_cc_admins = set(
+                            User.objects.filter(id__in=cc_admin_ids, is_staff=True)
                         )
-                        ticket.cc_admins.set(cc_admins)
-                        changes["cc_admins"] = {"new": [u.username for u in cc_admins]}
-                    else:
-                        ticket.cc_admins.clear()
-                        changes["cc_admins"] = {"new": []}
+
+                    # Update CC admins
+                    ticket.cc_admins.set(new_cc_admins)
+
+                    # Track changes for updates
+                    added_cc_admins = new_cc_admins - old_cc_admins
+                    removed_cc_admins = old_cc_admins - new_cc_admins
+
+                    if added_cc_admins or removed_cc_admins:
+                        TicketUpdateService.create_cc_update(
+                            ticket,
+                            request.user,
+                            added_cc_admins,
+                            removed_cc_admins,
+                            is_admin=True,
+                        )
+                        changes["cc_admins"] = {
+                            "new": [u.username for u in new_cc_admins]
+                        }
+
+                    # Track CC non-admin changes
+                    old_cc_non_admins = set(ticket.cc_non_admins.all())
+                    new_cc_non_admins = set()
+                    if cc_non_admin_ids:
+                        new_cc_non_admins = set(
+                            User.objects.filter(id__in=cc_non_admin_ids, is_staff=False)
+                        )
 
                     # Update CC non-admins
-                    if cc_non_admin_ids:
-                        cc_non_admins = User.objects.filter(
-                            id__in=cc_non_admin_ids, is_staff=False
+                    ticket.cc_non_admins.set(new_cc_non_admins)
+
+                    # Track changes for updates
+                    added_cc_non_admins = new_cc_non_admins - old_cc_non_admins
+                    removed_cc_non_admins = old_cc_non_admins - new_cc_non_admins
+
+                    if added_cc_non_admins or removed_cc_non_admins:
+                        TicketUpdateService.create_cc_update(
+                            ticket,
+                            request.user,
+                            added_cc_non_admins,
+                            removed_cc_non_admins,
+                            is_admin=False,
                         )
-                        ticket.cc_non_admins.set(cc_non_admins)
                         changes["cc_non_admins"] = {
-                            "new": [u.username for u in cc_non_admins]
+                            "new": [u.username for u in new_cc_non_admins]
                         }
-                    else:
-                        ticket.cc_non_admins.clear()
-                        changes["cc_non_admins"] = {"new": []}
+
+                # Create timeline updates for other changes
+                TicketUpdateService.process_ticket_changes(
+                    ticket, changes, request.user
+                )
 
                 # Log the ticket update for audit trail
                 audit_security_manager.log_audit_event(
@@ -307,12 +343,16 @@ def ticket_detail(request, ticket_id):
             else:
                 messages.error(request, "Comment content is required.")
 
-    # Get comments for the ticket (newest first)
-    comments = ticket.comments.all().order_by("-created_at")
+    # Get timeline entries (comments + updates) for the ticket
+    timeline_entries = TicketUpdateService.get_timeline_entries(ticket)
 
     # Filter out internal comments for non-staff users
     if not request.user.is_staff:
-        comments = comments.filter(is_internal=False)
+        timeline_entries = [
+            entry
+            for entry in timeline_entries
+            if entry["type"] != "comment" or not entry["content"].is_internal
+        ]
 
     # Get related tickets using basic rule-based approach
     try:
@@ -340,7 +380,7 @@ def ticket_detail(request, ticket_id):
 
     context = {
         "ticket": ticket,
-        "comments": comments,
+        "timeline_entries": timeline_entries,
         "related_tickets": related_tickets,
         "can_add_internal_comments": request.user.is_staff,
         "can_edit_ticket": (ticket.created_by == request.user or request.user.is_staff),

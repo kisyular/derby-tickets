@@ -187,19 +187,19 @@
                                             <td>
                                                 {% if ticket.priority == 'Urgent' %}
                                                     <span class="badge badge-danger">
-                                                        <i class="fas fa-exclamation-triangle"></i> {{ ticket.priority }}
+                                                         {{ ticket.priority }}
                                                     </span>
                                                 {% elif ticket.priority == 'High' %}
                                                     <span class="badge badge-warning">
-                                                        <i class="fas fa-exclamation-circle"></i> {{ ticket.priority }}
+                                                       {{ ticket.priority }}
                                                     </span>
                                                 {% elif ticket.priority == 'Medium' %}
                                                     <span class="badge badge-info">
-                                                        <i class="fas fa-info-circle"></i> {{ ticket.priority }}
+                                                         {{ ticket.priority }}
                                                     </span>
                                                 {% else %}
                                                     <span class="badge badge-secondary">
-                                                        <i class="fas fa-minus-circle"></i> {{ ticket.priority }}
+                                                        {{ ticket.priority }}
                                                     </span>
                                                 {% endif %}
                                             </td>
@@ -326,12 +326,6 @@
                                     Showing {{ page_obj.start_index }} to {{ page_obj.end_index }} of {{ page_obj.paginator.count }} tickets
                                 </small>
                             </div>
-                            </ul>
-                            <div class="float-left">
-                                <small class="text-muted">
-                                    Showing {{ tickets|length }} ticket{{ tickets|length|pluralize }}
-                                </small>
-                            </div>
                         </div>
                     {% endif %}
                 </div>
@@ -404,19 +398,19 @@
                                         <td>
                                             {% if ticket.priority == 'Urgent' %}
                                                 <span class="badge badge-danger">
-                                                    <i class="fas fa-exclamation-triangle"></i> {{ ticket.priority }}
+                                                    {{ ticket.priority }}
                                                 </span>
                                             {% elif ticket.priority == 'High' %}
                                                 <span class="badge badge-warning">
-                                                    <i class="fas fa-exclamation-circle"></i> {{ ticket.priority }}
+                                                    {{ ticket.priority }}
                                                 </span>
                                             {% elif ticket.priority == 'Medium' %}
                                                 <span class="badge badge-info">
-                                                    <i class="fas fa-info-circle"></i> {{ ticket.priority }}
+                                                   {{ ticket.priority }}
                                                 </span>
                                             {% else %}
                                                 <span class="badge badge-secondary">
-                                                    <i class="fas fa-minus-circle"></i> {{ ticket.priority }}
+                                                     {{ ticket.priority }}
                                                 </span>
                                             {% endif %}
                                         </td>
