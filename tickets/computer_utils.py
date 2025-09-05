@@ -16,26 +16,35 @@ def get_computer_info_by_user(username):
     Get computer information for a user from the computers database.
 
     Args:
-        username (str): The username to search for
+        username (str): The username to search for (can be email format like user@domain.com)
 
     Returns:
         ComputerInfo or None: Computer information if found, None otherwise
     """
     try:
+        # Strip email domain if present (e.g., "username@derbyfab.com" -> "username")
+        if "@" in username:
+            clean_username = username.split("@")[0]
+            logger.info(f"Stripped email domain: {username} -> {clean_username}")
+        else:
+            clean_username = username
+
         # Use the computers database connection
         computer_info = (
             ComputerInfo.objects.using("computers")
-            .filter(current_user__iexact=username)
+            .filter(current_user__iexact=clean_username)
             .first()
         )
 
         if computer_info:
             logger.info(
-                f"Found computer info for user {username}: {computer_info.hostname}"
+                f"Found computer info for user {clean_username} (original: {username}): {computer_info.hostname}"
             )
             return computer_info
         else:
-            logger.warning(f"No computer information found for user: {username}")
+            logger.warning(
+                f"No computer information found for user: {clean_username} (original: {username})"
+            )
             return None
 
     except Exception as e:
@@ -115,18 +124,49 @@ def link_ticket_to_computer_info(ticket, request=None):
     """
     try:
         computer_info = None
+        search_methods = []
 
         # Method 1: Try to find by username
         if ticket.created_by and ticket.created_by.username:
+            logger.info(
+                f"Attempting to link ticket {ticket.id} created by user: {ticket.created_by.username}"
+            )
             computer_info = get_computer_info_by_user(ticket.created_by.username)
+            search_methods.append(f"username: {ticket.created_by.username}")
 
         # Method 2: Try to find by client IP if request is available
         if not computer_info and request:
             client_ip = get_client_ip(request)
             if client_ip:
+                logger.info(f"Trying to find computer by IP: {client_ip}")
                 computer_info = get_computer_info_by_ip(client_ip)
+                search_methods.append(f"IP: {client_ip}")
 
-        # Method 3: Could add more methods here (hostname detection, etc.)
+        # Method 3: Try to find by email prefix variations
+        if not computer_info and ticket.created_by and ticket.created_by.email:
+            email_username = (
+                ticket.created_by.email.split("@")[0]
+                if "@" in ticket.created_by.email
+                else ticket.created_by.email
+            )
+            if email_username != ticket.created_by.username:
+                logger.info(
+                    f"Trying to find computer by email prefix: {email_username}"
+                )
+                computer_info = get_computer_info_by_user(email_username)
+                search_methods.append(f"email prefix: {email_username}")
+
+        # Method 4: Try to find by first name or display name (if available)
+        if not computer_info and ticket.created_by:
+            if (
+                hasattr(ticket.created_by, "first_name")
+                and ticket.created_by.first_name
+            ):
+                logger.info(
+                    f"Trying to find computer by first name: {ticket.created_by.first_name}"
+                )
+                computer_info = get_computer_info_by_user(ticket.created_by.first_name)
+                search_methods.append(f"first name: {ticket.created_by.first_name}")
 
         if computer_info:
             # Create a snapshot of the computer info linked to this ticket
@@ -149,12 +189,14 @@ def link_ticket_to_computer_info(ticket, request=None):
             )
 
             logger.info(
-                f"Successfully linked ticket {ticket.id} to computer {computer_info.hostname}"
+                f"Successfully linked ticket {ticket.id} to computer {computer_info.hostname} "
+                f"(found via: {', '.join(search_methods)})"
             )
             return ticket_computer_info
         else:
             logger.warning(
-                f"Could not link ticket {ticket.id} to any computer information"
+                f"Could not link ticket {ticket.id} to any computer information. "
+                f"Tried: {', '.join(search_methods)}"
             )
             return None
 
