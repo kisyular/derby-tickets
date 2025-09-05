@@ -4,8 +4,10 @@ from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.models import User
 from django.contrib import messages
 from django.core.paginator import Paginator
-from django.db.models import Q
+from django.db.models import Q, Count
 from django.core.cache import cache
+from django.utils import timezone
+from datetime import timedelta
 from .models import Ticket, UserProfile, Comment, Category
 from .security import SecurityManager, domain_required, staff_required
 from .audit_security import audit_security_manager
@@ -507,6 +509,111 @@ def home(request):
                 "department": "Not Set",
             }
 
+        # Priority distribution for charts
+        priority_stats = (
+            Ticket.objects.values("priority")
+            .annotate(count=Count("id"))
+            .order_by("priority")
+        )
+
+        # Recent activity (last 7 days)
+        week_ago = timezone.now().date() - timedelta(days=7)
+        new_this_week = Ticket.objects.filter(created_at__date__gte=week_ago).count()
+        closed_this_week = Ticket.objects.filter(
+            status="Closed", closed_on__date__gte=week_ago
+        ).count()
+
+        # Add basic analytics calculations
+        resolution_rate = (
+            round((closed_tickets / total_tickets * 100), 2) if total_tickets > 0 else 0
+        )
+
+        # Calculate weekly closure rate
+        weekly_closure_rate = (
+            round((closed_this_week / new_this_week * 100), 2)
+            if new_this_week > 0
+            else 0
+        )
+
+        # Simple analytics data structure
+        analytics_data = {
+            "totals": {
+                "resolution_rate": resolution_rate,
+            },
+            "recent_activity": {
+                "weekly_closure_rate": weekly_closure_rate,
+            },
+            "performance": {
+                "avg_first_response_hours": None,  # You can calculate this if needed
+            },
+        }
+
+        # Most Active Users (last 7 days)
+        from django.db.models import Case, When, Value
+        from django.contrib.auth.models import User
+
+        # Get activity counts for each user in the last 7 days
+        most_active_users = []
+
+        # Count tickets created
+        created_counts = (
+            Ticket.objects.filter(created_at__date__gte=week_ago)
+            .values("created_by__email")
+            .annotate(created_count=Count("id"))
+            .exclude(created_by__email__isnull=True)
+            .order_by()  # Clear default ordering to avoid GROUP BY issues
+        )
+
+        # Count comments made
+        comment_counts = (
+            Comment.objects.filter(created_at__date__gte=week_ago)
+            .values("author__email")
+            .annotate(comment_count=Count("id"))
+            .exclude(author__email__isnull=True)
+            .order_by()  # Clear default ordering to avoid GROUP BY issues
+        )
+
+        # Count ticket updates/assignments
+        update_counts = (
+            Ticket.objects.filter(updated_at__date__gte=week_ago)
+            .values("assigned_to__email")
+            .annotate(update_count=Count("id"))
+            .exclude(assigned_to__email__isnull=True)
+            .order_by()  # Clear default ordering to avoid GROUP BY issues
+        )
+
+        # Combine activity counts
+        user_activity = {}
+
+        for item in created_counts:
+            email = item["created_by__email"]
+            if email:
+                user_activity[email] = (
+                    user_activity.get(email, 0) + item["created_count"]
+                )
+
+        for item in comment_counts:
+            email = item["author__email"]
+            if email:
+                user_activity[email] = (
+                    user_activity.get(email, 0) + item["comment_count"]
+                )
+
+        for item in update_counts:
+            email = item["assigned_to__email"]
+            if email:
+                user_activity[email] = (
+                    user_activity.get(email, 0) + item["update_count"]
+                )
+
+        # Sort by activity and get top 5
+        sorted_users = sorted(user_activity.items(), key=lambda x: x[1], reverse=True)[
+            :4
+        ]
+        most_active_users = [
+            {"email": email, "activity_count": count} for email, count in sorted_users
+        ]
+
         context = {
             "recent_tickets": recent_tickets,
             "profile_info": profile_info,
@@ -516,6 +623,11 @@ def home(request):
             "closed_tickets": closed_tickets,
             "total_users": User.objects.count(),
             "total_staff": User.objects.filter(is_staff=True).count(),
+            "analytics_data": analytics_data,
+            "priority_stats": list(priority_stats),
+            "new_this_week": new_this_week,
+            "closed_this_week": closed_this_week,
+            "most_active_users": most_active_users,
         }
     else:
         context = {}
