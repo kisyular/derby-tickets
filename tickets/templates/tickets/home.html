@@ -207,7 +207,7 @@ System{% endblock %} {% block content %}
             <span class="info-box-text">Closed This Week</span>
             <span class="info-box-number">{{ closed_this_week }}</span>
             <span class="progress-description">
-              Weekly closure rate: {{ analytics_data.recent_activity.weekly_closure_rate }}%
+              Same-week resolution: {{ analytics_data.recent_activity.weekly_closure_rate }}%
             </span>
           </div>
         </div>
@@ -259,13 +259,13 @@ System{% endblock %} {% block content %}
       </div>
     </div>
 
-    <!-- Most Active Users (Last 7 Days) -->
+    <!-- Most Active Users (This Week) -->
     <div class="row">
       <div class="col-md-6">
         <div class="card card-outline card-info">
           <div class="card-header">
             <h3 class="card-title">
-              <i class="fas fa-users"></i> Most Active Users (Last 7 Days)
+              <i class="fas fa-users"></i> Most Active Users (This Week)
             </h3>
           </div>
           <div class="card-body table-responsive p-0">
@@ -309,7 +309,7 @@ System{% endblock %} {% block content %}
             {% else %}
             <div class="p-4 text-center">
               <i class="fas fa-user-slash fa-2x text-muted mb-3"></i>
-              <p class="text-muted">No user activity in the last 7 days</p>
+              <p class="text-muted">No user activity this week</p>
             </div>
             {% endif %}
           </div>
@@ -347,24 +347,17 @@ System{% endblock %} {% block content %}
             </div>
 
             <div class="mt-3">
-              <h6>Week Performance</h6>
               <div class="progress">
                 <div
                   class="progress-bar bg-success"
                   style="width: {{ analytics_data.recent_activity.weekly_closure_rate }}%"
                 >
                   {{ analytics_data.recent_activity.weekly_closure_rate }}%
-                  Resolution Rate
+                  Weekly Resolution
                 </div>
               </div>
               <small class="text-muted">
-                {% if analytics_data.recent_activity.weekly_closure_rate >= 80 %}
-                <i class="fas fa-thumbs-up text-success"></i> Excellent
-                performance this week! {% elif analytics_data.recent_activity.weekly_closure_rate >= 60 %}
-                <i class="fas fa-thumbs-up text-warning"></i> Good performance
-                this week {% else %}
-                <i class="fas fa-exclamation-triangle text-danger"></i> Room for
-                improvement {% endif %}
+                {{ closed_this_week }} of {{ total_tickets }} total tickets closed this week
               </small>
             </div>
           </div>

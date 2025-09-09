@@ -603,22 +603,48 @@ def home(request):
             .order_by("priority")
         )
 
-        # Recent activity (last 7 days)
-        week_ago = timezone.now().date() - timedelta(days=7)
-        new_this_week = Ticket.objects.filter(created_at__date__gte=week_ago).count()
-        closed_this_week = Ticket.objects.filter(
-            status="Closed", closed_on__date__gte=week_ago
-        ).count()
+        # Recent activity (this week - Monday to current day)
+        today = timezone.now().date()
+        # Get Monday of this week (0 = Monday, 6 = Sunday)
+        days_since_monday = today.weekday()
+        week_start = today - timedelta(days=days_since_monday)
 
-        # Add basic analytics calculations
+        # Debug: week_start should be Monday of current week
+        # Example: if today is Wednesday Sep 9, 2025, week_start should be Monday Sep 7, 2025
+
+        new_this_week = Ticket.objects.filter(created_at__date__gte=week_start).count()
+        closed_this_week = Ticket.objects.filter(
+            status="Closed", closed_on__date__gte=week_start
+        ).count()  # Add basic analytics calculations
         resolution_rate = (
             round((closed_tickets / total_tickets * 100), 2) if total_tickets > 0 else 0
         )
 
-        # Calculate weekly closure rate
+        # Simple weekly closure rate: closed this week / total tickets
         weekly_closure_rate = (
-            round((closed_this_week / new_this_week * 100), 2)
-            if new_this_week > 0
+            round((closed_this_week / total_tickets * 100), 2)
+            if total_tickets > 0
+            else 0
+        )
+
+        # Also calculate same-week creation-to-closure rate for reference
+        tickets_created_and_closed_this_week = Ticket.objects.filter(
+            created_at__date__gte=week_start,
+            status="Closed",
+            closed_on__date__gte=week_start,
+        ).count()
+
+        # Alternative calculation: Overall closure efficiency this week
+        # (tickets closed this week / total open tickets at start of week)
+        total_open_before_week = Ticket.objects.filter(
+            Q(status="Open") | Q(status="In Progress")
+        ).count()
+
+        weekly_activity_rate = (
+            round(
+                (closed_this_week / (total_open_before_week + new_this_week) * 100), 2
+            )
+            if (total_open_before_week + new_this_week) > 0
             else 0
         )
 
@@ -628,23 +654,24 @@ def home(request):
                 "resolution_rate": resolution_rate,
             },
             "recent_activity": {
-                "weekly_closure_rate": weekly_closure_rate,
+                "weekly_closure_rate": weekly_closure_rate,  # % of total tickets that were closed this week
+                "tickets_created_and_closed_this_week": tickets_created_and_closed_this_week,
             },
             "performance": {
                 "avg_first_response_hours": None,  # You can calculate this if needed
             },
         }
 
-        # Most Active Users (last 7 days)
+        # Most Active Users (this week)
         from django.db.models import Case, When, Value
         from django.contrib.auth.models import User
 
-        # Get activity counts for each user in the last 7 days
+        # Get activity counts for each user in this week (Monday to current day)
         most_active_users = []
 
         # Count tickets created
         created_counts = (
-            Ticket.objects.filter(created_at__date__gte=week_ago)
+            Ticket.objects.filter(created_at__date__gte=week_start)
             .values("created_by__email")
             .annotate(created_count=Count("id"))
             .exclude(created_by__email__isnull=True)
@@ -653,7 +680,7 @@ def home(request):
 
         # Count comments made
         comment_counts = (
-            Comment.objects.filter(created_at__date__gte=week_ago)
+            Comment.objects.filter(created_at__date__gte=week_start)
             .values("author__email")
             .annotate(comment_count=Count("id"))
             .exclude(author__email__isnull=True)
@@ -662,7 +689,7 @@ def home(request):
 
         # Count ticket updates/assignments
         update_counts = (
-            Ticket.objects.filter(updated_at__date__gte=week_ago)
+            Ticket.objects.filter(updated_at__date__gte=week_start)
             .values("assigned_to__email")
             .annotate(update_count=Count("id"))
             .exclude(assigned_to__email__isnull=True)
@@ -715,6 +742,8 @@ def home(request):
             "new_this_week": new_this_week,
             "closed_this_week": closed_this_week,
             "most_active_users": most_active_users,
+            "week_start": week_start,  # Monday of current week
+            "today": today,  # Current date
         }
     else:
         context = {}
