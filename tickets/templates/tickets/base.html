@@ -197,13 +197,19 @@
         background-color: #007bff;
         border-color: #007bff;
         color: #ffffff;
-        padding: 4px 8px;
-        margin: 2px;
-        border-radius: 15px;
-        font-size: 13px;
+        padding: 2px 6px;
+        margin: 1px 2px 1px 0;
+        border-radius: 12px;
         font-weight: 500;
-        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        box-shadow: 0 1px 2px rgba(0,0,0,0.1);
         transition: all 0.2s ease;
+        display: inline-flex;
+        align-items: center;
+        max-width: 150px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        line-height: 1.2;
       }
 
       .select2-container--bootstrap4 .select2-selection--multiple .select2-selection__choice:hover {
@@ -214,13 +220,20 @@
 
       .select2-container--bootstrap4 .select2-selection--multiple .select2-selection__choice__remove {
         color: #ffffff;
-        margin-right: 5px;
+        margin-right: 3px;
         font-weight: bold;
         background: #dc3545; /* Bootstrap danger color */
         border-radius: 50%;
-        padding: 2px 5px;
+        padding: 1px 3px;
         border: none;
         transition: all 0.2s ease-in-out;
+        font-size: 10px;
+        line-height: 1;
+        min-width: 14px;
+        height: 14px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
       }
 
       .select2-container--bootstrap4 .select2-selection--multiple .select2-selection__choice__remove:hover {
@@ -231,16 +244,23 @@
       }
 
       .select2-container--bootstrap4 .select2-selection--multiple {
-        min-height: 42px;
-        padding: 3px;
-        border-radius: 8px;
+        min-height: 38px;
+        padding: 2px 5px;
+        border-radius: 6px;
         border: 2px solid #ced4da;
         transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+        height: auto !important;
+        overflow-y: auto;
       }
 
       .select2-container--bootstrap4.select2-container--focus .select2-selection--multiple {
         border-color: #80bdff;
         box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+      }
+
+      /* Empty state styling */
+      .select2-container--bootstrap4 .select2-selection--multiple:empty {
+        min-height: 38px;
       }
 
       .select2-dropdown {
@@ -265,8 +285,17 @@
       .select2-container--bootstrap4 .select2-search__field {
         border-radius: 6px;
         border: 1px solid #ced4da;
-        padding: 6px 10px;
-        margin: 4px;
+        padding: 2px 6px;
+        margin: 2px;
+        min-height: 24px;
+      }
+
+      /* Compact input styling for multiple selection */
+      .select2-container--bootstrap4 .select2-selection--multiple .select2-search--inline .select2-search__field {
+        height: 24px;
+        margin: 2px 0;
+        padding: 2px 4px;
+        min-width: 80px;
       }
 
       /* Different colors for different types */
@@ -282,6 +311,7 @@
       .cc-users-select .select2-selection__choice {
         background-color: #17a2b8 !important;
         border-color: #17a2b8 !important;
+        padding: 2px 5px !important;
       }
 
       .cc-users-select .select2-selection__choice:hover {
