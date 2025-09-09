@@ -726,8 +726,10 @@
                                 <div class="row">
                                     <div class="col-md-6">
                                         <div class="form-group">
-                                            <label for="cc_admins">CC Admins</label>
-                                            <select class="form-control" id="cc_admins" name="cc_admins" multiple>
+                                            <label for="cc_admins">
+                                                <i class="fas fa-user-shield text-success"></i> CC Admins
+                                            </label>
+                                            <select class="form-control select2 cc-admins-select" id="cc_admins" name="cc_admins" multiple data-placeholder="Select admins to CC...">
                                                 {% for admin_user in admin_users %}
                                                     <option value="{{ admin_user.id }}"
                                                             {% if admin_user in ticket.cc_admins.all %}selected{% endif %}>
@@ -735,14 +737,18 @@
                                                     </option>
                                                 {% endfor %}
                                             </select>
-                                            <small class="form-text text-muted">Hold Ctrl/Cmd to select multiple</small>
+                                            <small class="form-text text-muted">
+                                                <i class="fas fa-info-circle"></i> Staff members who will receive updates
+                                            </small>
                                         </div>
                                     </div>
                                     <div class="col-md-6">
                                         <div class="form-group">
-                                            <label for="cc_non_admins">CC Users</label>
-                                            <select class="form-control" id="cc_non_admins" name="cc_non_admins"
-                                                    multiple>
+                                            <label for="cc_non_admins">
+                                                <i class="fas fa-users text-info"></i> CC Users
+                                            </label>
+                                            <select class="form-control select2 cc-users-select" id="cc_non_admins" name="cc_non_admins"
+                                                    multiple data-placeholder="Select users to CC...">
                                                 {% for regular_user in regular_users %}
                                                     <option value="{{ regular_user.id }}"
                                                             {% if regular_user in ticket.cc_non_admins.all %}selected{% endif %}>
@@ -750,7 +756,9 @@
                                                     </option>
                                                 {% endfor %}
                                             </select>
-                                            <small class="form-text text-muted">Hold Ctrl/Cmd to select multiple</small>
+                                            <small class="form-text text-muted">
+                                                <i class="fas fa-info-circle"></i> Regular users who will receive updates
+                                            </small>
                                         </div>
                                     </div>
                                 </div>
@@ -1108,6 +1116,71 @@
 {% block extra_js %}
     <script>
         $(document).ready(function () {
+            // Initialize Select2 for CC fields with enhanced configuration
+            $('.select2').select2({
+                theme: 'bootstrap4',
+                width: '100%',
+                allowClear: true,
+                closeOnSelect: false,
+                placeholder: function(){
+                    return $(this).data('placeholder');
+                },
+                templateResult: formatUser,
+                templateSelection: formatUserSelection,
+                escapeMarkup: function(markup) {
+                    return markup;
+                }
+            });
+
+            // Custom formatting for user options in dropdown
+            function formatUser(user) {
+                if (!user.id) {
+                    return user.text;
+                }
+                
+                var $user = $(
+                    '<span><i class="fas fa-user-circle mr-2"></i>' + user.text + '</span>'
+                );
+                return $user;
+            }
+
+            // Custom formatting for selected users
+            function formatUserSelection(user) {
+                if (!user.id) {
+                    return user.text;
+                }
+                return user.text;
+            }
+
+            // Add visual feedback when users are selected/deselected
+            $('.select2').on('select2:select', function (e) {
+                var data = e.params.data;
+                showNotification('Added: ' + data.text, 'success');
+            });
+
+            $('.select2').on('select2:unselect', function (e) {
+                var data = e.params.data;
+                showNotification('Removed: ' + data.text, 'info');
+            });
+
+            // Show notification function
+            function showNotification(message, type) {
+                var alertClass = 'alert-' + (type === 'success' ? 'success' : 'info');
+                var notification = $('<div class="alert ' + alertClass + ' alert-dismissible fade show position-fixed" style="top: 20px; right: 20px; z-index: 9999; min-width: 250px;">' +
+                    '<button type="button" class="close" data-dismiss="alert" aria-label="Close">' +
+                    '<span aria-hidden="true">&times;</span>' +
+                    '</button>' +
+                    '<i class="fas fa-' + (type === 'success' ? 'check' : 'info') + '-circle mr-2"></i>' + message +
+                    '</div>');
+                
+                $('body').append(notification);
+                
+                // Auto-dismiss after 3 seconds
+                setTimeout(function() {
+                    notification.alert('close');
+                }, 3000);
+            }
+
             // Initialize tooltips
             $('[data-toggle="tooltip"]').tooltip();
 

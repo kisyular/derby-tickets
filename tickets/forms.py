@@ -244,7 +244,12 @@ class TicketWithAttachmentsForm(forms.Form):
             "first_name", "last_name"
         ),
         required=False,
-        widget=forms.SelectMultiple(attrs={"class": "form-control"}),
+        widget=forms.SelectMultiple(
+            attrs={
+                "class": "form-control select2",
+                "data-placeholder": "Select admins to CC...",
+            }
+        ),
         label="CC Admins",
         help_text="Optional: Select additional staff/admins to CC.",
     )
@@ -253,10 +258,25 @@ class TicketWithAttachmentsForm(forms.Form):
             "first_name", "last_name"
         ),
         required=False,
-        widget=forms.SelectMultiple(attrs={"class": "form-control"}),
+        widget=forms.SelectMultiple(
+            attrs={
+                "class": "form-control select2",
+                "data-placeholder": "Select users to CC...",
+            }
+        ),
         label="CC Non-Admins",
         help_text="Optional: Select additional non-admin users to CC.",
     )
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Customize the label display for both CC fields
+        self.fields["cc_admins"].label_from_instance = (
+            lambda obj: obj.get_full_name() or obj.username
+        )
+        self.fields["cc_non_admins"].label_from_instance = (
+            lambda obj: obj.get_full_name() or obj.username
+        )
 
     def clean_attachments(self):
         """Validate all uploaded attachments"""

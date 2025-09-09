@@ -190,11 +190,11 @@
                                 {% if user.is_staff or user.is_superuser %}
                                     <div class="form-group">
                                         <label for="id_cc_admins">
-                                            CC Admins
+                                            <i class="fas fa-user-shield text-success"></i> CC Admins
                                         </label>
                                         {{ form.cc_admins }}
                                         <small class="form-text text-muted">
-                                            Optionally select additional staff/admins to CC on this ticket.
+                                            <i class="fas fa-info-circle"></i> Optionally select additional staff/admins to CC on this ticket.
                                         </small>
                                         {% if form.cc_admins.errors %}
                                             <div class="invalid-feedback">
@@ -207,11 +207,11 @@
                                     <!-- CC Non-Admins Field -->
                                     <div class="form-group">
                                         <label for="id_cc_non_admins">
-                                            CC Non-Admins
+                                            <i class="fas fa-users text-info"></i> CC Users
                                         </label>
                                         {{ form.cc_non_admins }}
                                         <small class="form-text text-muted">
-                                            Optionally select additional non-admin users to CC on this ticket.
+                                            <i class="fas fa-info-circle"></i> Optionally select additional non-admin users to CC on this ticket.
                                         </small>
                                         {% if form.cc_non_admins.errors %}
                                             <div class="invalid-feedback">
@@ -397,6 +397,46 @@
 {% block extra_js %}
     <script>
         $(document).ready(function () {
+            // Initialize Select2 for CC fields with enhanced configuration
+            $('.select2').select2({
+                theme: 'bootstrap4',
+                width: '100%',
+                allowClear: true,
+                closeOnSelect: false,
+                placeholder: function(){
+                    return $(this).data('placeholder');
+                },
+                templateResult: formatUser,
+                templateSelection: formatUserSelection,
+                escapeMarkup: function(markup) {
+                    return markup;
+                }
+            });
+
+            // Custom formatting for user options in dropdown
+            function formatUser(user) {
+                if (!user.id) {
+                    return user.text;
+                }
+                
+                var $user = $(
+                    '<span><i class="fas fa-user-circle mr-2"></i>' + user.text + '</span>'
+                );
+                return $user;
+            }
+
+            // Custom formatting for selected users
+            function formatUserSelection(user) {
+                if (!user.id) {
+                    return user.text;
+                }
+                return user.text;
+            }
+
+            // Add CC field specific classes for styling
+            $('#id_cc_admins').addClass('cc-admins-select');
+            $('#id_cc_non_admins').addClass('cc-users-select');
+
             // Character counter for description
             $('#id_description').on('input', function () {
                 const maxLength = 2000; // Adjust as needed
