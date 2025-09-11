@@ -20,17 +20,29 @@ def track_ticket_changes(sender, instance, **kwargs):
     """Track changes to ticket before saving."""
     if instance.pk:  # Only for existing tickets
         try:
-            old_ticket = Ticket.objects.get(pk=instance.pk)
-            instance._old_priority = old_ticket.priority
-            instance._old_status = old_ticket.status
-            instance._old_assigned_to = old_ticket.assigned_to
-            # Track CC fields before save
-            instance._old_cc_admins = set(
-                old_ticket.cc_admins.values_list("id", flat=True)
-            )
-            instance._old_cc_non_admins = set(
-                old_ticket.cc_non_admins.values_list("id", flat=True)
-            )
+            # Only capture old values on the FIRST pre_save call
+            if not hasattr(instance, "_old_status"):
+                old_ticket = Ticket.objects.get(pk=instance.pk)
+                print(
+                    f"DEBUG: pre_save triggered for ticket {instance.pk} (FIRST CALL)"
+                )
+                print(
+                    f"DEBUG: DB status: '{old_ticket.status}', Instance status: '{instance.status}'"
+                )
+                instance._old_priority = old_ticket.priority
+                instance._old_status = old_ticket.status
+                instance._old_assigned_to = old_ticket.assigned_to
+                # Track CC fields before save
+                instance._old_cc_admins = set(
+                    old_ticket.cc_admins.values_list("id", flat=True)
+                )
+                instance._old_cc_non_admins = set(
+                    old_ticket.cc_non_admins.values_list("id", flat=True)
+                )
+            else:
+                print(
+                    f"DEBUG: pre_save triggered for ticket {instance.pk} (SUBSEQUENT CALL - IGNORED)"
+                )
         except Ticket.DoesNotExist:
             instance._old_priority = None
             instance._old_status = None
@@ -48,6 +60,9 @@ def track_ticket_changes(sender, instance, **kwargs):
 @receiver(post_save, sender=Ticket)
 def ticket_saved(sender, instance, created, **kwargs):
     """Handle ticket creation and updates."""
+    print(
+        f"DEBUG: post_save triggered for ticket {instance.id}, status={instance.status}, created={created}"
+    )
     try:
         if created:
             # New ticket created
@@ -79,6 +94,17 @@ def ticket_saved(sender, instance, created, **kwargs):
                 }
 
             # Check for status change
+            print(
+                f"DEBUG: Status check - hasattr(_old_status): {hasattr(instance, '_old_status')}"
+            )
+            if hasattr(instance, "_old_status"):
+                print(
+                    f"DEBUG: Old status: {repr(instance._old_status)}, Current status: {repr(instance.status)}"
+                )
+                print(
+                    f"DEBUG: Status different: {instance._old_status != instance.status}"
+                )
+
             if (
                 hasattr(instance, "_old_status")
                 and instance._old_status != instance.status
@@ -90,25 +116,37 @@ def ticket_saved(sender, instance, created, **kwargs):
                     ),
                     "new": status_choices.get(instance.status, instance.status),
                 }
-
-            # Check for assignment change
-            old_assigned = getattr(instance, "_old_assigned_to", None)
-            logger.debug(
-                f"Assignment check - old: {old_assigned}, new: {instance.assigned_to}, created: {created}"
-            )
-
-            if old_assigned != instance.assigned_to:
-                if instance.assigned_to:
-                    # Ticket was assigned
-                    logger.info(
-                        f"Ticket {instance.id} assigned to {instance.assigned_to}"
-                    )
-                    # Send assignment notification asynchronously
-                    send_email_async(send_ticket_assigned_notification, instance)
-                else:
-                    logger.debug(f"No assigned_to user for ticket {instance.id}")
+                print(
+                    f"DEBUG: Status change detected! changed_fields: {changed_fields}"
+                )
             else:
-                logger.debug(f"No assignment change detected for ticket {instance.id}")
+                print("DEBUG: No status change detected")
+
+            # Check for assignment change (only if we haven't already processed this instance)
+            if hasattr(instance, "_old_assigned_to"):
+                old_assigned = getattr(instance, "_old_assigned_to", None)
+                logger.debug(
+                    f"Assignment check - old: {old_assigned}, new: {instance.assigned_to}, created: {created}"
+                )
+
+                if old_assigned != instance.assigned_to:
+                    if instance.assigned_to:
+                        # Ticket was assigned
+                        logger.info(
+                            f"Ticket {instance.id} assigned to {instance.assigned_to}"
+                        )
+                        # Send assignment notification asynchronously
+                        send_email_async(send_ticket_assigned_notification, instance)
+                    else:
+                        logger.debug(f"No assigned_to user for ticket {instance.id}")
+                else:
+                    logger.debug(
+                        f"No assignment change detected for ticket {instance.id}"
+                    )
+            else:
+                print(
+                    f"DEBUG: Skipping assignment check for ticket {instance.id} (already processed)"
+                )
 
             # Note: Assignment changes are handled by their own notification above,
             # so we don't include them in the general ticket update notification
@@ -130,6 +168,22 @@ def ticket_saved(sender, instance, created, **kwargs):
                     )
                 else:
                     logger.warning(f"No updated_by user found for ticket {instance.id}")
+
+            # Clear old values to prevent duplicate notifications on subsequent saves
+            # This must be done AFTER all change detection to avoid false positives
+            if hasattr(instance, "_old_status"):
+                delattr(instance, "_old_status")
+            if hasattr(instance, "_old_priority"):
+                delattr(instance, "_old_priority")
+            if hasattr(instance, "_old_assigned_to"):
+                delattr(instance, "_old_assigned_to")
+            if hasattr(instance, "_old_cc_admins"):
+                delattr(instance, "_old_cc_admins")
+            if hasattr(instance, "_old_cc_non_admins"):
+                delattr(instance, "_old_cc_non_admins")
+            print(
+                f"DEBUG: Cleared old values after all checks for ticket {instance.id}"
+            )
 
     except Exception as e:
         logger.error(f"Error in ticket_saved signal: {e}")
