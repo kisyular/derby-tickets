@@ -326,7 +326,12 @@ class CommentInline(admin.TabularInline):
                 obj = comment_form.instance
                 if obj.ticket:
                     # Check if this ticket was "Open" and now has exactly 1 comment (the one we just added)
-                    if obj.ticket.status == "Open" and obj.ticket.comments.count() == 1:
+                    # Don't update status if the ticket creator is the one commenting
+                    if (
+                        obj.ticket.status == "Open"
+                        and obj.ticket.comments.count() == 1
+                        and obj.author != obj.ticket.created_by
+                    ):
                         old_status = obj.ticket.status
                         obj.ticket.status = "In Progress"
                         obj.ticket._updated_by = request.user
@@ -385,7 +390,10 @@ class CommentAdmin(admin.ModelAdmin):
             # Check if this is the first comment on an open ticket
             existing_comments_count = obj.ticket.comments.count()
             should_update_status = (
-                obj.ticket.status == "Open" and existing_comments_count == 0
+                obj.ticket.status == "Open"
+                and existing_comments_count == 0
+                and obj.author
+                != obj.ticket.created_by  # Don't update status if ticket creator is commenting
             )
 
             # Save the comment first

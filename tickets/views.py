@@ -289,7 +289,10 @@ def ticket_detail(request, ticket_id):
                 # Check if this is the first comment on an open ticket
                 existing_comments_count = ticket.comments.count()
                 should_update_status = (
-                    ticket.status == "Open" and existing_comments_count == 0
+                    ticket.status == "Open"
+                    and existing_comments_count == 0
+                    and request.user
+                    != ticket.created_by  # Don't update status if ticket creator is commenting
                 )
 
                 comment = Comment.objects.create(
