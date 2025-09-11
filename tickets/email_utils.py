@@ -356,34 +356,40 @@ def send_comment_notification(comment, ticket):
 def send_ticket_updated_notification(ticket, changed_fields, updated_by):
     """Send notification when ticket priority or status is updated."""
     if set(changed_fields.keys()) == {"assigned_to"}:
-        return False
-
-    recipients = set()
+        return False  # Collect recipient users (not just emails)
+    recipient_users = set()
     if updated_by.is_staff:
-        if ticket.created_by.email and updated_by != ticket.created_by:
-            recipients.add(ticket.created_by.email)
+        if (
+            ticket.created_by
+            and ticket.created_by.email
+            and updated_by != ticket.created_by
+        ):
+            recipient_users.add(ticket.created_by)
         # Add assigned_to if updated_by is not assigned_to
         if (
             ticket.assigned_to
             and ticket.assigned_to.email
             and updated_by != ticket.assigned_to
         ):
-            recipients.add(ticket.assigned_to.email)
+            recipient_users.add(ticket.assigned_to)
     else:
         if (
             ticket.assigned_to
             and ticket.assigned_to.email
             and updated_by != ticket.assigned_to
         ):
-            recipients.add(ticket.assigned_to.email)
-    # Add all CC Admins and CC Non-Admins
-    recipients.update([u.email for u in ticket.cc_admins.all() if u.email])
-    recipients.update([u.email for u in ticket.cc_non_admins.all() if u.email])
-    if not recipients:
+            recipient_users.add(ticket.assigned_to)
+
+    # Add all CC Admins and CC Non-Admins as user objects
+    recipient_users.update(ticket.cc_admins.all())
+    recipient_users.update(ticket.cc_non_admins.all())
+
+    if not recipient_users:
         print("No recipients for ticket update notification")
         return False
 
-    context = {
+    # Prepare base context
+    base_context = {
         "ticket": prepare_ticket_context(ticket),
         "changed_fields": changed_fields,
         "updated_by": prepare_user_context(updated_by),
@@ -391,15 +397,32 @@ def send_ticket_updated_notification(ticket, changed_fields, updated_by):
         "site_url": os.environ.get("DJANGO_SITE_URL", "http://127.0.0.1:8000"),
     }
 
-    html_body = render_to_string("emails/ticket_updated.html", context)
-    subject = f"Ticket Updated: #{context['ticket']['ticket_number']} - {ticket.title}"
+    success = True
+    # Send personalized emails to each recipient
+    for recipient in recipient_users:
+        context = dict(base_context)
+        context["recipient"] = prepare_user_context(recipient)
 
-    return send_email(
-        subject=subject,
-        html_body=html_body,
-        recipients=list(recipients),
-        in_test=sending_email_in_test,
-    )
+        # Check if this is a status change to 'Closed'
+        if "status" in changed_fields and changed_fields["status"]["new"] == "closed":
+            # Use the closed ticket template and different subject
+            html_body = render_to_string("emails/ticket_closed.html", context)
+            subject = f"Ticket Resolved: #{context['ticket']['ticket_number']} - {ticket.title}"
+        else:
+            # Use the regular update template
+            html_body = render_to_string("emails/ticket_updated.html", context)
+            subject = f"Ticket Updated: #{context['ticket']['ticket_number']} - {ticket.title}"
+
+        result = send_email(
+            subject=subject,
+            html_body=html_body,
+            recipients=[recipient.email],
+            in_test=sending_email_in_test,
+        )
+        if not result:
+            success = False
+
+    return success
 
 
 # if the field cc_admins and cc_non_admin changes, we email the new people
