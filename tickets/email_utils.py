@@ -355,6 +355,9 @@ def send_comment_notification(comment, ticket):
 
 def send_ticket_updated_notification(ticket, changed_fields, updated_by):
     """Send notification when ticket priority or status is updated."""
+    print(
+        f"DEBUG: send_ticket_updated_notification called with changed_fields: {changed_fields} and updated_by: {updated_by}"
+    )
     if set(changed_fields.keys()) == {"assigned_to"}:
         return False  # Collect recipient users (not just emails)
     recipient_users = set()
@@ -403,8 +406,11 @@ def send_ticket_updated_notification(ticket, changed_fields, updated_by):
         context = dict(base_context)
         context["recipient"] = prepare_user_context(recipient)
 
-        # Check if this is a status change to 'Closed'
-        if "status" in changed_fields and changed_fields["status"]["new"] == "closed":
+        # Check if this is a status change to 'Closed' (case-insensitive)
+        if (
+            "status" in changed_fields
+            and changed_fields["status"]["new"].lower() == "closed"
+        ):
             # Use the closed ticket template and different subject
             html_body = render_to_string("emails/ticket_closed.html", context)
             subject = f"Ticket Resolved: #{context['ticket']['ticket_number']} - {ticket.title}"

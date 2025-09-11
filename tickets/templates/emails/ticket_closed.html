@@ -283,7 +283,7 @@
         <div class="resolution-notice">
             <h3>🎉 Great News!</h3>
             <p>Your support ticket has been marked as <strong>resolved</strong>.</p>
-            <p><strong>Resolved by:</strong> {{ closed_by.first_name }} {{ closed_by.last_name }} ({{ closed_by.username }})</p>
+            <p><strong>Resolved by:</strong> {{ updated_by.name }} ({{ updated_by.username }})</p>
             <p><strong>Resolution Date:</strong> {{ ticket.updated_at|date:"F j, Y g:i A" }}</p>
         </div>
 
