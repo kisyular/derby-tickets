@@ -283,7 +283,7 @@
         <div class="resolution-notice">
             <h3>🎉 Great News!</h3>
             <p>Your support ticket has been marked as <strong>resolved</strong>.</p>
-            <p><strong>Resolved by:</strong> {{ updated_by.name }} ({{ updated_by.username }})</p>
+            <p><strong>Resolved by:</strong> {{ updated_by.name }}</p>
             <p><strong>Resolution Date:</strong> {{ ticket.updated_at|date:"F j, Y g:i A" }}</p>
         </div>
 
@@ -330,10 +330,10 @@
         <!-- Action Buttons -->
         <div class="action-buttons">
             <a href="{{ site_url }}/tickets/{{ ticket.id }}/" class="btn btn-primary">
-                📋 View Ticket Details
+                View Ticket Details
             </a>
             <a href="{{ site_url }}/tickets/create/" class="btn btn-secondary">
-                ➕ Create New Ticket
+                Create New Ticket
             </a>
         </div>
 

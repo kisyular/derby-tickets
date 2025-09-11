@@ -401,32 +401,49 @@ def send_ticket_updated_notification(ticket, changed_fields, updated_by):
     }
 
     success = True
-    # Send personalized emails to each recipient
-    for recipient in recipient_users:
-        context = dict(base_context)
-        context["recipient"] = prepare_user_context(recipient)
 
-        # Check if this is a status change to 'Closed' (case-insensitive)
-        if (
-            "status" in changed_fields
-            and changed_fields["status"]["new"].lower() == "closed"
-        ):
+    # Check if this is a status change to 'Closed' (case-insensitive)
+    if (
+        "status" in changed_fields
+        and changed_fields["status"]["new"].lower() == "closed"
+    ):
+        # For closed tickets, only notify the ticket creator
+        if ticket.created_by and ticket.created_by.email:
+            context = dict(base_context)
+            context["recipient"] = prepare_user_context(ticket.created_by)
+
             # Use the closed ticket template and different subject
             html_body = render_to_string("emails/ticket_closed.html", context)
             subject = f"Ticket Resolved: #{context['ticket']['ticket_number']} - {ticket.title}"
+
+            result = send_email(
+                subject=subject,
+                html_body=html_body,
+                recipients=[ticket.created_by.email],
+                in_test=sending_email_in_test,
+            )
+            if not result:
+                success = False
         else:
+            print("No ticket creator email found for closed ticket notification")
+    else:
+        # For all other updates, send to all recipients
+        for recipient in recipient_users:
+            context = dict(base_context)
+            context["recipient"] = prepare_user_context(recipient)
+
             # Use the regular update template
             html_body = render_to_string("emails/ticket_updated.html", context)
             subject = f"Ticket Updated: #{context['ticket']['ticket_number']} - {ticket.title}"
 
-        result = send_email(
-            subject=subject,
-            html_body=html_body,
-            recipients=[recipient.email],
-            in_test=sending_email_in_test,
-        )
-        if not result:
-            success = False
+            result = send_email(
+                subject=subject,
+                html_body=html_body,
+                recipients=[recipient.email],
+                in_test=sending_email_in_test,
+            )
+            if not result:
+                success = False
 
     return success
 
