@@ -110,17 +110,8 @@ def ticket_saved(sender, instance, created, **kwargs):
             else:
                 logger.debug(f"No assignment change detected for ticket {instance.id}")
 
-                # Track assignment change for update notification
-                changed_fields["assigned_to"] = {
-                    "old": (
-                        old_assigned.get_full_name() if old_assigned else "Unassigned"
-                    ),
-                    "new": (
-                        instance.assigned_to.get_full_name()
-                        if instance.assigned_to
-                        else "Unassigned"
-                    ),
-                }
+            # Note: Assignment changes are handled by their own notification above,
+            # so we don't include them in the general ticket update notification
 
             # Send update notification if there were significant changes
             if changed_fields:
