@@ -211,7 +211,7 @@
                         <div class="card-body">
                             {% if ticket.status|lower == 'closed' %}
                                 <!-- Reopen Ticket Section (when ticket is closed) -->
-                                <div class="alert alert-info">
+                                <div class="mb-4 p-4 bg-info">
                                     <i class="fas fa-info-circle"></i>
                                     This ticket is closed. To add comments or updates, please reopen the ticket first.
                                 </div>
@@ -273,7 +273,7 @@
 
                                                     <div class="timeline-item">
                                                         <span class="time">
-                                                            <i class="fas fa-clock"></i> {{ entry.content.created_at|time:"H:i" }}
+                                                            <i class="fas fa-clock"></i> {{ entry.content.created_at|date:"Y-m-d" }} <span class="ml-1 text-info">{{ entry.content.created_at|time:"H:i" }}</span>
                                                         </span>
 
                                                         <h3 class="timeline-header">
@@ -322,10 +322,10 @@
                                             {% elif entry.type == 'update' %}
                                                 <!-- Update Entry - Clean AdminLTE style -->
                                                 <div>
-                                                    <i class="{{ entry.content.icon_class }} bg-gray"></i>
+                                                    <i class="{{ entry.content.icon_class }}"></i>
                                                     <div class="timeline-item">
                                                         <span class="time">
-                                                            <i class="far fa-clock"></i> {{ entry.content.created_at|time:"H:i" }}
+                                                            <i class="far fa-clock"></i> {{ entry.content.created_at|date:"Y-m-d" }} <span class="ml-1 text-info">{{ entry.content.created_at|time:"H:i" }}</span>
                                                         </span>
 
                                                         <h3 class="timeline-header no-border">
@@ -1078,9 +1078,6 @@
             background-color: #dd4b39 !important;
         }
 
-        .bg-gray {
-            background-color: #d2d6de !important;
-        }
 
         /* Description blocks for ticket creation */
         .description-block {

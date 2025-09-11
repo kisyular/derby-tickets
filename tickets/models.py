@@ -629,14 +629,14 @@ class TicketUpdate(models.Model):
         icon_map = {
             "ASSIGNED": "fas fa-user-plus",
             "UNASSIGNED": "fas fa-user-minus",
-            "STATUS_CHANGED": "fas fa-toggle-on",
-            "PRIORITY_CHANGED": "fas fa-exclamation-triangle",
-            "CC_ADMIN_ADDED": "fas fa-user-shield",
-            "CC_ADMIN_REMOVED": "fas fa-user-shield",
-            "CC_USER_ADDED": "fas fa-users",
-            "CC_USER_REMOVED": "fas fa-users",
-            "TITLE_CHANGED": "fas fa-edit",
-            "DESCRIPTION_CHANGED": "fas fa-file-alt",
+            "STATUS_CHANGED": "fas fa-toggle-on bg-info",
+            "PRIORITY_CHANGED": "fas fa-exclamation-triangle bg-warning",
+            "CC_ADMIN_ADDED": "fas fa-user-shield bg-danger",
+            "CC_ADMIN_REMOVED": "fas fa-user-shield bg-danger",
+            "CC_USER_ADDED": "fas fa-users bg-primary",
+            "CC_USER_REMOVED": "fas fa-users bg-primary",
+            "TITLE_CHANGED": "fas fa-edit bg-success",
+            "DESCRIPTION_CHANGED": "fas fa-file-alt bg-secondary",
             "CATEGORY_CHANGED": "fas fa-tag",
         }
         return icon_map.get(self.update_type, "fas fa-history")

@@ -8,7 +8,7 @@
 <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
     <div style="background: linear-gradient(135deg, #f39c12, #e67e22); padding: 20px; border-radius: 8px 8px 0 0; text-align: center;">
         <h1 style="color: white; margin: 0; font-size: 24px;">
-            🔄 Ticket Reopened
+            Ticket Reopened
         </h1>
     </div>
     
@@ -23,7 +23,7 @@
         
         <div style="background: #fff3cd; border: 1px solid #ffeaa7; border-radius: 6px; padding: 20px; margin: 20px 0;">
             <h3 style="color: #856404; margin: 0 0 15px 0; font-size: 18px;">
-                📋 Ticket Details
+                Ticket Details
             </h3>
             <table style="width: 100%; border-collapse: collapse;">
                 <tr>
@@ -63,20 +63,20 @@
         
         {% if changed_fields.reopen_reason %}
         <div style="background: #f8f9fa; border-left: 4px solid #f39c12; padding: 15px; margin: 20px 0;">
-            <h4 style="color: #856404; margin: 0 0 10px 0;">💬 Reason for Reopening:</h4>
+            <h4 style="color: #856404; margin: 0 0 10px 0;">Reason for Reopening:</h4>
             <p style="margin: 0; font-style: italic;">{{ changed_fields.reopen_reason }}</p>
         </div>
         {% endif %}
         
         <div style="background: #e7f3ff; border: 1px solid #b8daff; border-radius: 6px; padding: 20px; margin: 20px 0;">
-            <h4 style="color: #004085; margin: 0 0 10px 0;">📝 Original Description:</h4>
+            <h4 style="color: #004085; margin: 0 0 10px 0;">Original Description:</h4>
             <p style="margin: 0; color: #495057;">{{ ticket.description|truncatewords:50 }}</p>
         </div>
         
         <div style="text-align: center; margin: 30px 0;">
             <a href="{{ site_url }}/tickets/{{ ticket.id }}/" 
                style="background: #f39c12; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: bold; display: inline-block;">
-                🎫 View Ticket
+                View Ticket
             </a>
         </div>
         
