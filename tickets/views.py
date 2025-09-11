@@ -14,6 +14,7 @@ from .audit_security import audit_security_manager
 from .update_service import TicketUpdateService
 from .logging_utils import log_auth_event, log_security_event
 from .utils import user_can_access_ticket
+from .async_email import send_email_async
 
 # Create your views here.
 
@@ -434,6 +435,68 @@ def ticket_detail(request, ticket_id):
                 except Comment.DoesNotExist:
                     messages.error(request, "Comment not found.")
                 return redirect("tickets:ticket_detail", ticket_id=ticket.id)
+
+        elif action == "reopen_ticket":
+            # Handle ticket reopening
+            reopen_reason = request.POST.get("reopen_reason", "").strip()
+
+            if reopen_reason:
+                # Check if ticket is actually closed
+                if ticket.status.lower() != "closed":
+                    messages.error(
+                        request, "This ticket is not closed and cannot be reopened."
+                    )
+                    return redirect("tickets:ticket_detail", ticket_id=ticket.id)
+
+                # Create a comment with the reopening reason
+                comment = Comment.objects.create(
+                    ticket=ticket,
+                    author=request.user,
+                    content=f"**Ticket Reopened**\n\nReason: {reopen_reason}",
+                    is_internal=False,
+                )
+
+                # Change ticket status to Open
+                old_status = ticket.status
+                ticket.status = "Open"
+                ticket._updated_by = request.user
+                ticket.save()
+
+                # Log the ticket reopening for audit trail
+                audit_security_manager.log_audit_event(
+                    request=request,
+                    action="UPDATE",
+                    user=request.user,
+                    object_type="Ticket",
+                    object_id=str(ticket.id),
+                    object_repr=str(ticket),
+                    description=f"Reopened Ticket #{ticket.id}: {ticket.title}",
+                    risk_level="MEDIUM",
+                    changes={
+                        "status": {"old": old_status, "new": "Open"},
+                        "reopen_reason": reopen_reason,
+                    },
+                )
+
+                # Send reopened notification asynchronously
+                from .email_utils import send_ticket_reopened_notification
+
+                send_email_async(
+                    send_ticket_reopened_notification,
+                    ticket,
+                    {
+                        "status": {"old": old_status, "new": "Open"},
+                        "reopen_reason": reopen_reason,
+                    },
+                    request.user,
+                )
+
+                messages.success(request, "Ticket has been reopened successfully!")
+                return redirect("tickets:ticket_detail", ticket_id=ticket.id)
+            else:
+                messages.error(
+                    request, "Please provide a reason for reopening the ticket."
+                )
 
     # Get timeline entries (comments + updates) for the ticket
     timeline_entries = TicketUpdateService.get_timeline_entries(ticket)

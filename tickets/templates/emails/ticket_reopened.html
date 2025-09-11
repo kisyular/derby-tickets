@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ticket Reopened</title>
+</head>
+<body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
+    <div style="background: linear-gradient(135deg, #f39c12, #e67e22); padding: 20px; border-radius: 8px 8px 0 0; text-align: center;">
+        <h1 style="color: white; margin: 0; font-size: 24px;">
+            🔄 Ticket Reopened
+        </h1>
+    </div>
+    
+    <div style="background: #fff; padding: 30px; border: 1px solid #ddd; border-top: none; border-radius: 0 0 8px 8px;">
+        <p style="font-size: 16px; margin-bottom: 20px;">
+            Hello <strong>{{ recipient.greeting_name }}</strong>,
+        </p>
+        
+        <p style="font-size: 16px; margin-bottom: 20px;">
+            A ticket has been reopened and requires your attention.
+        </p>
+        
+        <div style="background: #fff3cd; border: 1px solid #ffeaa7; border-radius: 6px; padding: 20px; margin: 20px 0;">
+            <h3 style="color: #856404; margin: 0 0 15px 0; font-size: 18px;">
+                📋 Ticket Details
+            </h3>
+            <table style="width: 100%; border-collapse: collapse;">
+                <tr>
+                    <td style="padding: 8px 0; font-weight: bold; width: 120px;">Ticket #:</td>
+                    <td style="padding: 8px 0;">{{ ticket.ticket_number }}</td>
+                </tr>
+                <tr>
+                    <td style="padding: 8px 0; font-weight: bold;">Title:</td>
+                    <td style="padding: 8px 0;">{{ ticket.title }}</td>
+                </tr>
+                <tr>
+                    <td style="padding: 8px 0; font-weight: bold;">Priority:</td>
+                    <td style="padding: 8px 0;">
+                        <span style="background: {% if ticket.priority_lower == 'high' %}#dc3545{% elif ticket.priority_lower == 'medium' %}#ffc107{% else %}#28a745{% endif %}; color: white; padding: 4px 8px; border-radius: 12px; font-size: 12px; font-weight: bold;">
+                            {{ ticket.priority_display }}
+                        </span>
+                    </td>
+                </tr>
+                <tr>
+                    <td style="padding: 8px 0; font-weight: bold;">Status:</td>
+                    <td style="padding: 8px 0;">
+                        <span style="background: #28a745; color: white; padding: 4px 8px; border-radius: 12px; font-size: 12px; font-weight: bold;">
+                            {{ ticket.status_display }}
+                        </span>
+                    </td>
+                </tr>
+                <tr>
+                    <td style="padding: 8px 0; font-weight: bold;">Reopened by:</td>
+                    <td style="padding: 8px 0;">{{ updated_by.name }}</td>
+                </tr>
+                <tr>
+                    <td style="padding: 8px 0; font-weight: bold;">Reopened on:</td>
+                    <td style="padding: 8px 0;">{{ ticket.updated_at|date:"M d, Y g:i A" }}</td>
+                </tr>
+            </table>
+        </div>
+        
+        {% if changed_fields.reopen_reason %}
+        <div style="background: #f8f9fa; border-left: 4px solid #f39c12; padding: 15px; margin: 20px 0;">
+            <h4 style="color: #856404; margin: 0 0 10px 0;">💬 Reason for Reopening:</h4>
+            <p style="margin: 0; font-style: italic;">{{ changed_fields.reopen_reason }}</p>
+        </div>
+        {% endif %}
+        
+        <div style="background: #e7f3ff; border: 1px solid #b8daff; border-radius: 6px; padding: 20px; margin: 20px 0;">
+            <h4 style="color: #004085; margin: 0 0 10px 0;">📝 Original Description:</h4>
+            <p style="margin: 0; color: #495057;">{{ ticket.description|truncatewords:50 }}</p>
+        </div>
+        
+        <div style="text-align: center; margin: 30px 0;">
+            <a href="{{ site_url }}/tickets/{{ ticket.id }}/" 
+               style="background: #f39c12; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: bold; display: inline-block;">
+                🎫 View Ticket
+            </a>
+        </div>
+        
+        <hr style="border: none; border-top: 1px solid #eee; margin: 30px 0;">
+        
+        <p style="font-size: 14px; color: #666; margin: 0;">
+            <strong>Next Steps:</strong><br>
+            • Review the reopening reason<br>
+            • Respond to any questions or concerns<br>
+            • Update the ticket status as appropriate<br>
+            • Assign the ticket if needed
+        </p>
+        
+        <hr style="border: none; border-top: 1px solid #eee; margin: 20px 0;">
+        
+        <p style="font-size: 12px; color: #999; text-align: center; margin: 0;">
+            This is an automated notification from the Derby Fabricating Ticket System.<br>
+            Please do not reply to this email directly.
+        </p>
+    </div>
+</body>
+</html>

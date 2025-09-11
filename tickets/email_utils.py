@@ -500,3 +500,57 @@ def send_ticket_cc_updated_notification(ticket, new_cc_admins, new_cc_non_admins
             pass
 
     return success
+
+
+def send_ticket_reopened_notification(ticket, changed_fields, updated_by):
+    """Send notification when a ticket is reopened."""
+    # Determine who should receive the notification
+    recipient_users = set()
+
+    # Add assigned user if exists
+    if ticket.assigned_to and ticket.assigned_to.email:
+        recipient_users.add(ticket.assigned_to)
+
+    # Add all CC Admins and CC Non-Admins
+    recipient_users.update(ticket.cc_admins.all())
+    recipient_users.update(ticket.cc_non_admins.all())
+
+    # Remove the user who reopened the ticket (they already know they reopened it)
+    if updated_by in recipient_users:
+        recipient_users.remove(updated_by)
+
+    if not recipient_users:
+        print("No recipients for ticket reopened notification")
+        return False
+
+    # Prepare base context
+    base_context = {
+        "ticket": prepare_ticket_context(ticket),
+        "changed_fields": changed_fields,
+        "updated_by": prepare_user_context(updated_by),
+        "ticket_creator": prepare_user_context(ticket.created_by),
+        "site_url": os.environ.get("DJANGO_SITE_URL", "http://127.0.0.1:8000"),
+    }
+
+    success = True
+    # Send personalized emails to each recipient
+    for recipient in recipient_users:
+        context = dict(base_context)
+        context["recipient"] = prepare_user_context(recipient)
+
+        # Use the ticket reopened template
+        html_body = render_to_string("emails/ticket_reopened.html", context)
+        subject = (
+            f"Ticket Reopened: #{context['ticket']['ticket_number']} - {ticket.title}"
+        )
+
+        result = send_email(
+            subject=subject,
+            html_body=html_body,
+            recipients=[recipient.email],
+            in_test=sending_email_in_test,
+        )
+        if not result:
+            success = False
+
+    return success
