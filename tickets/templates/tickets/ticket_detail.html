@@ -215,7 +215,8 @@
                                     <i class="fas fa-info-circle"></i>
                                     This ticket is closed. To add comments or updates, please reopen the ticket first.
                                 </div>
-                                <button type="button" class="btn btn-warning btn-lg" data-toggle="modal" data-target="#reopenTicketModal">
+                                <button type="button" class="btn btn-warning btn-lg" data-toggle="modal"
+                                        data-target="#reopenTicketModal">
                                     <i class="fas fa-folder-open"></i> Reopen Ticket
                                 </button>
                             {% else %}
@@ -237,7 +238,8 @@
                                             <input class="form-check-input" type="checkbox" id="is_internal"
                                                    name="is_internal">
                                             <label class="form-check-label" for="is_internal">
-                                                <i class="fas fa-lock text-warning"></i> Internal comment (visible only to
+                                                <i class="fas fa-lock text-warning"></i> Internal comment (visible only
+                                                to
                                                 staff)
                                             </label>
                                         </div>
@@ -273,7 +275,8 @@
 
                                                     <div class="timeline-item">
                                                         <span class="time">
-                                                            <i class="fas fa-clock"></i> {{ entry.content.created_at|date:"Y-m-d" }} <span class="ml-1 text-info">{{ entry.content.created_at|time:"H:i" }}</span>
+                                                            <i class="fas fa-clock"></i> {{ entry.content.created_at|date:"Y-m-d" }} <span
+                                                                class="ml-1 text-info">{{ entry.content.created_at|time:"H:i" }}</span>
                                                         </span>
 
                                                         <h3 class="timeline-header">
@@ -292,17 +295,20 @@
                                                             <!-- Edit/Delete Controls -->
                                                             {% if entry.content.author == user or user.is_staff %}
                                                                 <div class="comment-actions float-right">
-                                                                    <button type="button" class="comment-action-btn edit-comment-btn bg-warning"
-                                                                            data-comment-id="{{ entry.content.id }}" 
+                                                                    <button type="button"
+                                                                            class="comment-action-btn edit-comment-btn bg-warning"
+                                                                            data-comment-id="{{ entry.content.id }}"
                                                                             data-comment-content="{{ entry.content.content }}"
                                                                             data-comment-internal="{{ entry.content.is_internal }}"
                                                                             title="Edit comment">
                                                                         <i class="fas fa-edit"></i>
                                                                     </button>
                                                                     {% if user.is_staff %}
-                                                                        <button type="button" class="comment-action-btn delete-comment-btn bg-danger"
+                                                                        <button type="button"
+                                                                                class="comment-action-btn delete-comment-btn bg-danger"
                                                                                 data-comment-id="{{ entry.content.id }}"
-                                                                                data-comment-author="{{ entry.content.author.get_full_name|default:entry.content.author.username }}"
+                                                                                data-comment-author="
+                                                                                        {{ entry.content.author.get_full_name|default:entry.content.author.username }}"
                                                                                 title="Delete comment">
                                                                             <i class="fas fa-trash"></i>
                                                                         </button>
@@ -325,7 +331,8 @@
                                                     <i class="{{ entry.content.icon_class }}"></i>
                                                     <div class="timeline-item">
                                                         <span class="time">
-                                                            <i class="far fa-clock"></i> {{ entry.content.created_at|date:"Y-m-d" }} <span class="ml-1 text-info">{{ entry.content.created_at|time:"H:i" }}</span>
+                                                            <i class="far fa-clock"></i> {{ entry.content.created_at|date:"Y-m-d" }} <span
+                                                                class="ml-1 text-info">{{ entry.content.created_at|time:"H:i" }}</span>
                                                         </span>
 
                                                         <h3 class="timeline-header no-border">
@@ -644,7 +651,8 @@
 
     <!-- Edit Ticket Modal -->
     {% if can_edit_ticket %}
-        <div class="modal fade" data-backdrop="static"  id="editTicketModal" tabindex="-1" role="dialog" aria-labelledby="editTicketModalLabel">
+        <div class="modal fade" data-backdrop="static" id="editTicketModal" tabindex="-1" role="dialog"
+             aria-labelledby="editTicketModalLabel">
             <div class="modal-dialog modal-lg" role="document">
                 <div class="modal-content">
                     <div class="modal-header">
@@ -666,7 +674,8 @@
                                 <!-- Warning banner for closed tickets (admin only) -->
                                 <div class="mb-4 p-4 bg-alert-warning rounded" role="alert">
                                     <i class="fas fa-info-circle"></i>
-                                    <strong>Warning:</strong> This ticket is closed. Editing will reopen it unless you choose "Keep it Closed".
+                                    <strong>Warning:</strong> This ticket is closed. Editing will reopen it unless you
+                                    choose "Keep it Closed".
                                 </div>
                             {% endif %}
                             <div class="form-group">
@@ -739,14 +748,32 @@
                                         {% endfor %}
                                     </select>
                                 </div>
-
-                                <div class="row">
-                                    <div class="col-md-6">
-                                        <div class="form-group">
-                                            <label for="cc_admins">
-                                                <i class="fas fa-user-shield text-success"></i> CC Admins
-                                            </label>
-                                            <select class="form-control select2 cc-admins-select" id="cc_admins" name="cc_admins" multiple data-placeholder="Select admins to CC...">
+                                <div class="col-md-12">
+                                    <div class="form-group">
+                                        <label for="cc-admins-input">
+                                            <i class="fas fa-user-shield text-success"></i> CC Admins
+                                        </label>
+                                        <div class="multiselect-container" data-field="cc_admins">
+                                            <div class="form-control multiselect-input d-flex flex-wrap align-items-center"
+                                                 style="min-height: 38px; padding: 0.25rem 0.5rem;">
+                                                <!-- Selected tags will appear here -->
+                                                <input type="text" class="search-input border-0 flex-grow-1"
+                                                       placeholder="Type to search admins..."
+                                                       style="outline: none; min-width: 150px; background: transparent">
+                                            </div>
+                                            <div class="dropdown-menu multiselect-dropdown w-100"
+                                                 style="max-height: 200px; overflow-y: auto;">
+                                                {% for admin_user in admin_users %}
+                                                    <div class="dropdown-item multiselect-option"
+                                                         data-value="{{ admin_user.id }}" data-text="
+                                                            {{ admin_user.get_full_name|default:admin_user.username }}">
+                                                        <i class="fas fa-user-circle text-primary me-2"></i>
+                                                        {{ admin_user.get_full_name|default:admin_user.username }}
+                                                    </div>
+                                                {% endfor %}
+                                            </div>
+                                            <!-- Hidden select for form submission -->
+                                            <select name="cc_admins" multiple class="d-none" id="cc_admins_hidden">
                                                 {% for admin_user in admin_users %}
                                                     <option value="{{ admin_user.id }}"
                                                             {% if admin_user in ticket.cc_admins.all %}selected{% endif %}>
@@ -754,18 +781,39 @@
                                                     </option>
                                                 {% endfor %}
                                             </select>
-                                            <small class="form-text text-muted">
-                                                <i class="fas fa-info-circle"></i> Staff members who will receive updates
-                                            </small>
                                         </div>
+                                        <small class="form-text text-muted">
+                                            <i class="fas fa-info-circle"></i> Staff members who will receive updates
+                                        </small>
                                     </div>
-                                    <div class="col-md-6">
-                                        <div class="form-group">
-                                            <label for="cc_non_admins">
-                                                <i class="fas fa-users text-info"></i> CC Users
-                                            </label>
-                                            <select class="form-control select2 cc-users-select" id="cc_non_admins" name="cc_non_admins"
-                                                    multiple data-placeholder="Select users to CC...">
+                                </div>
+                                <div class="col-md-12">
+                                    <div class="form-group">
+                                        <label for="cc-users-input">
+                                            <i class="fas fa-users text-info"></i> CC Users
+                                        </label>
+                                        <div class="multiselect-container" data-field="cc_non_admins">
+                                            <div class="form-control multiselect-input d-flex flex-wrap align-items-center"
+                                                 style="min-height: 38px; padding: 0.25rem 0.5rem;">
+                                                <!-- Selected tags will appear here -->
+                                                <input type="text" class="search-input border-0 flex-grow-1"
+                                                       placeholder="Type to search users..."
+                                                       style="outline: none; min-width: 150px; background: transparent">
+                                            </div>
+                                            <div class="dropdown-menu multiselect-dropdown w-100"
+                                                 style="max-height: 200px; overflow-y: auto;">
+                                                {% for regular_user in regular_users %}
+                                                    <div class="dropdown-item multiselect-option"
+                                                         data-value="{{ regular_user.id }}" data-text="
+                                                            {{ regular_user.get_full_name|default:regular_user.username }}">
+                                                        <i class="fas fa-user-circle text-info me-2"></i>
+                                                        {{ regular_user.get_full_name|default:regular_user.username }}
+                                                    </div>
+                                                {% endfor %}
+                                            </div>
+                                            <!-- Hidden select for form submission -->
+                                            <select name="cc_non_admins" multiple class="d-none"
+                                                    id="cc_non_admins_hidden">
                                                 {% for regular_user in regular_users %}
                                                     <option value="{{ regular_user.id }}"
                                                             {% if regular_user in ticket.cc_non_admins.all %}selected{% endif %}>
@@ -773,10 +821,10 @@
                                                     </option>
                                                 {% endfor %}
                                             </select>
-                                            <small class="form-text text-muted">
-                                                <i class="fas fa-info-circle"></i> Regular users who will receive updates
-                                            </small>
                                         </div>
+                                        <small class="form-text text-muted">
+                                            <i class="fas fa-info-circle"></i> Regular users who will receive updates
+                                        </small>
                                     </div>
                                 </div>
                             {% endif %}
@@ -796,7 +844,8 @@
     {% endif %}
 
     <!-- Image Viewer Modal -->
-    <div class="modal fade" data-backdrop="static"  id="imageModal" tabindex="-1" role="dialog" aria-labelledby="imageModalLabel">
+    <div class="modal fade" data-backdrop="static" id="imageModal" tabindex="-1" role="dialog"
+         aria-labelledby="imageModalLabel">
         <div class="modal-dialog modal-lg modal-dialog-centered" role="document">
             <div class="modal-content">
                 <div class="modal-header">
@@ -821,7 +870,8 @@
     </div>
 
     <!-- Edit Comment Modal -->
-    <div class="modal fade" data-backdrop="static"  id="editCommentModal" tabindex="-1" role="dialog" aria-labelledby="editCommentModalLabel">
+    <div class="modal fade" data-backdrop="static" id="editCommentModal" tabindex="-1" role="dialog"
+         aria-labelledby="editCommentModalLabel">
         <div class="modal-dialog" role="document">
             <div class="modal-content">
                 <div class="modal-header">
@@ -839,16 +889,17 @@
                     <div class="modal-body">
                         <div class="form-group">
                             <label for="editCommentContent">Comment:</label>
-                            <textarea class="form-control" id="editCommentContent" name="comment_content" 
+                            <textarea class="form-control" id="editCommentContent" name="comment_content"
                                       rows="4" required placeholder="Edit your comment..."></textarea>
                         </div>
                         {% if can_add_internal_comments %}
                             <div class="form-group">
                                 <div class="form-check">
-                                    <input class="form-check-input" type="checkbox" id="editCommentInternal" 
+                                    <input class="form-check-input" type="checkbox" id="editCommentInternal"
                                            name="is_internal">
                                     <label class="form-check-label" for="editCommentInternal">
-                                        <i class="fas fa-lock text-warning"></i> Internal comment (visible only to staff)
+                                        <i class="fas fa-lock text-warning"></i> Internal comment (visible only to
+                                        staff)
                                     </label>
                                 </div>
                             </div>
@@ -866,7 +917,8 @@
     </div>
 
     <!-- Delete Comment Modal -->
-    <div class="modal fade" data-backdrop="static"  id="deleteCommentModal" tabindex="-1" role="dialog" aria-labelledby="deleteCommentModalLabel">
+    <div class="modal fade" data-backdrop="static" id="deleteCommentModal" tabindex="-1" role="dialog"
+         aria-labelledby="deleteCommentModalLabel">
         <div class="modal-dialog" role="document">
             <div class="modal-content">
                 <div class="modal-header">
@@ -886,7 +938,8 @@
                             <i class="fas fa-exclamation-triangle"></i>
                             <strong>Warning:</strong> This action cannot be undone.
                         </div>
-                        <p>Are you sure you want to delete the comment by <strong id="deleteCommentAuthor"></strong>?</p>
+                        <p>Are you sure you want to delete the comment by <strong id="deleteCommentAuthor"></strong>?
+                        </p>
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
@@ -900,7 +953,8 @@
     </div>
 
     <!-- Reopen Ticket Modal -->
-    <div class="modal fade" data-backdrop="static"  id="reopenTicketModal" tabindex="-1" role="dialog" aria-labelledby="reopenTicketModalLabel">
+    <div class="modal fade" data-backdrop="static" id="reopenTicketModal" tabindex="-1" role="dialog"
+         aria-labelledby="reopenTicketModalLabel">
         <div class="modal-dialog" role="document">
             <div class="modal-content">
                 <div class="modal-header bg-warning">
@@ -918,13 +972,14 @@
 
                         <div class="mb-3 p-3 bg-alert-info">
                             <i class="fas fa-info-circle"></i>
-                            Please provide a reason for reopening this ticket. This will be added as a comment and all relevant parties will be notified.
+                            Please provide a reason for reopening this ticket. This will be added as a comment and all
+                            relevant parties will be notified.
                         </div>
-                        
+
                         <div class="form-group">
                             <label for="reopen_reason">Reason for reopening <span class="text-danger">*</span></label>
-                            <textarea class="form-control" id="reopen_reason" name="reopen_reason" 
-                                      rows="4" 
+                            <textarea class="form-control" id="reopen_reason" name="reopen_reason"
+                                      rows="4"
                                       placeholder="Please explain why this ticket needs to be reopened..."
                                       required></textarea>
                         </div>
@@ -1152,141 +1207,492 @@
         .text-blue {
             color: #3c8dbc !important;
         }
+
+        /* Custom Multiselect Styles - Dark/Light Mode Compatible */
+        .multiselect-container {
+            position: relative;
+        }
+
+        .multiselect-input {
+            cursor: text;
+            min-height: 38px;
+            transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+            background-color: var(--bs-body-bg, #fff);
+            color: var(--bs-body-color, #212529);
+        }
+
+        .multiselect-input:focus-within {
+            border-color: #80bdff;
+            outline: 0;
+            box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+        }
+
+        .search-input {
+            background: transparent;
+            border: none !important;
+            outline: none !important;
+            box-shadow: none !important;
+            flex-grow: 1;
+            min-width: 150px;
+            padding: 0;
+            color: inherit;
+        }
+
+        .multiselect-dropdown {
+            display: none;
+            max-height: 200px;
+            overflow-y: auto;
+            background-color: var(--bs-dropdown-bg, #fff);
+            border: 1px solid var(--bs-border-color, #ced4da);
+            color: var(--bs-dropdown-color, #212529);
+        }
+
+        .multiselect-option {
+            cursor: pointer;
+            padding: 0.5rem 1rem;
+            border: none;
+            transition: background-color 0.15s ease-in-out;
+            background-color: transparent;
+            color: inherit;
+        }
+
+        .multiselect-option:hover {
+            background-color: var(--bs-dropdown-link-hover-bg, rgba(0, 0, 0, 0.04)) !important;
+            color: var(--bs-dropdown-link-hover-color, #1e2125) !important;
+        }
+
+        .multiselect-option.active {
+            background-color: var(--bs-primary, #007bff) !important;
+            color: #fff !important;
+        }
+
+        .multiselect-option.active:hover {
+            background-color: var(--bs-primary-dark, #0056b3) !important;
+            color: #fff !important;
+        }
+
+        .badge {
+            font-size: 0.875em;
+            padding: 0.375rem 0.5rem;
+            margin-right: 0.25rem;
+            margin-bottom: 0.25rem;
+            background-color: var(--bs-primary, #007bff);
+            color: #fff;
+            border: 1px solid var(--bs-primary, #007bff);
+        }
+
+        .btn-close {
+            background: none;
+            border: none;
+            color: inherit;
+            font-size: 1.2em;
+            line-height: 1;
+            opacity: 0.7;
+            padding: 0 0.25rem;
+            margin-left: 0.25rem;
+            cursor: pointer;
+            transition: opacity 0.15s ease-in-out;
+            border-radius: 0.25rem;
+        }
+
+        .btn-close:hover {
+            opacity: 1;
+            background-color: rgba(255, 255, 255, 0.2);
+        }
+
+        .btn-danger {
+            background-color: #dc3545;
+            border-color: #dc3545;
+            color: #fff;
+        }
+
+        .btn-danger:hover {
+            background-color: #c82333;
+            border-color: #bd2130;
+        }
+
+        /* Dark mode specific adjustments */
+        @media (prefers-color-scheme: dark) {
+            .multiselect-input {
+                background-color: var(--bs-dark, #343a40);
+                border-color: var(--bs-border-color-translucent, rgba(255, 255, 255, 0.15));
+                color: var(--bs-light, #f8f9fa);
+            }
+
+            .multiselect-dropdown {
+                background-color: var(--bs-dark, #343a40);
+                border-color: var(--bs-border-color-translucent, rgba(255, 255, 255, 0.15));
+                color: var(--bs-light, #f8f9fa);
+            }
+
+            .multiselect-option:hover {
+                background-color: rgba(255, 255, 255, 0.1) !important;
+                color: var(--bs-light, #f8f9fa) !important;
+            }
+        }
+
+        /* AdminLTE dark mode compatibility */
+        [data-theme="dark"] .multiselect-input,
+        .dark-mode .multiselect-input {
+            background-color: #343a40;
+            border-color: rgba(255, 255, 255, 0.15);
+            color: #f8f9fa;
+        }
+
+        [data-theme="dark"] .multiselect-dropdown,
+        .dark-mode .multiselect-dropdown {
+            background-color: #343a40;
+            border-color: rgba(255, 255, 255, 0.15);
+            color: #f8f9fa;
+        }
+
+        [data-theme="dark"] .multiselect-option:hover,
+        .dark-mode .multiselect-option:hover {
+            background-color: rgba(255, 255, 255, 0.1) !important;
+            color: #f8f9fa !important;
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 576px) {
+            .search-input {
+                min-width: 100px;
+            }
+
+            .badge {
+                font-size: 0.75em;
+                padding: 0.25rem 0.375rem;
+            }
+        }
     </style>
 {% endblock %}
 
 {% block extra_js %}
     <script>
-        $(document).ready(function () {
-            // Initialize Select2 for CC fields with enhanced configuration
-            $('.select2').select2({
-                theme: 'bootstrap4',
-                width: '100%',
-                allowClear: true,
-                closeOnSelect: false,
-                placeholder: function(){
-                    return $(this).data('placeholder');
-                },
-                templateResult: formatUser,
-                templateSelection: formatUserSelection,
-                escapeMarkup: function(markup) {
-                    return markup;
-                }
-            });
+        // Pure JavaScript Bootstrap Multiselect Implementation
+        class BootstrapMultiselect {
+            constructor(container) {
+                this.container = container;
+                this.fieldName = container.dataset.field;
+                this.input = container.querySelector('.multiselect-input');
+                this.searchInput = container.querySelector('.search-input');
+                this.dropdown = container.querySelector('.multiselect-dropdown');
+                this.hiddenSelect = container.querySelector('select');
+                this.options = Array.from(container.querySelectorAll('.multiselect-option'));
+                this.selectedValues = new Set();
 
-            // Custom formatting for user options in dropdown
-            function formatUser(user) {
-                if (!user.id) {
-                    return user.text;
-                }
-                
-                var $user = $(
-                    '<span><i class="fas fa-user-circle mr-2"></i>' + user.text + '</span>'
-                );
-                return $user;
+                this.init();
             }
 
-            // Custom formatting for selected users
-            function formatUserSelection(user) {
-                if (!user.id) {
-                    return user.text;
-                }
-                return user.text;
+            init() {
+                this.bindEvents();
+                this.setupDropdown();
+                this.loadExistingSelections();
             }
 
-            // Add visual feedback when users are selected/deselected
-            $('.select2').on('select2:select', function (e) {
-                var data = e.params.data;
-                showNotification('Added: ' + data.text, 'success');
-            });
+            bindEvents() {
+                // Search input events
+                this.searchInput.addEventListener('focus', () => this.showDropdown());
+                this.searchInput.addEventListener('input', (e) => this.filterOptions(e.target.value));
+                this.searchInput.addEventListener('keydown', (e) => this.handleKeydown(e));
 
-            $('.select2').on('select2:unselect', function (e) {
-                var data = e.params.data;
-                showNotification('Removed: ' + data.text, 'info');
-            });
+                // Click outside to close
+                document.addEventListener('click', (e) => {
+                    if (!this.container.contains(e.target)) {
+                        this.hideDropdown();
+                    }
+                });
 
-            // Show notification function
-            function showNotification(message, type) {
-                var alertClass = 'alert-' + (type === 'success' ? 'success' : 'info');
-                var notification = $('<div class="alert ' + alertClass + ' alert-dismissible fade show position-fixed" style="top: 20px; right: 20px; z-index: 9999; min-width: 250px;">' +
-                    '<button type="button" class="close" data-dismiss="alert" aria-label="Close">' +
-                    '<span aria-hidden="true">&times;</span>' +
-                    '</button>' +
-                    '<i class="fas fa-' + (type === 'success' ? 'check' : 'info') + '-circle mr-2"></i>' + message +
-                    '</div>');
-                
-                $('body').append(notification);
-                
+                // Option clicks
+                this.options.forEach(option => {
+                    option.addEventListener('click', (e) => {
+                        e.preventDefault();
+                        this.toggleOption(option);
+                    });
+                });
+
+                // Input container click to focus search
+                this.input.addEventListener('click', (e) => {
+                    if (e.target === this.input) {
+                        this.searchInput.focus();
+                    }
+                });
+            }
+
+            setupDropdown() {
+                this.dropdown.style.display = 'none';
+                this.dropdown.style.position = 'absolute';
+                this.dropdown.style.top = '100%';
+                this.dropdown.style.left = '0';
+                this.dropdown.style.right = '0';
+                this.dropdown.style.zIndex = '1000';
+                this.dropdown.style.border = '1px solid #ced4da';
+                this.dropdown.style.borderTop = 'none';
+                this.dropdown.style.borderRadius = '0 0 0.25rem 0.25rem';
+                this.dropdown.style.boxShadow = '0 2px 4px rgba(0,0,0,0.1)';
+
+                // Make container relative for dropdown positioning
+                this.container.style.position = 'relative';
+            }
+
+            loadExistingSelections() {
+                // Load pre-selected values from hidden select
+                Array.from(this.hiddenSelect.options).forEach(option => {
+                    if (option.selected) {
+                        this.selectedValues.add(option.value);
+                        this.addSelectionTag(option.value, option.text);
+
+                        // Update option appearance
+                        const dropdownOption = this.options.find(opt => opt.dataset.value === option.value);
+                        if (dropdownOption) {
+                            dropdownOption.classList.add('active');
+                            dropdownOption.style.backgroundColor = '#007bff';
+                            dropdownOption.style.color = 'white';
+                        }
+                    }
+                });
+            }
+
+            showDropdown() {
+                this.dropdown.style.display = 'block';
+                this.input.style.borderBottomLeftRadius = '0';
+                this.input.style.borderBottomRightRadius = '0';
+                this.filterOptions(this.searchInput.value);
+            }
+
+            hideDropdown() {
+                this.dropdown.style.display = 'none';
+                this.input.style.borderBottomLeftRadius = '';
+                this.input.style.borderBottomRightRadius = '';
+                this.searchInput.value = '';
+                this.filterOptions('');
+            }
+
+            filterOptions(query) {
+                const search = query.toLowerCase();
+                this.options.forEach(option => {
+                    const text = option.dataset.text.toLowerCase();
+                    const isVisible = text.includes(search);
+                    option.style.display = isVisible ? 'block' : 'none';
+                });
+            }
+
+            toggleOption(option) {
+                const value = option.dataset.value;
+                const text = option.dataset.text;
+
+                if (this.selectedValues.has(value)) {
+                    this.removeSelection(value);
+                    this.showNotification('Removed: ' + text, 'info');
+                } else {
+                    this.addSelection(value, text);
+                    this.showNotification('Added: ' + text, 'success');
+                }
+
+                this.updateHiddenSelect();
+                this.searchInput.focus();
+            }
+
+            addSelection(value, text) {
+                this.selectedValues.add(value);
+                this.addSelectionTag(value, text);
+
+                // Update option appearance
+                const option = this.options.find(opt => opt.dataset.value === value);
+                if (option) {
+                    option.classList.add('active');
+                    option.style.backgroundColor = '#007bff';
+                    option.style.color = 'white';
+                }
+            }
+
+            addSelectionTag(value, text) {
+                // Create tag
+                const tag = document.createElement('span');
+                tag.className = 'badge badge-primary me-1 m-1 d-inline-flex align-items-center';
+                tag.dataset.value = value;
+                tag.innerHTML = `
+                    ${text}
+                    <button type="button" class="btn-close btn-danger m-1 rounded" style="font-size: 0.65em;" aria-label="Remove">&times;</button>
+                `;
+
+                // Add remove functionality
+                tag.querySelector('.btn-close').addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    this.removeSelection(value);
+                    this.updateHiddenSelect();
+                    this.showNotification('Removed: ' + text, 'info');
+                });
+
+                // Insert before search input
+                this.input.insertBefore(tag, this.searchInput);
+            }
+
+            removeSelection(value) {
+                this.selectedValues.delete(value);
+
+                // Remove tag
+                const tag = this.input.querySelector(`[data-value="${value}"]`);
+                if (tag) {
+                    tag.remove();
+                }
+
+                // Update option appearance
+                const option = this.options.find(opt => opt.dataset.value === value);
+                if (option) {
+                    option.classList.remove('active');
+                    option.style.backgroundColor = '';
+                    option.style.color = '';
+                }
+            }
+
+            updateHiddenSelect() {
+                // Clear existing selections
+                Array.from(this.hiddenSelect.options).forEach(option => {
+                    option.selected = false;
+                });
+
+                // Set new selections
+                this.selectedValues.forEach(value => {
+                    const option = this.hiddenSelect.querySelector(`option[value="${value}"]`);
+                    if (option) {
+                        option.selected = true;
+                    }
+                });
+            }
+
+            handleKeydown(e) {
+                if (e.key === 'Escape') {
+                    this.hideDropdown();
+                } else if (e.key === 'Enter') {
+                    e.preventDefault();
+                    // Find first visible option and select it
+                    const visibleOption = this.options.find(opt => opt.style.display !== 'none');
+                    if (visibleOption) {
+                        this.toggleOption(visibleOption);
+                    }
+                }
+            }
+
+            showNotification(message, type) {
+                const alertClass = 'alert-' + (type === 'success' ? 'success' : 'info');
+                const notification = document.createElement('div');
+                notification.className = `alert ${alertClass} alert-dismissible fade show position-fixed`;
+                notification.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 250px;';
+                notification.innerHTML = `
+                    <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                    <i class="fas fa-${type === 'success' ? 'check' : 'info'}-circle mr-2"></i>${message}
+                `;
+
+                document.body.appendChild(notification);
+
                 // Auto-dismiss after 3 seconds
-                setTimeout(function() {
-                    notification.alert('close');
+                setTimeout(() => {
+                    if (notification.parentNode) {
+                        notification.parentNode.removeChild(notification);
+                    }
                 }, 3000);
             }
+        }
 
-            // Initialize tooltips
-            $('[data-toggle="tooltip"]').tooltip();
-
-            // Handle form submission with loading state
-            $('#editTicketModal form').submit(function () {
-                const submitBtn = $(this).find('button[type="submit"]');
-                submitBtn.html('<i class="fas fa-spinner fa-spin"></i> Saving...')
-                    .prop('disabled', true);
+        document.addEventListener('DOMContentLoaded', function () {
+            // Initialize multiselects
+            const containers = document.querySelectorAll('.multiselect-container');
+            containers.forEach(container => {
+                new BootstrapMultiselect(container);
             });
 
-            // Auto-hide the edit modal if there are form errors
-            // {% if form.errors %}
-                //     $('#editTicketModal').modal('show');
-                // {% endif %}
+            // Initialize tooltips
+            const tooltips = document.querySelectorAll('[data-toggle="tooltip"]');
+            tooltips.forEach(tooltip => {
+                new bootstrap.Tooltip(tooltip);
+            });
+
+            // Handle form submission with loading state
+            const editForm = document.querySelector('#editTicketModal form');
+            if (editForm) {
+                editForm.addEventListener('submit', function () {
+                    const submitBtn = this.querySelector('button[type="submit"]');
+                    if (submitBtn) {
+                        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
+                        submitBtn.disabled = true;
+                    }
+                });
+            }
 
             // Handle comment editing
-            $('.edit-comment-btn').click(function() {
-                const commentId = $(this).data('comment-id');
-                const commentContent = $(this).data('comment-content');
-                const commentInternal = $(this).data('comment-internal');
-                
-                $('#editCommentId').val(commentId);
-                $('#editCommentContent').val(commentContent);
-                $('#editCommentInternal').prop('checked', commentInternal);
-                $('#editCommentModal').modal('show');
+            const editCommentBtns = document.querySelectorAll('.edit-comment-btn');
+            editCommentBtns.forEach(btn => {
+                btn.addEventListener('click', function () {
+                    const commentId = this.dataset.commentId;
+                    const commentContent = this.dataset.commentContent;
+                    const commentInternal = this.dataset.commentInternal === 'True';
+
+                    document.getElementById('editCommentId').value = commentId;
+                    document.getElementById('editCommentContent').value = commentContent;
+                    document.getElementById('editCommentInternal').checked = commentInternal;
+
+                    const editModal = new bootstrap.Modal(document.getElementById('editCommentModal'));
+                    editModal.show();
+                });
             });
 
             // Handle comment deletion
-            $('.delete-comment-btn').click(function() {
-                const commentId = $(this).data('comment-id');
-                const commentAuthor = $(this).data('comment-author');
-                
-                $('#deleteCommentId').val(commentId);
-                $('#deleteCommentAuthor').text(commentAuthor);
-                $('#deleteCommentModal').modal('show');
+            const deleteCommentBtns = document.querySelectorAll('.delete-comment-btn');
+            deleteCommentBtns.forEach(btn => {
+                btn.addEventListener('click', function () {
+                    const commentId = this.dataset.commentId;
+                    const commentAuthor = this.dataset.commentAuthor;
+
+                    document.getElementById('deleteCommentId').value = commentId;
+                    document.getElementById('deleteCommentAuthor').textContent = commentAuthor;
+
+                    const deleteModal = new bootstrap.Modal(document.getElementById('deleteCommentModal'));
+                    deleteModal.show();
+                });
             });
 
             // Handle reopen ticket form submission
-            $('#reopenTicketForm').submit(function(e) {
-                const submitBtn = $(this).find('button[type="submit"]');
-                const reasonField = $('#reopen_reason');
-                
-                // Validate reason is not empty
-                if (!reasonField.val().trim()) {
-                    alert('Please provide a reason for reopening this ticket.');
-                    reasonField.focus();
-                    e.preventDefault();
-                    return false;
-                }
-                
-                // Show loading state
-                submitBtn.html('<i class="fas fa-spinner fa-spin"></i> Reopening...')
-                    .prop('disabled', true);
-            });
+            const reopenForm = document.getElementById('reopenTicketForm');
+            if (reopenForm) {
+                reopenForm.addEventListener('submit', function (e) {
+                    const submitBtn = this.querySelector('button[type="submit"]');
+                    const reasonField = document.getElementById('reopen_reason');
+
+                    // Validate reason is not empty
+                    if (!reasonField.value.trim()) {
+                        alert('Please provide a reason for reopening this ticket.');
+                        reasonField.focus();
+                        e.preventDefault();
+                        return false;
+                    }
+
+                    // Show loading state
+                    if (submitBtn) {
+                        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Reopening...';
+                        submitBtn.disabled = true;
+                    }
+                });
+            }
         });
 
         // Function to open image modal
         function openImageModal(imageUrl, filename) {
-            $('#imageModalImg').attr('src', imageUrl);
-            $('#imageModalImg').attr('alt', filename);
-            $('#imageModalTitle').text(filename);
-            $('#imageDownloadBtn').attr('href', imageUrl);
-            $('#imageDownloadBtn').attr('download', filename);
-            $('#imageModal').modal('show');
+            const img = document.getElementById('imageModalImg');
+            const title = document.getElementById('imageModalTitle');
+            const downloadBtn = document.getElementById('imageDownloadBtn');
+
+            if (img) img.src = imageUrl;
+            if (img) img.alt = filename;
+            if (title) title.textContent = filename;
+            if (downloadBtn) {
+                downloadBtn.href = imageUrl;
+                downloadBtn.download = filename;
+            }
+
+            const imageModal = new bootstrap.Modal(document.getElementById('imageModal'));
+            imageModal.show();
         }
     </script>
 {% endblock %}
