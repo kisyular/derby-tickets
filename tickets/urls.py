@@ -10,6 +10,7 @@ urlpatterns = [
     path("tickets/", views.ticket_list, name="ticket_list"),
     path("tickets/<int:ticket_id>/", views.ticket_detail, name="ticket_detail"),
     path("tickets/create/", views.create_ticket, name="create_ticket"),
+    path("all-tickets/", views.admin_all_tickets, name="admin_all_tickets"),
     # Security Dashboard URLs
     path("security/", security_views.security_dashboard, name="security_dashboard"),
     path("security/events/", security_views.security_events, name="security_events"),

@@ -7,7 +7,9 @@ from django.core.paginator import Paginator
 from django.db.models import Q, Count
 from django.core.cache import cache
 from django.utils import timezone
+from django.http import HttpResponse
 from datetime import timedelta
+import csv
 from .models import Ticket, UserProfile, Comment, Category
 from .security import SecurityManager, domain_required, staff_required
 from .audit_security import audit_security_manager
@@ -1109,3 +1111,160 @@ def serve_protected_file(request, ticket_id, filename):
             risk_level="HIGH",
         )
         raise Http404("File not found")
+
+
+@login_required
+def admin_all_tickets(request):
+    """Admin-only view to display all tickets with pagination and CSV export"""
+    if not (request.user.is_staff or request.user.is_superuser):
+        messages.error(request, "Access denied. Admin privileges required.")
+        return redirect("ticket_list")
+
+    # Handle CSV export
+    if request.GET.get("export") == "csv":
+        return export_all_tickets_csv(request)
+
+    # Get all tickets
+    tickets = Ticket.objects.select_related(
+        "created_by", "assigned_to", "category"
+    ).order_by("-created_at")
+
+    # Search functionality
+    search_query = request.GET.get("search", "").strip()
+    if search_query:
+        tickets = tickets.filter(
+            Q(title__icontains=search_query)
+            | Q(description__icontains=search_query)
+            | Q(created_by__username__icontains=search_query)
+            | Q(created_by__email__icontains=search_query)
+            | Q(assigned_to__username__icontains=search_query)
+            | Q(id__icontains=search_query)
+        )
+
+    # Status filter
+    status_filter = request.GET.get("status", "")
+    if status_filter:
+        tickets = tickets.filter(status=status_filter)
+
+    # Priority filter
+    priority_filter = request.GET.get("priority", "")
+    if priority_filter:
+        tickets = tickets.filter(priority=priority_filter)
+
+    # Get counts for summary cards
+    total_count = Ticket.objects.count()
+    open_count = Ticket.objects.filter(status="Open").count()
+    in_progress_count = Ticket.objects.filter(status="In Progress").count()
+    closed_count = Ticket.objects.filter(status="Closed").count()
+    urgent_count = Ticket.objects.filter(priority="Urgent").count()
+    high_count = Ticket.objects.filter(priority="High").count()
+
+    # Pagination
+    paginator = Paginator(tickets, 25)  # 25 tickets per page
+    page_number = request.GET.get("page")
+    page_obj = paginator.get_page(page_number)
+
+    context = {
+        "tickets": page_obj,
+        "page_obj": page_obj,
+        "total_count": total_count,
+        "open_count": open_count,
+        "in_progress_count": in_progress_count,
+        "closed_count": closed_count,
+        "urgent_count": urgent_count,
+        "high_count": high_count,
+        "search_query": search_query,
+        "status_filter": status_filter,
+        "priority_filter": priority_filter,
+        "ticket_statuses": Ticket._meta.get_field("status").choices,
+        "ticket_priorities": Ticket._meta.get_field("priority").choices,
+    }
+
+    return render(request, "tickets/admin_all_tickets.html", context)
+
+
+def export_all_tickets_csv(request):
+    """Export all tickets to CSV format"""
+    if not (request.user.is_staff or request.user.is_superuser):
+        messages.error(request, "Access denied. Admin privileges required.")
+        return redirect("ticket_list")
+
+    # Create HTTP response with CSV content type
+    response = HttpResponse(content_type="text/csv")
+    response["Content-Disposition"] = (
+        f'attachment; filename="all_tickets_{timezone.now().strftime("%Y%m%d_%H%M%S")}.csv"'
+    )
+
+    writer = csv.writer(response)
+
+    # Write CSV header
+    writer.writerow(
+        [
+            "Ticket ID",
+            "Title",
+            "Status",
+            "Priority",
+            "Category",
+            "Created By",
+            "Assignee",
+            "Created Date",
+            "Updated Date",
+            "CC Admins",
+            "CC Users",
+            "Description",
+        ]
+    )
+
+    # Get all tickets with related data
+    tickets = (
+        Ticket.objects.select_related("created_by", "assigned_to", "category")
+        .prefetch_related("cc_admins", "cc_users")
+        .order_by("-created_at")
+    )
+
+    # Apply same filters as the view if any
+    search_query = request.GET.get("search", "").strip()
+    if search_query:
+        tickets = tickets.filter(
+            Q(title__icontains=search_query)
+            | Q(description__icontains=search_query)
+            | Q(created_by__username__icontains=search_query)
+            | Q(created_by__email__icontains=search_query)
+            | Q(assigned_to__username__icontains=search_query)
+            | Q(id__icontains=search_query)
+        )
+
+    status_filter = request.GET.get("status", "")
+    if status_filter:
+        tickets = tickets.filter(status=status_filter)
+
+    priority_filter = request.GET.get("priority", "")
+    if priority_filter:
+        tickets = tickets.filter(priority=priority_filter)
+
+    # Write ticket data
+    for ticket in tickets:
+        cc_admins = ", ".join([admin.username for admin in ticket.cc_admins.all()])
+        cc_users = ", ".join([user.username for user in ticket.cc_users.all()])
+
+        writer.writerow(
+            [
+                ticket.id,
+                ticket.title,
+                ticket.get_status_display(),
+                ticket.get_priority_display(),
+                ticket.category.name if ticket.category else "",
+                ticket.created_by.username,
+                ticket.assigned_to.username if ticket.assigned_to else "",
+                ticket.created_at.strftime("%Y-%m-%d %H:%M:%S"),
+                ticket.updated_at.strftime("%Y-%m-%d %H:%M:%S"),
+                cc_admins,
+                cc_users,
+                ticket.description[:500]
+                + (
+                    "..." if len(ticket.description) > 500 else ""
+                ),  # Truncate long descriptions
+            ]
+        )
+
+    return response

@@ -675,6 +675,16 @@
 
               <li class="nav-item">
                 <a
+                  href="{% url 'tickets:admin_all_tickets' %}"
+                  class="nav-link {% if request.resolver_match.url_name == 'admin_all_tickets' %}active{% endif %}"
+                >
+                  <i class="nav-icon fas fa-list-alt"></i>
+                  <p>All Tickets</p>
+                </a>
+              </li>
+
+              <li class="nav-item">
+                <a
                   href="{% url 'tickets:security_dashboard' %}"
                   class="nav-link {% if request.resolver_match.url_name == 'security_dashboard' %}active{% endif %}"
                 >

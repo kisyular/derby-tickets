@@ -11,18 +11,11 @@ from django.conf import settings
 from django.core.mail import send_mail
 from django.template.loader import render_to_string
 
-# clean the created by and assigned to columns
-"""
-Jeffrey Land -> Jeff Land
-Jason Carr -> Jason Carrier
-"""
-
 
 class Command(BaseCommand):
     # Name cleaning map for known corrections
     NAME_CLEAN_MAP = {
         "Jeffrey Land": "Jeff Land",
-        "Jason Carr": "Jason Carrier",
     }
     help = "Load ticket data from CSV file using pandas"
 
