@@ -122,6 +122,23 @@ class UserProfileAdmin(admin.ModelAdmin):
 
 @admin.register(Ticket)
 class TicketAdmin(admin.ModelAdmin):
+    # Custom form field classes for better user display
+    from django import forms
+
+    class UserChoiceField(forms.ModelChoiceField):
+        def label_from_instance(self, obj):
+            full_name = obj.get_full_name()
+            if full_name:
+                return f"{full_name} ({obj.username})"
+            return obj.username
+
+    class UserMultipleChoiceField(forms.ModelMultipleChoiceField):
+        def label_from_instance(self, obj):
+            full_name = obj.get_full_name()
+            if full_name:
+                return f"{full_name} ({obj.username})"
+            return obj.username
+
     def get_created_by_name(self, obj):
         return obj.created_by.get_full_name() or obj.created_by.username
 
@@ -256,10 +273,27 @@ class TicketAdmin(admin.ModelAdmin):
             kwargs["queryset"] = User.objects.filter(is_staff=True).order_by(
                 "first_name", "last_name"
             )
+            kwargs["form_class"] = self.UserChoiceField
         elif db_field.name == "created_by":
             # Show all users for created_by dropdown, order by name
             kwargs["queryset"] = User.objects.all().order_by("first_name", "last_name")
+            kwargs["form_class"] = self.UserChoiceField
         return super().formfield_for_foreignkey(db_field, request, **kwargs)
+        return super().formfield_for_foreignkey(db_field, request, **kwargs)
+
+    def formfield_for_manytomany(self, db_field, request, **kwargs):
+        if db_field.name in ["cc_admins", "cc_non_admins"]:
+            # Set appropriate querysets and apply full name display
+            if db_field.name == "cc_admins":
+                kwargs["queryset"] = User.objects.filter(is_staff=True).order_by(
+                    "first_name", "last_name"
+                )
+            else:  # cc_non_admins
+                kwargs["queryset"] = User.objects.filter(is_staff=False).order_by(
+                    "first_name", "last_name"
+                )
+            kwargs["form_class"] = self.UserMultipleChoiceField
+        return super().formfield_for_manytomany(db_field, request, **kwargs)
 
     fieldsets = (
         ("Ticket Information", {"fields": ("title", "description", "category")}),
