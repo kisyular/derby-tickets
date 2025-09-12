@@ -336,7 +336,12 @@ class TicketAdmin(admin.ModelAdmin):
         """Save model and track who made the changes for email notifications."""
         # Set the user who made the changes for email notifications
         obj._updated_by = request.user
-        super().save_model(request, obj, form, change)
+
+        # Save with current_user for response timestamp tracking
+        if change:  # Only for updates, not creation
+            obj.save(current_user=request.user)
+        else:
+            super().save_model(request, obj, form, change)
 
 
 # Inline for Comments to be displayed within Ticket admin
@@ -369,7 +374,7 @@ class CommentInline(admin.TabularInline):
                         old_status = obj.ticket.status
                         obj.ticket.status = "In Progress"
                         obj.ticket._updated_by = request.user
-                        obj.ticket.save()
+                        obj.ticket.save(current_user=request.user)
 
                         # Log the automatic status change
                         from .audit_security import audit_security_manager
@@ -438,7 +443,7 @@ class CommentAdmin(admin.ModelAdmin):
                 old_status = obj.ticket.status
                 obj.ticket.status = "In Progress"
                 obj.ticket._updated_by = request.user
-                obj.ticket.save()
+                obj.ticket.save(current_user=request.user)
 
                 # Log the automatic status change
                 from .audit_security import audit_security_manager

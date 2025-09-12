@@ -227,7 +227,7 @@ def ticket_detail(request, ticket_id):
 
                 # Set the user who made the changes for email notifications
                 ticket._updated_by = request.user
-                ticket.save()
+                ticket.save(current_user=request.user)
 
                 # Handle CC changes for staff users
                 if request.user.is_staff:
@@ -367,7 +367,7 @@ def ticket_detail(request, ticket_id):
                     ticket._updated_by = (
                         request.user
                     )  # Set the user who made the change
-                    ticket.save()
+                    ticket.save(current_user=request.user)
 
                     # Log the automatic status change
                     audit_security_manager.log_audit_event(
@@ -516,7 +516,7 @@ def ticket_detail(request, ticket_id):
                 old_status = ticket.status
                 ticket.status = "Open"
                 ticket._updated_by = request.user
-                ticket.save()
+                ticket.save(current_user=request.user)
 
                 # Log the ticket reopening for audit trail
                 audit_security_manager.log_audit_event(

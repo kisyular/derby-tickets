@@ -190,6 +190,17 @@ class Ticket(models.Model):
     def save(self, *args, **kwargs):
         """Override save to handle auto timestamps, user profile info, and ticket number generation"""
         use_auto_now = kwargs.pop("use_auto_now", True)
+        current_user = kwargs.pop(
+            "current_user", None
+        )  # Get the user making the change
+
+        # Check if this is an update (not creation)
+        is_update = self.pk is not None
+        original_ticket = None
+
+        if is_update:
+            # Get the original ticket to compare changes
+            original_ticket = Ticket.objects.get(pk=self.pk)
 
         if use_auto_now and not self.created_at:
             # For new tickets created through web interface - set current time
@@ -209,7 +220,76 @@ class Ticket(models.Model):
             if not self.department and profile.department:
                 self.department = profile.department
 
+        # Handle response timestamps for updates
+        if is_update and current_user:
+            self._update_response_timestamps(original_ticket, current_user)
+
         super().save(*args, **kwargs)
+
+    def _update_response_timestamps(self, original_ticket, current_user):
+        """Update first_response_at and last_user_response_at based on changes"""
+        from django.utils import timezone
+
+        now = timezone.now()
+
+        # Always update last_user_response_at to current updated_at time
+        self.last_user_response_at = now
+
+        # Check if this qualifies as a "first response"
+        if not self.first_response_at:
+            should_set_first_response = False
+
+            # Check if any fields have changed
+            fields_changed = self._get_changed_fields(original_ticket)
+
+            if fields_changed:
+                # If user is not the creator, any change counts as first response
+                if current_user != self.created_by:
+                    should_set_first_response = True
+                # If creator is admin/staff, only assignment changes count as first response
+                elif self.created_by.is_staff and ("assigned_to" in fields_changed):
+                    should_set_first_response = True
+
+            if should_set_first_response:
+                self.first_response_at = now
+
+    def _get_changed_fields(self, original_ticket):
+        """Get list of fields that have changed"""
+        changed_fields = []
+
+        # Fields to check for changes
+        fields_to_check = [
+            "status",
+            "priority",
+            "assigned_to",
+            "title",
+            "description",
+            "category",
+            "location",
+            "department",
+        ]
+
+        for field in fields_to_check:
+            original_value = getattr(original_ticket, field, None)
+            current_value = getattr(self, field, None)
+
+            if original_value != current_value:
+                changed_fields.append(field)
+
+        # Check many-to-many fields
+        if original_ticket.pk:
+            # Compare CC fields (need to use .all() and convert to sets)
+            original_cc_admins = set(original_ticket.cc_admins.all())
+            current_cc_admins = set(self.cc_admins.all()) if self.pk else set()
+            if original_cc_admins != current_cc_admins:
+                changed_fields.append("cc_admins")
+
+            original_cc_non_admins = set(original_ticket.cc_non_admins.all())
+            current_cc_non_admins = set(self.cc_non_admins.all()) if self.pk else set()
+            if original_cc_non_admins != current_cc_non_admins:
+                changed_fields.append("cc_non_admins")
+
+        return changed_fields
 
     def _generate_ticket_number(self):
         """Generate a unique ticket number."""
@@ -494,6 +574,39 @@ def update_closed_on(sender, instance, created, **kwargs):
         if instance.closed_on:
             instance.closed_on = None
             instance.save(update_fields=["closed_on"])
+
+
+@receiver(post_save, sender=Comment)
+def update_ticket_response_on_comment(sender, instance, created, **kwargs):
+    """
+    Update ticket response timestamps when a comment is created.
+    """
+    if created:
+        from django.utils import timezone
+
+        ticket = instance.ticket
+        comment_author = instance.author
+        now = timezone.now()
+
+        # Always update last_user_response_at for new comments
+        ticket.last_user_response_at = now
+
+        # Check if this qualifies as a "first response"
+        if not ticket.first_response_at:
+            should_set_first_response = False
+
+            # If comment author is not the ticket creator, it counts as first response
+            if comment_author != ticket.created_by:
+                should_set_first_response = True
+            # If creator is admin/staff and they're commenting, it counts as first response
+            elif ticket.created_by.is_staff and comment_author == ticket.created_by:
+                should_set_first_response = True
+
+            if should_set_first_response:
+                ticket.first_response_at = now
+
+        # Save the ticket with the updated timestamps
+        ticket.save(update_fields=["first_response_at", "last_user_response_at"])
 
 
 class ComputerInfo(models.Model):
