@@ -677,7 +677,28 @@ def create_ticket(request):
         else []
     )
 
-    context = {"form": form, "admin_users": assignable_users, "categories": categories}
+    # Get admin and regular users for CC fields
+    admin_users = (
+        User.objects.filter(is_staff=True, is_active=True).order_by(
+            "first_name", "last_name", "username"
+        )
+        if (request.user.is_staff or request.user.is_superuser)
+        else []
+    )
+    regular_users = (
+        User.objects.filter(is_staff=False, is_active=True).order_by(
+            "first_name", "last_name", "username"
+        )
+        if (request.user.is_staff or request.user.is_superuser)
+        else []
+    )
+
+    context = {
+        "form": form,
+        "admin_users": admin_users,
+        "regular_users": regular_users,
+        "categories": categories,
+    }
     return render(request, "tickets/create_ticket.html", context)
 
 

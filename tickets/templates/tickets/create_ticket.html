@@ -2,6 +2,166 @@
 
 {% block title %}Create New Ticket - Ticket Management System{% endblock %}
 
+{% block extra_css %}
+<style>
+/* Custom Multiselect Styles - Dark/Light Mode Compatible */
+.multiselect-container {
+    position: relative;
+}
+
+.multiselect-input {
+    cursor: text;
+    min-height: 38px;
+    transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+    background-color: var(--bs-body-bg, #fff);
+    color: var(--bs-body-color, #212529);
+}
+
+.multiselect-input:focus-within {
+    border-color: #80bdff;
+    outline: 0;
+    box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+}
+
+.search-input {
+    background: transparent;
+    border: none !important;
+    outline: none !important;
+    box-shadow: none !important;
+    flex-grow: 1;
+    min-width: 150px;
+    padding: 0;
+    color: inherit;
+}
+
+.multiselect-dropdown {
+    display: none;
+    max-height: 200px;
+    overflow-y: auto;
+    background-color: var(--bs-dropdown-bg, #fff);
+    border: 1px solid var(--bs-border-color, #ced4da);
+    color: var(--bs-dropdown-color, #212529);
+}
+
+.multiselect-option {
+    cursor: pointer;
+    padding: 0.5rem 1rem;
+    border: none;
+    transition: background-color 0.15s ease-in-out;
+    background-color: transparent;
+    color: inherit;
+}
+
+.multiselect-option:hover {
+    background-color: var(--bs-dropdown-link-hover-bg, rgba(0, 0, 0, 0.04)) !important;
+    color: var(--bs-dropdown-link-hover-color, #1e2125) !important;
+}
+
+.multiselect-option.active {
+    background-color: var(--bs-primary, #007bff) !important;
+    color: #fff !important;
+}
+
+.multiselect-option.active:hover {
+    background-color: var(--bs-primary-dark, #0056b3) !important;
+    color: #fff !important;
+}
+
+.badge {
+    font-size: 0.875em;
+    padding: 0.375rem 0.5rem;
+    margin-right: 0.25rem;
+    margin-bottom: 0.25rem;
+    background-color: var(--bs-primary, #007bff);
+    color: #fff;
+    border: 1px solid var(--bs-primary, #007bff);
+}
+
+.btn-close {
+    background: none;
+    border: none;
+    color: inherit;
+    font-size: 1.2em;
+    line-height: 1;
+    opacity: 0.7;
+    padding: 0 0.25rem;
+    margin-left: 0.25rem;
+    cursor: pointer;
+    transition: opacity 0.15s ease-in-out;
+    border-radius: 0.25rem;
+}
+
+.btn-close:hover {
+    opacity: 1;
+    background-color: rgba(255, 255, 255, 0.2);
+}
+
+.btn-danger {
+    background-color: #dc3545;
+    border-color: #dc3545;
+    color: #fff;
+}
+
+.btn-danger:hover {
+    background-color: #c82333;
+    border-color: #bd2130;
+}
+
+/* Dark mode specific adjustments */
+@media (prefers-color-scheme: dark) {
+    .multiselect-input {
+        background-color: var(--bs-dark, #343a40);
+        border-color: var(--bs-border-color-translucent, rgba(255, 255, 255, 0.15));
+        color: var(--bs-light, #f8f9fa);
+    }
+    
+    .multiselect-dropdown {
+        background-color: var(--bs-dark, #343a40);
+        border-color: var(--bs-border-color-translucent, rgba(255, 255, 255, 0.15));
+        color: var(--bs-light, #f8f9fa);
+    }
+    
+    .multiselect-option:hover {
+        background-color: rgba(255, 255, 255, 0.1) !important;
+        color: var(--bs-light, #f8f9fa) !important;
+    }
+}
+
+/* AdminLTE dark mode compatibility */
+[data-theme="dark"] .multiselect-input,
+.dark-mode .multiselect-input {
+    background-color: #343a40;
+    border-color: rgba(255, 255, 255, 0.15);
+    color: #f8f9fa;
+}
+
+[data-theme="dark"] .multiselect-dropdown,
+.dark-mode .multiselect-dropdown {
+    background-color: #343a40;
+    border-color: rgba(255, 255, 255, 0.15);
+    color: #f8f9fa;
+}
+
+[data-theme="dark"] .multiselect-option:hover,
+.dark-mode .multiselect-option:hover {
+    background-color: rgba(255, 255, 255, 0.1) !important;
+    color: #f8f9fa !important;
+}
+
+/* Responsive adjustments */
+@media (max-width: 576px) {
+    .search-input {
+        min-width: 100px;
+    }
+    
+    .badge {
+        font-size: 0.75em;
+        padding: 0.25rem 0.375rem;
+    }
+}
+</style>
+{% endblock %}
+
 {% block content %}
     <!-- Content Header (Page header) -->
     <div class="content-header">
@@ -189,12 +349,31 @@
                                 <!-- CC Admins Field -->
                                 {% if user.is_staff or user.is_superuser %}
                                     <div class="form-group">
-                                        <label for="id_cc_admins">
+                                        <label for="cc-admins-input">
                                             <i class="fas fa-user-shield text-success"></i> CC Admins
                                         </label>
-                                        {{ form.cc_admins }}
+                                        <div class="multiselect-container" data-field="cc_admins">
+                                            <div class="form-control multiselect-input d-flex flex-wrap align-items-center" style="min-height: 38px; padding: 0.25rem 0.5rem;">
+                                                <!-- Selected tags will appear here -->
+                                                <input type="text" class="search-input flex-grow-1 border-0" placeholder="Type to search admins..." style="outline: none; min-width: 150px; background: transparent;">
+                                            </div>
+                                            <div class="dropdown-menu multiselect-dropdown w-100" style="max-height: 200px; overflow-y: auto;">
+                                                {% for admin_user in admin_users %}
+                                                    <div class="dropdown-item multiselect-option" data-value="{{ admin_user.id }}" data-text="{{ admin_user.get_full_name|default:admin_user.username }}">
+                                                        <i class="fas fa-user-circle text-primary me-2"></i>
+                                                        {{ admin_user.get_full_name|default:admin_user.username }}
+                                                    </div>
+                                                {% endfor %}
+                                            </div>
+                                            <!-- Hidden select for form submission -->
+                                            <select name="cc_admins" multiple class="d-none" id="cc_admins_hidden">
+                                                {% for admin_user in admin_users %}
+                                                    <option value="{{ admin_user.id }}">{{ admin_user.get_full_name|default:admin_user.username }}</option>
+                                                {% endfor %}
+                                            </select>
+                                        </div>
                                         <small class="form-text text-muted">
-                                            <i class="fas fa-info-circle"></i> Optionally select additional staff/admins to CC on this ticket.
+                                            <i class="fas fa-info-circle"></i> Staff members who will receive updates. Type to search, click to select.
                                         </small>
                                         {% if form.cc_admins.errors %}
                                             <div class="invalid-feedback">
@@ -203,15 +382,33 @@
                                         {% endif %}
                                     </div>
 
-
                                     <!-- CC Non-Admins Field -->
                                     <div class="form-group">
-                                        <label for="id_cc_non_admins">
+                                        <label for="cc-users-input">
                                             <i class="fas fa-users text-info"></i> CC Users
                                         </label>
-                                        {{ form.cc_non_admins }}
+                                        <div class="multiselect-container" data-field="cc_non_admins">
+                                            <div class="form-control multiselect-input d-flex flex-wrap align-items-center" style="min-height: 38px; padding: 0.25rem 0.5rem;">
+                                                <!-- Selected tags will appear here -->
+                                                <input type="text" class="search-input border-0 flex-grow-1" placeholder="Type to search users..." style="outline: none; min-width: 150px; background: transparent;">
+                                            </div>
+                                            <div class="dropdown-menu multiselect-dropdown w-100" style="max-height: 200px; overflow-y: auto;">
+                                                {% for regular_user in regular_users %}
+                                                    <div class="dropdown-item multiselect-option" data-value="{{ regular_user.id }}" data-text="{{ regular_user.get_full_name|default:regular_user.username }}">
+                                                        <i class="fas fa-user-circle text-info me-2"></i>
+                                                        {{ regular_user.get_full_name|default:regular_user.username }}
+                                                    </div>
+                                                {% endfor %}
+                                            </div>
+                                            <!-- Hidden select for form submission -->
+                                            <select name="cc_non_admins" multiple class="d-none" id="cc_non_admins_hidden">
+                                                {% for regular_user in regular_users %}
+                                                    <option value="{{ regular_user.id }}">{{ regular_user.get_full_name|default:regular_user.username }}</option>
+                                                {% endfor %}
+                                            </select>
+                                        </div>
                                         <small class="form-text text-muted">
-                                            <i class="fas fa-info-circle"></i> Optionally select additional non-admin users to CC on this ticket.
+                                            <i class="fas fa-info-circle"></i> Regular users who will receive updates. Type to search, click to select.
                                         </small>
                                         {% if form.cc_non_admins.errors %}
                                             <div class="invalid-feedback">
@@ -396,184 +593,363 @@
 
 {% block extra_js %}
     <script>
-        $(document).ready(function () {
-            // Initialize Select2 for CC fields with enhanced configuration
-            $('.select2').select2({
-                theme: 'bootstrap4',
-                width: '100%',
-                allowClear: true,
-                closeOnSelect: false,
-                placeholder: function(){
-                    return $(this).data('placeholder');
-                },
-                templateResult: formatUser,
-                templateSelection: formatUserSelection,
-                escapeMarkup: function(markup) {
-                    return markup;
-                }
-            });
-
-            // Custom formatting for user options in dropdown
-            function formatUser(user) {
-                if (!user.id) {
-                    return user.text;
+        // Pure JavaScript Bootstrap Multiselect Implementation
+        class BootstrapMultiselect {
+            constructor(container) {
+                this.container = container;
+                this.fieldName = container.dataset.field;
+                this.input = container.querySelector('.multiselect-input');
+                this.searchInput = container.querySelector('.search-input');
+                this.dropdown = container.querySelector('.multiselect-dropdown');
+                this.hiddenSelect = container.querySelector('select');
+                this.options = Array.from(container.querySelectorAll('.multiselect-option'));
+                this.selectedValues = new Set();
+                
+                this.init();
+            }
+            
+            init() {
+                this.bindEvents();
+                this.setupDropdown();
+            }
+            
+            bindEvents() {
+                // Search input events
+                this.searchInput.addEventListener('focus', () => this.showDropdown());
+                this.searchInput.addEventListener('input', (e) => this.filterOptions(e.target.value));
+                this.searchInput.addEventListener('keydown', (e) => this.handleKeydown(e));
+                
+                // Click outside to close
+                document.addEventListener('click', (e) => {
+                    if (!this.container.contains(e.target)) {
+                        this.hideDropdown();
+                    }
+                });
+                
+                // Option clicks
+                this.options.forEach(option => {
+                    option.addEventListener('click', (e) => {
+                        e.preventDefault();
+                        this.toggleOption(option);
+                    });
+                });
+                
+                // Input container click to focus search
+                this.input.addEventListener('click', (e) => {
+                    if (e.target === this.input) {
+                        this.searchInput.focus();
+                    }
+                });
+            }
+            
+            setupDropdown() {
+                this.dropdown.style.display = 'none';
+                this.dropdown.style.position = 'absolute';
+                this.dropdown.style.top = '100%';
+                this.dropdown.style.left = '0';
+                this.dropdown.style.right = '0';
+                this.dropdown.style.zIndex = '1000';
+                this.dropdown.style.border = '1px solid #ced4da';
+                this.dropdown.style.borderTop = 'none';
+                this.dropdown.style.borderRadius = '0 0 0.25rem 0.25rem';
+                this.dropdown.style.boxShadow = '0 2px 4px rgba(0,0,0,0.1)';
+                
+                // Make container relative for dropdown positioning
+                this.container.style.position = 'relative';
+            }
+            
+            showDropdown() {
+                this.dropdown.style.display = 'block';
+                this.input.style.borderBottomLeftRadius = '0';
+                this.input.style.borderBottomRightRadius = '0';
+                this.filterOptions(this.searchInput.value);
+            }
+            
+            hideDropdown() {
+                this.dropdown.style.display = 'none';
+                this.input.style.borderBottomLeftRadius = '';
+                this.input.style.borderBottomRightRadius = '';
+                this.searchInput.value = '';
+                this.filterOptions('');
+            }
+            
+            filterOptions(query) {
+                const search = query.toLowerCase();
+                this.options.forEach(option => {
+                    const text = option.dataset.text.toLowerCase();
+                    const isVisible = text.includes(search);
+                    option.style.display = isVisible ? 'block' : 'none';
+                });
+            }
+            
+            toggleOption(option) {
+                const value = option.dataset.value;
+                const text = option.dataset.text;
+                
+                if (this.selectedValues.has(value)) {
+                    this.removeSelection(value);
+                } else {
+                    this.addSelection(value, text);
                 }
                 
-                var $user = $(
-                    '<span><i class="fas fa-user-circle mr-2"></i>' + user.text + '</span>'
-                );
-                return $user;
+                this.updateHiddenSelect();
+                this.searchInput.focus();
             }
-
-            // Custom formatting for selected users
-            function formatUserSelection(user) {
-                if (!user.id) {
-                    return user.text;
+            
+            addSelection(value, text) {
+                this.selectedValues.add(value);
+                
+                // Create tag
+                const tag = document.createElement('span');
+                tag.className = 'badge badge-primary me-1 m-1 d-inline-flex align-items-center';
+                tag.dataset.value = value;
+                tag.innerHTML = `
+                    ${text}
+                    <button type="button" class="btn-close btn-danger m-1 rounded" style="font-size: 0.65em;" aria-label="Remove">&times;</button>
+                `;
+                
+                // Add remove functionality
+                tag.querySelector('.btn-close').addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    this.removeSelection(value);
+                    this.updateHiddenSelect();
+                });
+                
+                // Insert before search input
+                this.input.insertBefore(tag, this.searchInput);
+                
+                // Update option appearance
+                const option = this.options.find(opt => opt.dataset.value === value);
+                if (option) {
+                    option.classList.add('active');
+                    option.style.backgroundColor = '#007bff';
+                    option.style.color = 'white';
                 }
-                return user.text;
             }
+            
+            removeSelection(value) {
+                this.selectedValues.delete(value);
+                
+                // Remove tag
+                const tag = this.input.querySelector(`[data-value="${value}"]`);
+                if (tag) {
+                    tag.remove();
+                }
+                
+                // Update option appearance
+                const option = this.options.find(opt => opt.dataset.value === value);
+                if (option) {
+                    option.classList.remove('active');
+                    option.style.backgroundColor = '';
+                    option.style.color = '';
+                }
+            }
+            
+            updateHiddenSelect() {
+                // Clear existing selections
+                Array.from(this.hiddenSelect.options).forEach(option => {
+                    option.selected = false;
+                });
+                
+                // Set new selections
+                this.selectedValues.forEach(value => {
+                    const option = this.hiddenSelect.querySelector(`option[value="${value}"]`);
+                    if (option) {
+                        option.selected = true;
+                    }
+                });
+            }
+            
+            handleKeydown(e) {
+                if (e.key === 'Escape') {
+                    this.hideDropdown();
+                } else if (e.key === 'Enter') {
+                    e.preventDefault();
+                    // Find first visible option and select it
+                    const visibleOption = this.options.find(opt => opt.style.display !== 'none');
+                    if (visibleOption) {
+                        this.toggleOption(visibleOption);
+                    }
+                }
+            }
+        }
 
-            // Add CC field specific classes for styling
-            $('#id_cc_admins').addClass('cc-admins-select');
-            $('#id_cc_non_admins').addClass('cc-users-select');
+        // Initialize when DOM is ready
+        document.addEventListener('DOMContentLoaded', function() {
+            // Initialize multiselects
+            const containers = document.querySelectorAll('.multiselect-container');
+            containers.forEach(container => {
+                new BootstrapMultiselect(container);
+            });
 
             // Character counter for description
-            $('#id_description').on('input', function () {
-                const maxLength = 2000; // Adjust as needed
-                const currentLength = $(this).val().length;
-                const remaining = maxLength - currentLength;
-                if (!$('#char-counter').length) {
-                    $(this).after('<small id="char-counter" class="form-text text-muted"></small>');
-                }
-                $('#char-counter').text(`${currentLength} characters`);
-                if (remaining < 100) {
-                    $('#char-counter').removeClass('text-muted').addClass('text-warning');
-                } else {
-                    $('#char-counter').removeClass('text-warning').addClass('text-muted');
-                }
-            });
+            const descriptionField = document.getElementById('id_description');
+            if (descriptionField) {
+                descriptionField.addEventListener('input', function () {
+                    const maxLength = 2000;
+                    const currentLength = this.value.length;
+                    const remaining = maxLength - currentLength;
+                    let counter = document.getElementById('char-counter');
+                    
+                    if (!counter) {
+                        counter = document.createElement('small');
+                        counter.id = 'char-counter';
+                        counter.className = 'form-text text-muted';
+                        this.parentNode.appendChild(counter);
+                    }
+                    
+                    counter.textContent = `${currentLength} characters`;
+                    if (remaining < 100) {
+                        counter.className = 'form-text text-warning';
+                    } else {
+                        counter.className = 'form-text text-muted';
+                    }
+                });
+            }
 
             // Form validation
-            $('form').on('submit', function () {
-                let isValid = true;
-                // Check required fields
-                const title = $('#id_title').val().trim();
-                const priority = $('#id_priority').val();
-                if (!title) {
-                    isValid = false;
-                    $('#id_title').addClass('is-invalid');
-                } else {
-                    $('#id_title').removeClass('is-invalid');
-                }
-                if (!priority) {
-                    isValid = false;
-                    $('#id_priority').addClass('is-invalid');
-                } else {
-                    $('#id_priority').removeClass('is-invalid');
-                }
-                if (isValid) {
-                    // Show loading state
-                    const submitBtn = $(this).find('button[type="submit"]');
-                    submitBtn.html('<i class="fas fa-spinner fa-spin"></i> Creating Ticket...')
-                        .prop('disabled', true);
-                }
-                return isValid;
-            });
+            const form = document.querySelector('form');
+            if (form) {
+                form.addEventListener('submit', function () {
+                    let isValid = true;
+                    const title = document.getElementById('id_title').value.trim();
+                    const priority = document.getElementById('id_priority').value;
+                    
+                    const titleField = document.getElementById('id_title');
+                    const priorityField = document.getElementById('id_priority');
+                    
+                    if (!title) {
+                        isValid = false;
+                        titleField.classList.add('is-invalid');
+                    } else {
+                        titleField.classList.remove('is-invalid');
+                    }
+                    
+                    if (!priority) {
+                        isValid = false;
+                        priorityField.classList.add('is-invalid');
+                    } else {
+                        priorityField.classList.remove('is-invalid');
+                    }
+                    
+                    if (isValid) {
+                        const submitBtn = this.querySelector('button[type="submit"]');
+                        if (submitBtn) {
+                            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Creating Ticket...';
+                            submitBtn.disabled = true;
+                        }
+                    }
+                    
+                    return isValid;
+                });
+            }
 
             // Priority selection helper
-            $('#id_priority').on('change', function () {
-                const priority = $(this).val();
-                const helpText = {
-                    'Low': 'Low priority tickets are typically addressed within 3-5 business days.',
-                    'Medium': 'Medium priority tickets are typically addressed within 1-2 business days.',
-                    'High': 'High priority tickets are typically addressed within 4-8 hours.',
-                    'Urgent': 'Urgent tickets receive immediate attention and are prioritized over all other work.'
-                };
-                if (priority && helpText[priority]) {
-                    if (!$('#priority-help').length) {
-                        $(this).after('<small id="priority-help" class="form-text"></small>');
-                    }
-                    $('#priority-help').text(helpText[priority]);
-                    // Color coding
-                    const colors = {
-                        'Low': 'text-success',
-                        'Medium': 'text-info',
-                        'High': 'text-warning',
-                        'Urgent': 'text-danger'
+            const priorityField = document.getElementById('id_priority');
+            if (priorityField) {
+                priorityField.addEventListener('change', function () {
+                    const priority = this.value;
+                    const helpText = {
+                        'Low': 'Low priority tickets are typically addressed within 3-5 business days.',
+                        'Medium': 'Medium priority tickets are typically addressed within 1-2 business days.',
+                        'High': 'High priority tickets are typically addressed within 4-8 hours.',
+                        'Urgent': 'Urgent tickets receive immediate attention and are prioritized over all other work.'
                     };
-                    $('#priority-help').removeClass('text-success text-info text-warning text-danger')
-                        .addClass(colors[priority]);
-                }
-            });
+                    
+                    if (priority && helpText[priority]) {
+                        let help = document.getElementById('priority-help');
+                        if (!help) {
+                            help = document.createElement('small');
+                            help.id = 'priority-help';
+                            help.className = 'form-text';
+                            this.parentNode.appendChild(help);
+                        }
+                        
+                        help.textContent = helpText[priority];
+                        const colors = {
+                            'Low': 'text-success',
+                            'Medium': 'text-info',
+                            'High': 'text-warning',
+                            'Urgent': 'text-danger'
+                        };
+                        help.className = `form-text ${colors[priority]}`;
+                    }
+                });
+            }
 
             // File upload handling
-            $('#id_attachments').on('change', function () {
-                handleFiles(this.files);
-            });
+            const fileInput = document.getElementById('id_attachments');
+            if (fileInput) {
+                fileInput.addEventListener('change', function () {
+                    handleFiles(this.files);
+                });
+            }
 
             // Drag & drop support
-            var dropArea = document.getElementById('drop-area');
-            var fileInput = document.getElementById('id_attachments');
-
+            const dropArea = document.getElementById('drop-area');
             if (dropArea && fileInput) {
                 dropArea.addEventListener('dragover', function (e) {
                     e.preventDefault();
                     e.stopPropagation();
-                    dropArea.classList.add('bg-info', 'text-white');
+                    this.classList.add('bg-info', 'text-white');
                 });
+                
                 dropArea.addEventListener('dragleave', function (e) {
                     e.preventDefault();
                     e.stopPropagation();
-                    dropArea.classList.remove('bg-info', 'text-white');
+                    this.classList.remove('bg-info', 'text-white');
                 });
+                
                 dropArea.addEventListener('drop', function (e) {
                     e.preventDefault();
                     e.stopPropagation();
-                    dropArea.classList.remove('bg-info', 'text-white');
-                    var files = e.dataTransfer.files;
+                    this.classList.remove('bg-info', 'text-white');
+                    const files = e.dataTransfer.files;
                     if (files.length > 0) {
-                        // Set files to input (triggers change event)
                         fileInput.files = files;
-                        $(fileInput).trigger('change');
+                        handleFiles(files);
                     }
                 });
-                // Optional: clicking drop area triggers file input
+                
                 dropArea.addEventListener('click', function () {
                     fileInput.click();
                 });
             }
 
-            // Helper to handle files (for both input and drop)
+            // Helper to handle files
             function handleFiles(files) {
-                const fileList = $('#file-list');
-                const filePreview = $('#file-preview');
+                const fileList = document.getElementById('file-list');
+                const filePreview = document.getElementById('file-preview');
+                
                 if (files.length > 0) {
-                    fileList.empty();
-                    filePreview.show();
+                    fileList.innerHTML = '';
+                    filePreview.style.display = 'block';
+                    
                     for (let i = 0; i < files.length; i++) {
                         const file = files[i];
                         const fileSize = (file.size / (1024 * 1024)).toFixed(2);
                         const isValid = validateFile(file);
-                        const fileItem = $(`
-                        <div class="file-item d-flex justify-content-between align-items-center p-2 mb-2 border rounded ${isValid.valid ? 'border-success bg-light' : 'border-danger bg-danger-light'}">
+                        
+                        const fileItem = document.createElement('div');
+                        fileItem.className = `file-item d-flex justify-content-between align-items-center p-2 mb-2 border rounded ${isValid.valid ? 'border-success bg-light' : 'border-danger bg-danger-light'}`;
+                        fileItem.innerHTML = `
                             <div class="file-info">
                                 <i class="fas ${getFileIcon(file.type)} mr-2"></i>
                                 <strong>${file.name}</strong>
                                 <span class="text-muted ml-2">(${fileSize} MB)</span>
-                                ${!isValid.valid ? `<br><small class=\"text-danger\">${isValid.error}</small>` : ''}
+                                ${!isValid.valid ? `<br><small class="text-danger">${isValid.error}</small>` : ''}
                             </div>
                             <div class="file-actions">
                                 ${isValid.valid ?
-                            '<i class="fas fa-check-circle text-success"></i>' :
-                            '<i class="fas fa-times-circle text-danger"></i>'
-                        }
+                                '<i class="fas fa-check-circle text-success"></i>' :
+                                '<i class="fas fa-times-circle text-danger"></i>'
+                            }
                             </div>
-                        </div>
-                    `);
-                        fileList.append(fileItem);
+                        `;
+                        fileList.appendChild(fileItem);
                     }
                 } else {
-                    filePreview.hide();
+                    filePreview.style.display = 'none';
                 }
             }
         });
@@ -621,10 +997,16 @@
         function resetForm() {
             if (confirm('Are you sure you want to reset the form? All entered data will be lost.')) {
                 document.querySelector('form').reset();
-                $('.is-invalid').removeClass('is-invalid');
-                $('#char-counter, #priority-help').remove();
-                $('#file-preview').hide();
-                $('#file-list').empty();
+                const invalidFields = document.querySelectorAll('.is-invalid');
+                invalidFields.forEach(field => field.classList.remove('is-invalid'));
+                
+                const helpers = document.querySelectorAll('#char-counter, #priority-help');
+                helpers.forEach(helper => helper.remove());
+                
+                const filePreview = document.getElementById('file-preview');
+                const fileList = document.getElementById('file-list');
+                if (filePreview) filePreview.style.display = 'none';
+                if (fileList) fileList.innerHTML = '';
             }
         }
     </script>
