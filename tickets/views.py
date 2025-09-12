@@ -158,6 +158,20 @@ def ticket_detail(request, ticket_id):
             cc_non_admin_ids = request.POST.getlist("cc_non_admins")
 
             if title and priority and status:
+                # Check if admin is editing a closed ticket
+                is_reopening_closed_ticket = (
+                    request.user.is_staff
+                    and ticket.status.lower() == "closed"
+                    and (
+                        title != ticket.title
+                        or description != ticket.description
+                        or priority != ticket.priority
+                        or status != ticket.status
+                        or assigned_to_id
+                        != (ticket.assigned_to.id if ticket.assigned_to else None)
+                    )
+                )
+
                 # Capture changes for audit trail
                 changes = {}
                 if ticket.title != title:
@@ -198,7 +212,17 @@ def ticket_detail(request, ticket_id):
                 ticket.title = title
                 ticket.description = description
                 ticket.priority = priority
-                ticket.status = status
+
+                # If admin is reopening a closed ticket, automatically set status to "Open"
+                if is_reopening_closed_ticket:
+                    old_status = ticket.status
+                    ticket.status = "Open"
+                    # Update the changes to reflect the reopening
+                    changes["status"] = {"old": old_status, "new": "Open"}
+                    changes["admin_reopened"] = True
+                else:
+                    ticket.status = status
+
                 # Set the user who made the changes for email notifications
                 ticket._updated_by = request.user
                 ticket.save()
@@ -264,20 +288,49 @@ def ticket_detail(request, ticket_id):
                     ticket, changes, request.user
                 )
 
-                # Log the ticket update for audit trail
-                audit_security_manager.log_audit_event(
-                    request=request,
-                    action="UPDATE",
-                    user=request.user,
-                    object_type="Ticket",
-                    object_id=str(ticket.id),
-                    object_repr=str(ticket),
-                    changes=changes,
-                    description=f"Updated Ticket #{ticket.id}: {ticket.title}",
-                    risk_level="LOW",
-                )
+                # Handle notifications based on whether ticket was reopened
+                if is_reopening_closed_ticket:
+                    # Send reopened notification instead of regular update notification
+                    from .email_utils import send_ticket_reopened_notification
 
-                messages.success(request, "Ticket updated successfully!")
+                    send_email_async(
+                        send_ticket_reopened_notification,
+                        ticket,
+                        changes,
+                        request.user,
+                    )
+
+                    # Log as a reopening action
+                    audit_security_manager.log_audit_event(
+                        request=request,
+                        action="REOPEN",
+                        user=request.user,
+                        object_type="Ticket",
+                        object_id=str(ticket.id),
+                        object_repr=str(ticket),
+                        changes=changes,
+                        description=f"Admin reopened and updated Ticket #{ticket.id}: {ticket.title}",
+                        risk_level="MEDIUM",
+                    )
+
+                    messages.success(
+                        request, "Ticket has been reopened and updated successfully!"
+                    )
+                else:
+                    # Log the regular ticket update for audit trail
+                    audit_security_manager.log_audit_event(
+                        request=request,
+                        action="UPDATE",
+                        user=request.user,
+                        object_type="Ticket",
+                        object_id=str(ticket.id),
+                        object_repr=str(ticket),
+                        changes=changes,
+                        description=f"Updated Ticket #{ticket.id}: {ticket.title}",
+                        risk_level="LOW",
+                    )
+
+                    messages.success(request, "Ticket updated successfully!")
                 return redirect("tickets:ticket_detail", ticket_id=ticket.id)
             else:
                 messages.error(request, "Please fill in all required fields.")
