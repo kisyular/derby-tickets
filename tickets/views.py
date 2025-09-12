@@ -145,7 +145,8 @@ def ticket_detail(request, ticket_id):
         action = request.POST.get("action", "edit_ticket")
 
         if action == "edit_ticket" and (
-            ticket.created_by == request.user or request.user.is_staff
+            (ticket.created_by == request.user or request.user.is_staff)
+            and (request.user.is_staff or ticket.status.lower() != "closed")
         ):
             # Handle ticket editing
             title = request.POST.get("title")
@@ -538,7 +539,10 @@ def ticket_detail(request, ticket_id):
         "timeline_entries": timeline_entries,
         "related_tickets": related_tickets,
         "can_add_internal_comments": request.user.is_staff,
-        "can_edit_ticket": (ticket.created_by == request.user or request.user.is_staff),
+        "can_edit_ticket": (
+            (ticket.created_by == request.user or request.user.is_staff)
+            and (request.user.is_staff or ticket.status.lower() != "closed")
+        ),
         "staff_users": staff_users,
         "admin_users": admin_users,
         "regular_users": regular_users,
