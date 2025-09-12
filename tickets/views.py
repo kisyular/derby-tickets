@@ -1218,7 +1218,7 @@ def export_all_tickets_csv(request):
     # Get all tickets with related data
     tickets = (
         Ticket.objects.select_related("created_by", "assigned_to", "category")
-        .prefetch_related("cc_admins", "cc_users")
+        .prefetch_related("cc_admins", "cc_non_admins")
         .order_by("-created_at")
     )
 
@@ -1244,8 +1244,12 @@ def export_all_tickets_csv(request):
 
     # Write ticket data
     for ticket in tickets:
-        cc_admins = ", ".join([admin.username for admin in ticket.cc_admins.all()])
-        cc_users = ", ".join([user.username for user in ticket.cc_users.all()])
+        cc_admins = ", ".join(
+            [admin.get_full_name() for admin in ticket.cc_admins.all()]
+        )
+        cc_non_admins = ", ".join(
+            [user.get_full_name() for user in ticket.cc_non_admins.all()]
+        )
 
         writer.writerow(
             [
@@ -1254,12 +1258,12 @@ def export_all_tickets_csv(request):
                 ticket.get_status_display(),
                 ticket.get_priority_display(),
                 ticket.category.name if ticket.category else "",
-                ticket.created_by.username,
-                ticket.assigned_to.username if ticket.assigned_to else "",
+                ticket.created_by.get_full_name(),
+                ticket.assigned_to.get_full_name() if ticket.assigned_to else "",
                 ticket.created_at.strftime("%Y-%m-%d %H:%M:%S"),
                 ticket.updated_at.strftime("%Y-%m-%d %H:%M:%S"),
                 cc_admins,
-                cc_users,
+                cc_non_admins,
                 ticket.description[:500]
                 + (
                     "..." if len(ticket.description) > 500 else ""
